@@ -808,6 +808,23 @@ Evas_GL_Program_Source shader_rgb_a_pair_nomul_vert_src =
    NULL, 0
 };
 
+const char filter_fxaa_vert_glsl[] =
+#include "shader/filter_fxaa_vert.h"
+;
+Evas_GL_Program_Source shader_filter_fxaa_vert_src =
+{
+   filter_fxaa_vert_glsl,
+   NULL, 0
+};
+
+const char filter_fxaa_frag_glsl[] =
+#include "shader/filter_fxaa_frag.h"
+;
+Evas_GL_Program_Source shader_filter_fxaa_frag_src =
+{
+   filter_fxaa_frag_glsl,
+   NULL, 0
+};
 
 /////////////////////////////////////////////
 static void
@@ -1088,6 +1105,8 @@ static const struct {
 
   SHADER_SOURCE_LINE(RGB_A_PAIR, rgb_a_pair),
   SHADER_SOURCE_LINE(RGB_A_PAIR_NOMUL, rgb_a_pair_nomul),
+
+  SHADER_SOURCE_LINE(FILTER_FXAA, filter_fxaa),
 };
 
 static int

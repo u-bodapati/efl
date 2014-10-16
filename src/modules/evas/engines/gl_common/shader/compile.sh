@@ -69,3 +69,5 @@ compile yuy2_nomul
 compile rgb_a_pair
 compile rgb_a_pair_nomul
 
+compile filter_fxaa
+

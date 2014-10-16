@@ -1479,16 +1479,7 @@ evas_gl_common_context_line_push(Evas_Engine_GL_Context *gc,
         PUSH_COLOR(pn, r, g, b, a);
      }
 
-   shader_array_flush(gc);
-   gc->pipe[pn].array.line = 0;
-   gc->pipe[pn].array.anti_alias = 0;
-   gc->pipe[pn].array.use_vertex = 0;
-   gc->pipe[pn].array.use_color = 0;
-   gc->pipe[pn].array.use_texuv = 0;
-   gc->pipe[pn].array.use_texuv2 = 0;
-   gc->pipe[pn].array.use_texuv3 = 0;
-   gc->pipe[pn].array.use_texa = 0;
-   gc->pipe[pn].array.use_texsam = 0;
+//   shader_array_flush(gc);
 }
 
 void
