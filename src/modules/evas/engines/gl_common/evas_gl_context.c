@@ -1504,6 +1504,8 @@ evas_gl_common_context_rectangle_push(Evas_Engine_GL_Context *gc,
    if (!(gc->dc->render_op == EVAS_RENDER_COPY) && (a < 255))
      blend = EINA_TRUE;
 
+   ERR("%d: (%d %d %d %d)", gc->dc->anti_alias, x, y, w, h);
+
 again:
    vertex_array_size_check(gc, gc->state.top_pipe, 6);
    pn = gc->state.top_pipe;
@@ -1521,6 +1523,8 @@ again:
         gc->pipe[pn].shader.cw = 0;
         gc->pipe[pn].shader.ch = 0;
         gc->pipe[pn].array.line = 0;
+        ERR("1. %d (%d %d %d %d)", gc->dc->anti_alias, x, y, w, h);
+        gc->pipe[pn].array.anti_alias = gc->dc->anti_alias;
         gc->pipe[pn].array.use_vertex = 1;
         gc->pipe[pn].array.use_color = 1;
         gc->pipe[pn].array.use_texuv = 0;
@@ -1569,6 +1573,9 @@ again:
              gc->pipe[pn].shader.cw = 0;
              gc->pipe[pn].shader.ch = 0;
              gc->pipe[pn].array.line = 0;
+             ERR("2. %d (%d %d %d %d)", gc->dc->anti_alias, x, y, w, h);
+
+             gc->pipe[pn].array.anti_alias = gc->dc->anti_alias;
              gc->pipe[pn].array.use_vertex = 1;
              gc->pipe[pn].array.use_color = 1;
              gc->pipe[pn].array.use_texuv = 0;
@@ -1601,6 +1608,9 @@ again:
 
    gc->pipe[pn].region.type = RTYPE_RECT;
    gc->pipe[pn].array.line = 0;
+        ERR("3. %d (%d %d %d %d)", gc->dc->anti_alias, x, y, w, h);
+
+   gc->pipe[pn].array.anti_alias = gc->dc->anti_alias;
    gc->pipe[pn].array.use_vertex = 1;
    gc->pipe[pn].array.use_color = 1;
    gc->pipe[pn].array.use_texuv = 0;
@@ -1612,6 +1622,7 @@ again:
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
+   gc->pipe[pn].array.anti_alias = gc->dc->anti_alias;
    pnum = gc->pipe[pn].array.num;
    nv = pnum * 3; nc = pnum * 4;
    gc->pipe[pn].array.num += 6;
@@ -1820,9 +1831,8 @@ evas_gl_common_context_image_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].shader.cw = 0;
    gc->pipe[pn].shader.ch = 0;
    gc->pipe[pn].array.line = 0;
+   gc->pipe[pn].array.anti_alias = 0;
    gc->pipe[pn].array.use_vertex = 1;
-//   gc->pipe[pn].array.anti_alias = gc->dc->anti_alias;
-   gc->pipe[pn].array.anti_alias = 1;
 
    // if nomul... dont need this
    gc->pipe[pn].array.use_color = 1;
@@ -1930,6 +1940,7 @@ evas_gl_common_context_font_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = 0;
    gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 0;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2023,6 +2034,7 @@ evas_gl_common_context_yuv_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = 1;
    gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 0;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2127,6 +2139,7 @@ evas_gl_common_context_yuy2_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = 0;
    gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 0;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2225,6 +2238,7 @@ evas_gl_common_context_nv12_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = 0;
    gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 0;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2328,6 +2342,7 @@ evas_gl_common_context_rgb_a_pair_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = 0;
    gc->pipe[pn].array.use_texa = EINA_TRUE;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 0;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2573,6 +2588,7 @@ evas_gl_common_context_image_map_push(Evas_Engine_GL_Context *gc,
    gc->pipe[pn].array.use_texuv3 = (utexture) ? 1 : 0;
    gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.anti_alias = 1;
 
    pipe_region_expand(gc, pn, x, y, w, h);
 
@@ -2735,11 +2751,13 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
         //TODO: Anti Alias is enabled?
         anti_alias = gc->pipe[i].array.anti_alias;
+        ERR("anti_alias ?? %d", anti_alias);
+
 #if 1
         if (anti_alias)
           {
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
-ERR("AAA!! (%d %d)", gw, gh);
+
              //FBO
              glGenFramebuffers(1, &aa_fbo);
              glBindFramebuffer(GL_FRAMEBUFFER, aa_fbo);
@@ -2770,7 +2788,7 @@ ERR("AAA!! (%d %d)", gw, gh);
                   anti_alias = EINA_FALSE;
                }
 
-             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+             glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              glViewport(0, 0, gw, gh);
           }
@@ -3340,11 +3358,12 @@ ERR("AAA!! (%d %d)", gw, gh);
         //Post Processing Anti-Aliasing
         if (anti_alias)
           {
+#if 1
              GLuint loc_tex, loc_res;
 
-             fprintf(stderr, "AA Post Processing! (%d)\n", orig_fbo);
              glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
              glDisable(GL_DEPTH_TEST);
+
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
              glActiveTexture(GL_TEXTURE0);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
@@ -3355,34 +3374,72 @@ ERR("AAA!! (%d %d)", gw, gh);
                                             "resolution");
              glUniform2f(loc_res, (float) gw, (float) gh);
 
-             int aPosCoord =
+             int vertex =
                 glGetAttribLocation(shared->shader[SHADER_FILTER_FXAA].prog,
-                                    "aPosition");
-             int aTexCoord =
+                                    "vertex");
+             int tex_coord =
                 glGetAttribLocation(shared->shader[SHADER_FILTER_FXAA].prog,
-                                    "aTexCoord");
+                                    "tex_coord");
 
-             float vertexPosition[] = { 1.0f, -1.0f,
-                  -1.0f, -1.0f,
-                  1.0f, 1.0f,
-                  -1.0f, 1.0f};
+         GLshort *pp = vertex_ptr;
 
+         ERR("(%f %f %f) (%f %f %f) (%f %f %f) (%f %f %f)\n",
+			  (float) pp[0], 
+			  (float) pp[1], 
+			  (float) pp[2], 
+
+			  (float) pp[3], 
+			  (float) pp[4], 
+			  (float) pp[5], 
+
+			  (float) pp[6], 
+			  (float) pp[7], 
+			  (float) pp[8], 
+
+			  (float) pp[9], 
+			  (float) pp[10], 
+			  (float) pp[11]);
+
+             //GLshort vertexPosition[12];
+             GLshort vertexPosition[] = { 1.0f, 1.0f,
+                                          0.75f, 1.0f,
+                                          1.0f, 0.75f,
+                                          0.75f, 0.75f};
              float textureCoord[] = { 1.0f, 0.0f,
-                  0.0f, 0.0f,
-                  1.0f, 1.0f,
-                  0.0f, 1.0f };
+                                      0.0f, 0.0f,
+                                      1.0f, 1.0f,
+                                      0.0f, 1.0f };
 
-             glVertexAttribPointer(aPosCoord, 2, GL_FLOAT, GL_FALSE, 0,
+/*             vertexPosition[0] = pp[0];
+             vertexPosition[1] = pp[1];
+             vertexPosition[2] = pp[2];
+             vertexPosition[2] = pp[3];
+             vertexPosition[3] = pp[4];
+             vertexPosition[5] = pp[5];
+             vertexPosition[4] = pp[6];
+             vertexPosition[5] = pp[7];
+             vertexPosition[8] = pp[8];
+             vertexPosition[6] = pp[9];
+             vertexPosition[7] = pp[10];
+             vertexPosition[11] = pp[11];
+*/
+             glVertexAttribPointer(vertex, 2, GL_SHORT, GL_FALSE, 0,
                                    vertexPosition);
-             glVertexAttribPointer(aTexCoord, 2, GL_FLOAT, GL_FALSE, 0,
+             glVertexAttribPointer(tex_coord, 2, GL_FLOAT, GL_FALSE, 0,
                                    textureCoord);
-             glEnableVertexAttribArray(aPosCoord);
-             glEnableVertexAttribArray(aTexCoord);
+             glEnableVertexAttribArray(vertex);
+             glEnableVertexAttribArray(tex_coord);
+
+//             glDisableVertexAttribArray(SHAD_TEXUV);
+  //           glDisableVertexAttribArray(SHAD_TEXUV2);
+    //         glDisableVertexAttribArray(SHAD_TEXUV3);
+
 
              glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-             glDisableVertexAttribArray(aPosCoord);
-             glDisableVertexAttribArray(aTexCoord);
+             glDisableVertexAttribArray(vertex);
+             glDisableVertexAttribArray(tex_coord);
+#endif
 
           }
 
@@ -3425,6 +3482,7 @@ ERR("AAA!! (%d %d)", gw, gh);
 
         gc->pipe[i].array.num = 0;
         gc->pipe[i].array.alloc = 0;
+        gc->pipe[i].array.anti_alias = 0;
 
         if (glsym_glMapBuffer && glsym_glUnmapBuffer)
           {
@@ -3436,7 +3494,10 @@ ERR("AAA!! (%d %d)", gw, gh);
         gc->pipe[i].region.w = 0;
         gc->pipe[i].region.h = 0;
         gc->pipe[i].region.type = 0;
+
+        anti_alias = EINA_FALSE;
      }
+
    gc->state.top_pipe = 0;
    if (dbgflushnum == 1)
      {

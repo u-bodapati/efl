@@ -1192,7 +1192,7 @@ _evas_gl_common_shader_binary_save(Evas_GL_Shared *shared)
 
    /* use eet */
    if (!eet_init()) goto error;
-
+ERR("%s", tmp_file);
    et = eet_open(tmp_file, EET_FILE_MODE_WRITE);
    if (!et) goto error;
 
