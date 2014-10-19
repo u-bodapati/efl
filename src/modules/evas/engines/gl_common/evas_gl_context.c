@@ -2704,13 +2704,23 @@ start_tiling(Evas_Engine_GL_Context *gc EINA_UNUSED,
 }
 
 static void
+shader_array_flush_internal(Evas_Engine_GL_Context *gc, int pipe_idx)
+{
+
+
+}
+
+static void
 shader_array_flush(Evas_Engine_GL_Context *gc)
 {
    int i, gw, gh, setclip, fbo = 0, done = 0;
+   Eina_Bool antialise = EINA_FALSE;
 
    if (!gc->havestuff) return;
+
    gw = gc->w;
    gh = gc->h;
+
    if (!((gc->pipe[0].shader.surface == gc->def_surface) ||
          (!gc->pipe[0].shader.surface)))
      {
@@ -2718,12 +2728,19 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
         gh = gc->pipe[0].shader.surface->h;
         fbo = 1;
      }
+
    for (i = 0; i < gc->shared->info.tune.pipes.max; i++)
      {
         if (gc->pipe[i].array.num <= 0) break;
+
+        //TODO: Antialias is enabled?
+        //Create FrameBuffer for the object
+        //Enable Framebuffer to render target
+
         setclip = 0;
         done++;
         gc->flushnum++;
+
         GLERR(__FUNCTION__, __FILE__, __LINE__, "<flush err>");
         if (gc->pipe[i].shader.cur_prog != gc->state.current.cur_prog)
           {
@@ -2869,7 +2886,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
         if (gc->pipe[i].shader.clip != gc->state.current.clip)
           {
              int cx, cy, cw, ch;
-             
+
              cx = gc->pipe[i].shader.cx;
              cy = gc->pipe[i].shader.cy;
              cw = gc->pipe[i].shader.cw;
@@ -2890,8 +2907,8 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                        ch = gc->master_clip.h;
                     }
                }
-             if ((glsym_glStartTiling) && (glsym_glEndTiling) && 
-                 (gc->master_clip.enabled) && 
+             if ((glsym_glStartTiling) && (glsym_glEndTiling) &&
+                 (gc->master_clip.enabled) &&
                  (gc->master_clip.w > 0) && (gc->master_clip.h > 0))
                {
                   if (!gc->master_clip.used)
@@ -2908,13 +2925,13 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                                gc->preserve_bit = GL_COLOR_BUFFER_BIT0_QCOM;
                          }
                        else
-                         start_tiling(gc, 0, gw, gh, 
+                         start_tiling(gc, 0, gw, gh,
                                       gc->master_clip.x, gc->master_clip.y,
                                       gc->master_clip.w, gc->master_clip.h, 0);
                        gc->master_clip.used = EINA_TRUE;
                     }
                }
-             if ((gc->pipe[i].shader.clip) || 
+             if ((gc->pipe[i].shader.clip) ||
                  ((gc->master_clip.enabled) && (!fbo)))
                {
                   glEnable(GL_SCISSOR_TEST);
@@ -2942,7 +2959,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
             ((gc->master_clip.enabled) && (!fbo)))
           {
              int cx, cy, cw, ch;
-             
+
              cx = gc->pipe[i].shader.cx;
              cy = gc->pipe[i].shader.cy;
              cw = gc->pipe[i].shader.cw;
@@ -3306,7 +3323,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
         gc->pipe[i].array.use_texuv3 = 0;
         gc->pipe[i].array.use_texa = 0;
         gc->pipe[i].array.use_texsam = 0;
-        
+
         gc->pipe[i].array.vertex = NULL;
         gc->pipe[i].array.color = NULL;
         gc->pipe[i].array.texuv = NULL;
@@ -3329,11 +3346,14 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
         gc->pipe[i].region.h = 0;
         gc->pipe[i].region.type = 0;
      }
+
    gc->state.top_pipe = 0;
+
    if (dbgflushnum == 1)
      {
         if (done > 0) printf("DONE (pipes): %i\n", done);
      }
+
    gc->havestuff = EINA_FALSE;
 }
 
