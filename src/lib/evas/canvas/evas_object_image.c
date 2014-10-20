@@ -2900,6 +2900,9 @@ evas_draw_image_map_async_check(Evas_Object_Protected_Data *obj,
 {
    Eina_Bool async_unref;
 
+   obj->layer->evas->engine.func->context_anti_alias_set(data, context,
+                                                         obj->cur->anti_alias);
+
    async_unref = obj->layer->evas->engine.func->image_map_draw(data, context,
                                                                surface, image, m,
                                                                smooth, level,

@@ -10,5 +10,6 @@ uniform mat4 mvp;
 void main(void)
 {
     vTexCoord = tex_coord;
-	 gl_Position = vec4(vertex.x, vertex.y, 0.0, 1.0);
+//	 gl_Position = vec4(vertex.x, vertex.y, 0.0, 1.0);
+   gl_Position = mvp * vec4(vertex.x, vertex.y, 0.0, 1.0);
 }

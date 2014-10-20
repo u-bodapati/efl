@@ -2733,6 +2733,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
    GLint orig_rbo;
    GLint orig_tex;
    GLint orig_vert;
+   GLshort aa_x, aa_y, aa_w, aa_h;
 
    if (!gc->havestuff) return;
    gw = gc->w;
@@ -2755,7 +2756,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
          GLshort *pp = (unsigned char *)gc->pipe[i].array.vertex;
 
-         ERR("pipe(%d) aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
+         ERR("pipe(%d) aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
              i,
              anti_alias,
              gc->pipe[i].array.num,
@@ -2772,15 +2773,64 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              //			  (float) pp[8], 
 
              (float) pp[9],
-             (float) pp[10]);
+             (float) pp[10],
+             
+             (float) pp[12],
+             (float) pp[13],
+             
+             (float) pp[15],
+             (float) pp[16]);
              //			  (float) pp[11]);
+
         if (anti_alias)
           {
+             GLshort vertices[18];
+
+             vertices[0] = pp[0];
+             vertices[1] = pp[1];
+             vertices[2] = pp[2];
+
+             vertices[3] = pp[3];
+             vertices[4] = pp[4];
+             vertices[5] = pp[5];
+
+             vertices[6] = pp[6];
+             vertices[7] = pp[7];
+             vertices[8] = pp[8];
+
+             vertices[9] = pp[9];
+             vertices[10] = pp[10];
+             vertices[11] = pp[11];
+
+             vertices[12] = pp[12];
+             vertices[13] = pp[13];
+             vertices[14] = pp[14];
+
+             vertices[15] = pp[15];
+             vertices[16] = pp[16];
+             vertices[17] = pp[17];
+
+             int j;
+             GLshort min_x = gw, min_y = gh;
+             GLshort max_x = -1, max_y = -1;
+             for (j = 0; j < 18; j += 3)
+               {
+                  if (vertices[j] < min_x) min_x = vertices[j];
+                  if (vertices[j] > max_x) max_x = vertices[j];
+                  if (vertices[j + 1] < min_y) min_y = vertices[j + 1];
+                  if (vertices[j + 1] > max_y) max_y = vertices[j + 1];
+               }
+             aa_x = min_x;
+             aa_y = min_y;
+             aa_w = max_x - min_x;
+             aa_h = max_y - min_y;
+
+             ERR("(%d %d) (%d %d) = (%d %d)", min_x, min_y, max_x, max_y, aa_w, aa_h);
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
              glGetIntegerv(GL_TEXTURE_BINDING_2D, &orig_tex);
              glGetIntegerv(GL_VERTEX_ARRAY, &orig_vert);
-ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
+
              //FBO
              glGenFramebuffers(1, &aa_fbo);
              glBindFramebuffer(GL_FRAMEBUFFER, aa_fbo);
@@ -2794,7 +2844,7 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
                              GL_CLAMP_TO_EDGE);
              glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                              GL_CLAMP_TO_EDGE);
-             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gw, gh, 0,
+             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) gw, (int) gh, 0,
                           GL_RGBA, GL_UNSIGNED_BYTE, 0);
              glBindTexture(GL_TEXTURE_2D, orig_tex);
              glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -2815,7 +2865,7 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
 
              glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-             glViewport(0, 0, gw, gh);
+             glViewport(0, 0, (int) gw, (int) gh);
           }
 #endif
         //Create FrameBuffer for the object
@@ -3389,6 +3439,8 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
 
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
 
+//             glEnable(GL_BLEND);
+//             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
              glDisable(GL_DEPTH_TEST);
              glActiveTexture(GL_TEXTURE0);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
@@ -3409,30 +3461,77 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
                 glGetAttribLocation(shared->shader[SHADER_FILTER_FXAA].prog,
                                     "tex_coord");
 
-             //GLshort vertexPosition[12];
-             GLshort vertexPosition[] = { 1.0f, 1.0f,
-                                          0.75f, 1.0f,
-                                          1.0f, 0.75f,
-                                          0.75f, 0.75f};
-             float textureCoord[] = { 1.0f, 0.0f,
-                                      0.0f, 0.0f,
-                                      1.0f, 1.0f,
-                                      0.0f, 1.0f };
+             GLshort vertexPosition[18];
+             float textureCoord[12];
+/*
+             vertexPosition[0] = aa_x;
+             vertexPosition[1] = aa_y;
+             vertexPosition[2] = 0;
 
-/*             vertexPosition[0] = pp[0];
-             vertexPosition[1] = pp[1];
-             vertexPosition[2] = pp[2];
-             vertexPosition[2] = pp[3];
-             vertexPosition[3] = pp[4];
-             vertexPosition[5] = pp[5];
-             vertexPosition[4] = pp[6];
-             vertexPosition[5] = pp[7];
-             vertexPosition[8] = pp[8];
-             vertexPosition[6] = pp[9];
-             vertexPosition[7] = pp[10];
-             vertexPosition[11] = pp[11];
+             vertexPosition[3] = aa_x + aa_w;
+             vertexPosition[4] = aa_y;
+             vertexPosition[5] = 0;
+
+             vertexPosition[6] = aa_x + aa_w;
+             vertexPosition[7] = aa_y + aa_h;
+             vertexPosition[8] = 0;
+
+             vertexPosition[9] = aa_x;
+             vertexPosition[10] = aa_y;
+             vertexPosition[11] = 0;
+
+             vertexPosition[12] = aa_x;
+             vertexPosition[13] = aa_y + aa_h;
+             vertexPosition[14] = 0;
+
+             vertexPosition[15] = aa_x + aa_w;
+             vertexPosition[16] = aa_y;
+             vertexPosition[17] = 0;
 */
-             glVertexAttribPointer(vertex, 2, GL_SHORT, GL_FALSE, 0,
+             vertexPosition[0] = 0;
+             vertexPosition[1] = 0;
+             vertexPosition[2] = 0;
+
+             vertexPosition[3] = gw;
+             vertexPosition[4] = 0;
+             vertexPosition[5] = 0;
+
+             vertexPosition[6] = gw;
+             vertexPosition[7] = gh;
+             vertexPosition[8] = 0;
+
+             vertexPosition[9] = 0;
+             vertexPosition[10] = 0;
+             vertexPosition[11] = 0;
+
+             vertexPosition[12] = gw;
+             vertexPosition[13] = gh;
+             vertexPosition[14] = 0;
+
+             vertexPosition[15] = 0;
+             vertexPosition[16] = gh;
+             vertexPosition[17] = 0;
+
+
+             textureCoord[0] = 0.0f;
+             textureCoord[1] = 1.0f;
+
+             textureCoord[2] = 1.0f;
+             textureCoord[3] = 1.0f;
+
+             textureCoord[4] = 1.0f;
+             textureCoord[5] = 0.0f;
+
+             textureCoord[6] = 0.0f;
+             textureCoord[7] = 1.0f;
+
+             textureCoord[8] = 1.0f;
+             textureCoord[9] = 0.0f;
+
+             textureCoord[10] = 0.0f;
+             textureCoord[11] = 0.0f;
+
+             glVertexAttribPointer(vertex, 3, GL_SHORT, GL_FALSE, 0,
                                    vertexPosition);
              glVertexAttribPointer(tex_coord, 2, GL_FLOAT, GL_FALSE, 0,
                                    textureCoord);
@@ -3443,7 +3542,7 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
   //           glDisableVertexAttribArray(SHAD_TEXUV2);
     //         glDisableVertexAttribArray(SHAD_TEXUV3);
 
-             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+             glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 
 //             if (!orig_vert) glDisableVertexAttribArray(vertex);
   //           if (!orig_tex) glDisableVertexAttribArray(tex_coord);
@@ -3456,6 +3555,7 @@ ERR("FRAME BUFFER = %d %d %d %d", orig_fbo,orig_rbo, orig_tex, orig_vert);
              glBindTexture(GL_TEXTURE_2D, orig_tex);
              glBindRenderbuffer(GL_RENDERBUFFER, orig_rbo);
 
+             glViewport(0, 0, gw, gh);
           }
 
         gc->state.current.cur_prog  = gc->pipe[i].shader.cur_prog;
