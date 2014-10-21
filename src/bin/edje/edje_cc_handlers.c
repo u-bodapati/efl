@@ -4200,19 +4200,74 @@ ob_collections_group_parts_part(void)
 }
 
 static void *
-_part_desc_free(Edje_Part_Description_Common *ed)
+_part_desc_free(Edje_Part_Collection *pc,
+                Edje_Part *ep,
+                Edje_Part_Description_Common *ed)
 {
    if (!ed) return NULL;
+
+   part_lookup_del(pc, &(ed->rel1.id_x));
+   part_lookup_del(pc, &(ed->rel1.id_y));
+   part_lookup_del(pc, &(ed->rel2.id_x));
+   part_lookup_del(pc, &(ed->rel2.id_y));
+   part_lookup_del(pc, &(ed->map.id_persp));
+   part_lookup_del(pc, &(ed->map.id_light));
+   part_lookup_del(pc, &(ed->map.rot.id_center));
+
+   switch (ep->type)
+     {
+      case EDJE_PART_TYPE_SPACER:
+      case EDJE_PART_TYPE_RECTANGLE:
+      case EDJE_PART_TYPE_SWALLOW:
+      case EDJE_PART_TYPE_GROUP:
+         /* Nothing todo, this part only have a common description. */
+         break;
+      case EDJE_PART_TYPE_BOX:
+      case EDJE_PART_TYPE_TABLE:
+      case EDJE_PART_TYPE_IMAGE:
+         /* Nothing todo here */
+         break;
+      case EDJE_PART_TYPE_TEXT:
+      case EDJE_PART_TYPE_TEXTBLOCK:
+        {
+           Edje_Part_Description_Text *ted = (Edje_Part_Description_Text*) ed;
+
+           part_lookup_del(pc, &(ted->text.id_source));
+           part_lookup_del(pc, &(ted->text.id_text_source));
+           break;
+        }
+      case EDJE_PART_TYPE_PROXY:
+        {
+           Edje_Part_Description_Proxy *ped = (Edje_Part_Description_Proxy*) ed;
+
+           part_lookup_del(pc, &(ped->proxy.id));
+           break;
+        }
+     }
+
    free((void*)ed->state.name);
    free(ed);
    return NULL;
 }
 
 static void *
-_part_free(Edje_Part *ep)
+_part_free(Edje_Part_Collection *pc, Edje_Part *ep)
 {
    Edje_Part_Parser *epp = (Edje_Part_Parser*)ep;
    unsigned int j;
+
+   part_lookup_del(pc, &(ep->clip_to_id));
+   part_lookup_del(pc, &(ep->dragable.confine_id));
+   part_lookup_del(pc, &(ep->dragable.threshold_id));
+   part_lookup_del(pc, &(ep->dragable.event_id));
+
+   _part_desc_free(pc, ep, ep->default_desc);
+   for (j = 0 ; j < ep->other.desc_count ; j++)
+     _part_desc_free(pc, ep, ep->other.desc[j]);
+
+   for (j = 0 ; j < ep->items_count ; j++)
+     free(ep->items[j]);
+   free(ep->items);
 
    free((void*)ep->name);
    free((void*)ep->source);
@@ -4225,16 +4280,9 @@ _part_free(Edje_Part *ep)
    free((void*)epp->reorder.insert_before);
    free((void*)epp->reorder.insert_after);
 
-   for (j = 0 ; j < ep->items_count ; j++)
-     free(ep->items[j]);
-   free(ep->items);
-
    free((void*)ep->api.name);
    free((void*)ep->api.description);
 
-   _part_desc_free(ep->default_desc);
-   for (j = 0 ; j < ep->other.desc_count ; j++)
-     _part_desc_free(ep->other.desc[j]);
    free(ep->other.desc);
    free(ep);
    return NULL;
@@ -4278,7 +4326,7 @@ st_collections_group_parts_part_inherit(void)
           }
         pname = current_part->name;
         current_part->name = NULL;
-        current_part = _part_free(current_part);
+        current_part = _part_free(pc, current_part);
         edje_cc_handlers_part_make(id);
         _part_copy(current_part, pc->parts[i]);
         free((void*)current_part->name);
@@ -4472,7 +4520,7 @@ st_collections_group_part_remove(void)
 
              if (strcmp(pc->parts[j]->name, name)) continue;
 
-             pc->parts[j] = _part_free(pc->parts[j]);
+             pc->parts[j] = _part_free(pc, pc->parts[j]);
              for (i = j; i < pc->parts_count - 1; i++)
                {
                   if (!pc->parts[i + 1]) break;
