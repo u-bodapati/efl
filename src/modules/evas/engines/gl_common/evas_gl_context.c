@@ -2724,6 +2724,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
    unsigned int pipe_done = 0;  //count pipe iteration for debugging
    Eina_Bool setclip;
    Eina_Bool fbo = EINA_FALSE;
+
    Eina_Bool anti_alias = EINA_FALSE;
 
    GLuint aa_fbo;

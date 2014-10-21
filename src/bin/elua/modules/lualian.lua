@@ -132,19 +132,46 @@ local Node = util.Object:clone {
 
     gen_children = function(self, s)
         local len = #self.children
-        local evs =  self.events
+
+        local evs = self.events
         local evslen
         if evs then evslen = #evs end
         local hasevs = evs and evslen > 0
+
+        local hasprops = false
+        local nprops = 0
+        local props = {}
+
         for i, v in ipairs(self.children) do
             v.parent_node = self
-            v:generate(s, (not hasevs) and (i == len))
+            if v.generate_prop then
+                if v:generate_prop(props) then
+                    nprops = nprops + 1
+                end
+                hasprops = true
+            end
+            v:generate(s, (not hasevs) and (not hasprops) and (i == len))
         end
+
         if hasevs then
             s:write("    __events = {\n")
             for i, v in ipairs(evs) do
                 v.parent_node = self
                 v:generate(s, i == evslen)
+            end
+            s:write("    }", hasprops and "," or "", "\n")
+        end
+
+        if hasprops then
+            if hasevs then
+                s:write("\n")
+            end
+            s:write("    __properties = {\n")
+            local pi = 0
+            for k, v in pairs(props) do
+                pi = pi + 1
+                s:write("        [\"", k, "\"] = { ", table.concat(v, ", "),
+                    " }", pi ~= nprops and "," or "", "\n")
             end
             s:write("    }\n")
         end
@@ -255,7 +282,9 @@ local Property = Method:clone {
 
         local proto = {
             name    = prop:name_get(),
-            suffix  = (self.isget and "_get" or "_set")
+            suffix  = (self.isget and "_get" or "_set"),
+            nkeys   = #keys,
+            nvals   = #vals
         }
         proto.ret_type = rett and rett:c_type_get() or "void"
         local args, cargs, vargs = { "self" }, {}, {}
@@ -271,16 +300,14 @@ local Property = Method:clone {
 
         local fulln = proto.full_name
         if #keys > 0 then
-            local argn = (#keys > 1) and "keys" or "key"
             for i, v in ipairs(keys) do
                 local nm  = kw_t(v:name_get())
                 local tps = v:type_get()
                 local tp  = tps:c_type_get()
-                cargs [#cargs  + 1] = tp .. " " .. nm
-                vargs [#vargs  + 1] = typeconv(tps, argn .. "[" .. i
-                    .. "]", true)
+                args [#args  + 1] = nm
+                cargs[#cargs + 1] = tp .. " " .. nm
+                vargs[#vargs + 1] = typeconv(tps, nm, true)
             end
-            args[#args + 1] = argn
         end
         proto.kprop = #keys > 0
 
@@ -302,15 +329,13 @@ local Property = Method:clone {
                     end
                 end
             else
-                local argn = (#keys > 1) and "vals" or "val"
-                args[#args + 1] = argn
                 for i, v in ipairs(vals) do
                     local dir, tps, nm = v:direction_get(), v:type_get(),
                         kw_t(v:name_get())
                     local tp = tps:c_type_get()
+                    args [#args  + 1] = nm
                     cargs[#cargs + 1] = tp .. " " .. nm
-                    vargs[#vargs + 1] = typeconv(tps, argn .. "[" .. i .. "]",
-                        true)
+                    vargs[#vargs + 1] = typeconv(tps, nm, true)
                 end
             end
         end
@@ -320,6 +345,23 @@ local Property = Method:clone {
         self.cached_proto = proto
 
         return proto
+    end,
+
+    generate_prop = function(self, props)
+        local proto = self:gen_proto()
+        local prop = props[proto.name]
+        if prop then
+            if self.isget then
+                prop[3] = "true"
+            else
+                prop[4] = "true"
+            end
+            return false
+        else
+            props[proto.name] = { proto.nkeys, math.max(proto.nvals, 1),
+                tostring(self.isget), tostring(not self.isget) }
+            return true
+        end
     end
 }
 

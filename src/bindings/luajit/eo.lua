@@ -108,6 +108,13 @@ ffi.cdef [[
     const Eo_Class *eo_base_class_get(void);
 ]]
 
+local addr_d = ffi.typeof("union { double d; const Eo_Class *p; }")
+local eo_class_addr_get = function(x)
+    local v = addr_d()
+    v.p = x
+    return tonumber(v.d)
+end
+
 local cutil = require("cutil")
 local util  = require("util")
 
@@ -121,6 +128,8 @@ local eo_classes = {}
 local init = function()
     eo = util.lib_load("eo")
     eo.eo_init()
+    local eocl = eo.eo_base_class_get()
+    local addr = eo_class_addr_get(eocl)
     classes["Eo_Base"] = util.Object:clone {
         connect = function(self, ename, func)
             local ev = self.__events[ename]
@@ -140,11 +149,13 @@ local init = function()
         __events = util.Object:clone {},
         __properties = util.Object:clone {}
     }
-    eo_classes["Eo_Base"] = eo.eo_base_class_get()
+    classes[addr] = classes["Eo_Base"]
+    eo_classes["Eo_Base"] = eocl
+    eo_classes[addr] = eocl
 end
 
 local shutdown = function()
-    M.class_unregister("Eo.Base")
+    M.class_unregister("Eo_Base")
     eo.eo_shutdown()
     util.lib_unload("eo")
 end
@@ -171,17 +182,41 @@ M.class_register = function(name, parent, body, eocl)
     if body.__properties then
         body.__properties = parent.__properties:clone(body.__properties)
     end
+    local addr = eo_class_addr_get(eocl)
     classes[name] = parent:clone(body)
+    classes[addr] = classes[name]
     eo_classes[name] = eocl
+    eo_classes[addr] = eocl
 end
 
 M.class_unregister = function(name)
+    local addr = eo_class_addr_get(eo_classes[name])
     classes[name] = nil
+    classes[addr] = nil
     eo_classes[name] = nil
+    eo_classes[addr] = nil
+end
+
+local mixin_tbl = function(cl, mixin, field)
+    local mxt = mixin[field]
+    if mxt then
+        local clt = cl[field]
+        if not clt then
+            cl[field] = mxt
+        else
+            for k, v in pairs(mxt) do clt[k] = v end
+        end
+        mixin[field] = nil
+    end
 end
 
 M.class_mixin = function(name, mixin)
-    classes[name]:mixin(classes[mixin])
+    local cl = classes[name]
+    -- mixin properties/events
+    mixin_tbl(cl, mixin, "__properties")
+    mixin_tbl(cl, mixin, "__events")
+    -- mixin the rest
+    cl:mixin(classes[mixin])
 end
 
 local obj_gccb = function(obj)
@@ -219,30 +254,97 @@ M.__do_end = function()
                        -- only for cleanup (dtor)
 end
 
-ffi.metatype("Eo", {
+local get_obj_mt = function(obj)
+    local cl = eo.eo_class_get(obj)
+    if cl == nil then return nil end
+    return classes[eo_class_addr_get(cl)]
+end
+
+local prop_proxy_meta = {
     __index = function(self, key)
-        local cl = eo.eo_class_get(self)
-        if cl == nil then return nil end
-        local nm = eo.eo_class_name_get(cl)
-        if nm == nil then return nil end
-        local mt = classes[ffi.string(nm)]
-        if mt == nil then return nil end
-        return mt[key]
+        if self.nkeys > 1 and type(key) == "table" then
+            if self.nvals > 1 then
+                return { self(unpack(key)) }
+            else
+                return self(unpack(key))
+            end
+        else
+            if self.nvals > 1 then
+                return { self(key) }
+            else
+                return self(key)
+            end
+        end
     end,
 
     __newindex = function(self, key, val)
-        local cl = eo.eo_class_get(self)
-        if cl == nil then return nil end
-        local nm = eo.eo_class_name_get(cl)
-        if nm == nil then return nil end
-        local mt = classes[ffi.string(nm)]
+        local nkeys = self.nkeys
+        if nkeys > 1 then
+            -- ultra slow path, q66 failed optimizing this
+            local atbl
+            if type(key) == "table" then
+                atbl = { unpack(key) }
+            else
+                atbl = { key }
+            end
+            if self.nvals > 1 and type(val) == "table" then
+                for i, v in ipairs(val) do atbl[nkeys + i] = v end
+            else
+                atbl[nkeys + 1] = val
+            end
+            self.mt[self.key .. "_set"](self.obj, unpack(atbl))
+        else
+            if self.nvals > 1 and type(val) == "table" then
+                -- somewhat less slow but still slow path
+                self.mt[self.key .. "_set"](self.obj, key, unpack(val))
+            else
+                -- least slow, no unpacks, no temporaries, just proxy
+                self.mt[self.key .. "_set"](self.obj, key, val)
+            end
+        end
+    end,
+
+    -- provides alt syntax for getters with keys
+    __call = function(self, ...)
+        return self.mt[self.key .. "_get"](self.obj, ...)
+    end
+}
+
+ffi.metatype("Eo", {
+    __index = function(self, key)
+        local mt = get_obj_mt(self)
+        if mt == nil then return nil end
+        local pt = mt.__properties
+        local pp = pt[key]
+        if not pp then
+            return mt[key]
+        end
+        if not pp[3] then
+            error("property '" .. key .. "' is not gettable", 2)
+        end
+        local nkeys, nvals = pp[1], pp[2]
+        if nkeys ~= 0 then
+            -- proxy - slow path... TODO: find a better way
+            return setmetatable({ nkeys = nkeys, nvals = nvals,
+                obj = self, key = key, mt = mt }, prop_proxy_meta)
+        end
+        if nvals > 1 then
+            return { mt[key .. "_get"](self) }
+        else
+            return mt[key .. "_get"](self)
+        end
+    end,
+
+    __newindex = function(self, key, val)
+        local mt = get_obj_mt(self)
+        if mt == nil then return nil end
         local pt = mt.__properties
         local pp = pt[key]
         if not pp then
             error("no such property '" .. key .. "'", 2)
         end
         if not pp[4] then
-            error("property '" .. key .. "' is not settable")
+            error("property '" .. key .. "' is not settable", 2)
         end
         if pp[1] ~= 0 then
             error("property '" .. key .. "' requires " .. pp[1] .. " keys", 2)

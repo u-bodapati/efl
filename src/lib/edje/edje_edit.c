@@ -1500,6 +1500,33 @@ edje_edit_sound_samplebuffer_get(Evas_Object *obj, const char *sample_name)
    return NULL;
 }
 
+EAPI const char *
+edje_edit_sound_samplesource_get(Evas_Object *obj, const char *sample_name)
+{
+   Edje_Sound_Sample *sample;
+   int i;
+
+   if (!sample_name)
+    {
+       ERR("Given Sample Name is NULL");
+       return NULL;
+    }
+
+   GET_ED_OR_RETURN(NULL);
+
+   if ((!ed) || (!ed->file) || (!ed->file->sound_dir))
+     return NULL;
+
+   for(i = 0; i < (int)ed->file->sound_dir->samples_count; i++)
+     {
+        sample = &ed->file->sound_dir->samples[i];
+        if (!strcmp(sample->name, sample_name))
+          return eina_stringshare_add(sample->snd_src);
+     }
+
+   return NULL;
+}
+
 
 /****************/
 /*  GROUPS API  */
@@ -4761,6 +4788,7 @@ _edje_edit_state_alloc(int type, Edje *ed)
 	   }
 
 	 EDIT_ALLOC_POOL(IMAGE, Image, image);
+	 EDIT_ALLOC_POOL(PROXY, Proxy, proxy);
 	 EDIT_ALLOC_POOL(TEXT, Text, text);
 	 EDIT_ALLOC_POOL(TEXTBLOCK, Text, text);
 	 EDIT_ALLOC_POOL(BOX, Box, box);
@@ -7298,6 +7326,10 @@ edje_edit_image_usage_list_get(Evas_Object *obj, const char *name, Eina_Bool fir
    image_id = edje_edit_image_id_get(obj, name);
    if (image_id < 0)
       return NULL;
+
+   if (edje_edit_image_compression_type_get(obj, name) ==
+       EDJE_EDIT_IMAGE_COMP_USER)
+     image_id = -1 - image_id;
 
    it = eina_hash_iterator_data_new(ed->file->collection);
 
