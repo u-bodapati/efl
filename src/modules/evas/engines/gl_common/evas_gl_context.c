@@ -2864,7 +2864,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                   anti_alias = EINA_FALSE;
                }
 
-             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              glViewport(0, 0, (int) gw, (int) gh);
           }
@@ -3440,9 +3440,12 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
 
-//             glEnable(GL_BLEND);
-//             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+             glEnable(GL_BLEND);
+             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
              glDisable(GL_DEPTH_TEST);
+//        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // dest alpha
+  //      glBlendFunc(GL_SRC_ALPHA, GL_ONE); // ???
+
              glActiveTexture(GL_TEXTURE0);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
 
