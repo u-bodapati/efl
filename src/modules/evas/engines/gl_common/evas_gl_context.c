@@ -2537,9 +2537,6 @@ evas_gl_common_context_image_map_push(Evas_Engine_GL_Context *gc,
         gc->change.size = 1;
         _evas_gl_common_viewport_set(gc);
      }
-
-   ERR("%d %d %d %d", x, y, w, h);
-
    pn = _evas_gl_common_context_push(RTYPE_MAP,
                                      gc, tex,
                                      prog,
@@ -2642,11 +2639,6 @@ evas_gl_common_context_image_map_push(Evas_Engine_GL_Context *gc,
                    G_VAL(&cl),
                    B_VAL(&cl),
                    A_VAL(&cl));
-     }
-
-   if (gc->dc->anti_alias)
-     {
-         ERR("AA!!");
      }
 
    if (!flat || gc->dc->anti_alias)
@@ -2755,62 +2747,36 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
          //TODO: Anti Alias is enabled?
          anti_alias = gc->pipe[i].array.anti_alias;
 
-         GLshort *pp = (unsigned char *)gc->pipe[i].array.vertex;
+         GLshort *vertices = (unsigned char *)gc->pipe[i].array.vertex;
 
-         ERR("pipe(%d) aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
+         fprintf(stderr, "pipe(%d) aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
              i,
              anti_alias,
              gc->pipe[i].array.num,
-             (float) pp[0],
-             (float) pp[1],
-             //			  (float) pp[2], 
+             (float) vertices[0],
+             (float) vertices[1],
+             //			  (float) vertices[2], 
 
-             (float) pp[3],
-             (float) pp[4],
-             //			  (float) pp[5], 
+             (float) vertices[3],
+             (float) vertices[4],
+             //			  (float) vertices[5], 
 
-             (float) pp[6],
-             (float) pp[7],
-             //			  (float) pp[8], 
+             (float) vertices[6],
+             (float) vertices[7],
+             //			  (float) vertices[8], 
 
-             (float) pp[9],
-             (float) pp[10],
+             (float) vertices[9],
+             (float) vertices[10],
              
-             (float) pp[12],
-             (float) pp[13],
+             (float) vertices[12],
+             (float) vertices[13],
              
-             (float) pp[15],
-             (float) pp[16]);
-             //			  (float) pp[11]);
+             (float) vertices[15],
+             (float) vertices[16]);
+             //			  (float) vertices[11]);
 
         if (anti_alias)
           {
-             GLshort vertices[18];
-
-             vertices[0] = pp[0];
-             vertices[1] = pp[1];
-             vertices[2] = pp[2];
-
-             vertices[3] = pp[3];
-             vertices[4] = pp[4];
-             vertices[5] = pp[5];
-
-             vertices[6] = pp[6];
-             vertices[7] = pp[7];
-             vertices[8] = pp[8];
-
-             vertices[9] = pp[9];
-             vertices[10] = pp[10];
-             vertices[11] = pp[11];
-
-             vertices[12] = pp[12];
-             vertices[13] = pp[13];
-             vertices[14] = pp[14];
-
-             vertices[15] = pp[15];
-             vertices[16] = pp[16];
-             vertices[17] = pp[17];
-
              int j;
              GLshort min_x = gw, min_y = gh;
              GLshort max_x = -1, max_y = -1;
@@ -2826,7 +2792,26 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              aa_w = max_x - min_x;
              aa_h = max_y - min_y;
 
-             ERR("(%d %d) (%d %d) = (%d %d)", min_x, min_y, max_x, max_y, aa_w, aa_h);
+				 vertices[0] -= aa_x;
+				 vertices[1] += (gh/2 - aa_y - 8);
+
+				 vertices[3] -= aa_x;
+				 vertices[4] += (gh/2 - aa_y - 8);
+
+				 vertices[6] -= aa_x;
+				 vertices[7] += (gh/2 - aa_y - 8);
+
+				 vertices[9] -= aa_x;
+				 vertices[10] += (gh/2 - aa_y - 8);
+
+				 vertices[12] -= aa_x;
+				 vertices[13] += (gh/2 - aa_y - 8);
+
+				 vertices[15] -= aa_x;
+				 vertices[16] += (gh/2 - aa_y - 8);
+
+				 fprintf(stderr, "%d %d %d\n", gh/2 - aa_y - 8, gh/2, aa_y);
+             fprintf(stderr, "min(%d %d) max(%d %d) = wh(%d %d)\n", min_x, min_y, max_x, max_y, aa_w, aa_h);
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
              glGetIntegerv(GL_TEXTURE_BINDING_2D, &orig_tex);
@@ -2836,7 +2821,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              glGenFramebuffers(1, &aa_fbo);
              glBindFramebuffer(GL_FRAMEBUFFER, aa_fbo);
 
-             //Texture
+             ///Texture
              glGenTextures(1, &aa_tex);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
              glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -2845,7 +2830,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                              GL_CLAMP_TO_EDGE);
              glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                              GL_CLAMP_TO_EDGE);
-             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) gw, (int) gh, 0,
+             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) aa_w, (int) aa_h, 0,
                           GL_RGBA, GL_UNSIGNED_BYTE, 0);
              glBindTexture(GL_TEXTURE_2D, orig_tex);
              glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -2864,9 +2849,9 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                   anti_alias = EINA_FALSE;
                }
 
-             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-             glViewport(0, 0, (int) gw, (int) gh);
+             glViewport(0, 0, (int) aa_w, (int) aa_h);
           }
 #endif
         //Create FrameBuffer for the object
@@ -3440,11 +3425,11 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
 
-             glEnable(GL_BLEND);
-             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-             glDisable(GL_DEPTH_TEST);
-//        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // dest alpha
-  //      glBlendFunc(GL_SRC_ALPHA, GL_ONE); // ???
+//             glEnable(GL_BLEND);
+ //          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+//             glDisable(GL_DEPTH_TEST);
+//           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // dest alpha
+  //           glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA); // ???
 
              glActiveTexture(GL_TEXTURE0);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
@@ -3467,7 +3452,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              GLshort vertexPosition[18];
              float textureCoord[12];
-/*
+
              vertexPosition[0] = aa_x;
              vertexPosition[1] = aa_y;
              vertexPosition[2] = 0;
@@ -3484,36 +3469,12 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              vertexPosition[10] = aa_y;
              vertexPosition[11] = 0;
 
-             vertexPosition[12] = aa_x;
+             vertexPosition[12] = aa_x + aa_w;
              vertexPosition[13] = aa_y + aa_h;
              vertexPosition[14] = 0;
 
-             vertexPosition[15] = aa_x + aa_w;
-             vertexPosition[16] = aa_y;
-             vertexPosition[17] = 0;
-*/
-             vertexPosition[0] = 0;
-             vertexPosition[1] = 0;
-             vertexPosition[2] = 0;
-
-             vertexPosition[3] = gw;
-             vertexPosition[4] = 0;
-             vertexPosition[5] = 0;
-
-             vertexPosition[6] = gw;
-             vertexPosition[7] = gh;
-             vertexPosition[8] = 0;
-
-             vertexPosition[9] = 0;
-             vertexPosition[10] = 0;
-             vertexPosition[11] = 0;
-
-             vertexPosition[12] = gw;
-             vertexPosition[13] = gh;
-             vertexPosition[14] = 0;
-
-             vertexPosition[15] = 0;
-             vertexPosition[16] = gh;
+             vertexPosition[15] = aa_x;
+             vertexPosition[16] = aa_y + aa_h;
              vertexPosition[17] = 0;
 
 

@@ -1650,7 +1650,7 @@ evas_render_updates_internal(Evas *eo_e,
 
    e = eo_data_scope_get(eo_e, EVAS_CANVAS_CLASS);
    if (!e->changed) return EINA_FALSE;
-ERR("-----------------------------------------------------------");
+fprintf(stderr, "-----------------------------------------------------------\n");
    if (e->rendering)
      {
         if (do_async)
