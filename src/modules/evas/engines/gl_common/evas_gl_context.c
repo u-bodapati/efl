@@ -2793,24 +2793,23 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              aa_h = max_y - min_y;
 
 				 vertices[0] -= aa_x;
-				 vertices[1] += (gh/2 - aa_y - 8);
+				 vertices[1] -= (aa_y);
 
 				 vertices[3] -= aa_x;
-				 vertices[4] += (gh/2 - aa_y - 8);
+				 vertices[4] -= (aa_y);
 
 				 vertices[6] -= aa_x;
-				 vertices[7] += (gh/2 - aa_y - 8);
+				 vertices[7] -= (aa_y);
 
 				 vertices[9] -= aa_x;
-				 vertices[10] += (gh/2 - aa_y - 8);
+				 vertices[10] -= (aa_y);
 
 				 vertices[12] -= aa_x;
-				 vertices[13] += (gh/2 - aa_y - 8);
+				 vertices[13] -= (aa_y);
 
 				 vertices[15] -= aa_x;
-				 vertices[16] += (gh/2 - aa_y - 8);
-
-				 fprintf(stderr, "%d %d %d\n", gh/2 - aa_y - 8, gh/2, aa_y);
+				 vertices[16] -= (aa_y);
+fprintf(stderr, "????\n");
              fprintf(stderr, "min(%d %d) max(%d %d) = wh(%d %d)\n", min_x, min_y, max_x, max_y, aa_w, aa_h);
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
@@ -2849,9 +2848,17 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                   anti_alias = EINA_FALSE;
                }
 
-             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+             glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              glViewport(0, 0, (int) aa_w, (int) aa_h);
+
+             GLfloat proj[16];
+             matrix_ortho(proj,
+                          0, aa_w, 0, aa_h,
+                          -1000000.0, 1000000.0,
+                          0, aa_w, aa_h,
+                          1, 1.0);
+             glUniformMatrix4fv(glGetUniformLocation(gc->pipe[i].shader.cur_prog, "mvp"), 1, GL_FALSE, proj);
           }
 #endif
         //Create FrameBuffer for the object
@@ -3425,6 +3432,22 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
 
+				 fprintf(stderr, "%d %d\n", gw, gh);
+             glViewport(0, 0, (int) gw, (int) gh);
+
+
+				 GLfloat proj[16];
+         matrix_ortho(proj,
+                        0, gw, 0, gh,
+                        -1000000.0, 1000000.0,
+                        0, gw, gh,
+                        1, 1.0);
+        glUniformMatrix4fv(glGetUniformLocation(shared->shader[SHADER_FILTER_FXAA].prog, "mvp"), 1, GL_FALSE, proj);
+
+  
+
+
+
 //             glEnable(GL_BLEND);
  //          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 //             glDisable(GL_DEPTH_TEST);
@@ -3441,7 +3464,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              loc_res =
                 glGetUniformLocation(shared->shader[SHADER_FILTER_FXAA].prog,
                                             "resolution");
-             glUniform2f(loc_res, (float) gw, (float) gh);
+             glUniform2f(loc_res, (float) aa_w, (float) aa_h);
 
              int vertex =
                 glGetAttribLocation(shared->shader[SHADER_FILTER_FXAA].prog,
@@ -3519,8 +3542,6 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              glUseProgram(gc->pipe[i].shader.cur_prog);
              glBindTexture(GL_TEXTURE_2D, orig_tex);
              glBindRenderbuffer(GL_RENDERBUFFER, orig_rbo);
-
-             glViewport(0, 0, gw, gh);
           }
 
         gc->state.current.cur_prog  = gc->pipe[i].shader.cur_prog;
