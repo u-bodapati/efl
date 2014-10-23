@@ -15,8 +15,8 @@ uniform sampler2D uSourceTex;
 
 void main() {
 
-       gl_FragColor = texture2D(uSourceTex, vTexCoord.xy);
-       return;
+     //  gl_FragColor = texture2D(uSourceTex, vTexCoord.xy);
+     //  return;
 
      float FXAA_SPAN_MAX = 8.0;
      float FXAA_REDUCE_MUL = 1.0/8.0;
