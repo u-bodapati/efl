@@ -2743,7 +2743,6 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
      {
         if (gc->pipe[i].array.num <= 0) break;
 
-#if 1
          //TODO: Anti Alias is enabled?
          anti_alias = gc->pipe[i].array.anti_alias;
 
@@ -2792,25 +2791,24 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              aa_w = max_x - min_x;
              aa_h = max_y - min_y;
 
-				 vertices[0] -= aa_x;
-				 vertices[1] -= (aa_y);
+             vertices[0] -= aa_x;
+             vertices[1] -= (aa_y);
 
-				 vertices[3] -= aa_x;
-				 vertices[4] -= (aa_y);
+             vertices[3] -= aa_x;
+             vertices[4] -= (aa_y);
 
-				 vertices[6] -= aa_x;
-				 vertices[7] -= (aa_y);
+             vertices[6] -= aa_x;
+             vertices[7] -= (aa_y);
 
-				 vertices[9] -= aa_x;
-				 vertices[10] -= (aa_y);
+             vertices[9] -= aa_x;
+             vertices[10] -= (aa_y);
 
-				 vertices[12] -= aa_x;
-				 vertices[13] -= (aa_y);
+             vertices[12] -= aa_x;
+             vertices[13] -= (aa_y);
 
-				 vertices[15] -= aa_x;
-				 vertices[16] -= (aa_y);
-fprintf(stderr, "????\n");
-             fprintf(stderr, "min(%d %d) max(%d %d) = wh(%d %d)\n", min_x, min_y, max_x, max_y, aa_w, aa_h);
+             vertices[15] -= aa_x;
+             vertices[16] -= (aa_y);
+
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
              glGetIntegerv(GL_TEXTURE_BINDING_2D, &orig_tex);
@@ -2823,11 +2821,11 @@ fprintf(stderr, "????\n");
              ///Texture
              glGenTextures(1, &aa_tex);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
-             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                              GL_CLAMP_TO_EDGE);
-             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                              GL_CLAMP_TO_EDGE);
              glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) aa_w, (int) aa_h, 0,
                           GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -2835,12 +2833,12 @@ fprintf(stderr, "????\n");
              glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, aa_tex, 0);
              //RenderBuffer
-             glGenRenderbuffers(1, &aa_rbo);
+/*             glGenRenderbuffers(1, &aa_rbo);
              glBindRenderbuffer(GL_RENDERBUFFER, aa_rbo);
              glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
                                    GL_RENDERBUFFER, aa_rbo);
              glBindRenderbuffer(GL_RENDERBUFFER, orig_rbo);
-
+*/
              if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
                  GL_FRAMEBUFFER_COMPLETE)
                {
@@ -2848,21 +2846,25 @@ fprintf(stderr, "????\n");
                   anti_alias = EINA_FALSE;
                }
 
-             glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              glViewport(0, 0, (int) aa_w, (int) aa_h);
 
              GLfloat proj[16];
              matrix_ortho(proj,
-                          0, aa_w, 0, aa_h,
+                          0, (float) aa_w, 0, (float) aa_h,
                           -1000000.0, 1000000.0,
                           0, aa_w, aa_h,
                           1, 1.0);
+
+             if (gc->pipe[i].shader.cur_prog != gc->state.current.cur_prog)
+               {
+                  glUseProgram(gc->pipe[i].shader.cur_prog);
+                  GLERR(__FUNCTION__, __FILE__, __LINE__, "");
+               }
+
              glUniformMatrix4fv(glGetUniformLocation(gc->pipe[i].shader.cur_prog, "mvp"), 1, GL_FALSE, proj);
           }
-#endif
-        //Create FrameBuffer for the object
-        //Enable Framebuffer to render target
 
         setclip = EINA_FALSE;
         pipe_done++;
@@ -3429,7 +3431,6 @@ fprintf(stderr, "????\n");
              GLuint loc_tex, loc_res;
 
              glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
-
              glUseProgram(shared->shader[SHADER_FILTER_FXAA].prog);
 
 				 fprintf(stderr, "%d %d\n", gw, gh);
@@ -3444,15 +3445,9 @@ fprintf(stderr, "????\n");
                         1, 1.0);
         glUniformMatrix4fv(glGetUniformLocation(shared->shader[SHADER_FILTER_FXAA].prog, "mvp"), 1, GL_FALSE, proj);
 
-  
-
-
-
-//             glEnable(GL_BLEND);
- //          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-//             glDisable(GL_DEPTH_TEST);
-//           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // dest alpha
-  //           glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA); // ???
+             glEnable(GL_BLEND);
+             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+             glDisable(GL_DEPTH_TEST);
 
              glActiveTexture(GL_TEXTURE0);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
@@ -3474,8 +3469,8 @@ fprintf(stderr, "????\n");
                                     "tex_coord");
 
              GLshort vertexPosition[18];
-             float textureCoord[12];
-
+             float textureCoord[12] = { 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+                                        0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f };
              vertexPosition[0] = aa_x;
              vertexPosition[1] = aa_y;
              vertexPosition[2] = 0;
@@ -3500,25 +3495,6 @@ fprintf(stderr, "????\n");
              vertexPosition[16] = aa_y + aa_h;
              vertexPosition[17] = 0;
 
-
-             textureCoord[0] = 0.0f;
-             textureCoord[1] = 1.0f;
-
-             textureCoord[2] = 1.0f;
-             textureCoord[3] = 1.0f;
-
-             textureCoord[4] = 1.0f;
-             textureCoord[5] = 0.0f;
-
-             textureCoord[6] = 0.0f;
-             textureCoord[7] = 1.0f;
-
-             textureCoord[8] = 1.0f;
-             textureCoord[9] = 0.0f;
-
-             textureCoord[10] = 0.0f;
-             textureCoord[11] = 0.0f;
-
              glVertexAttribPointer(vertex, 3, GL_SHORT, GL_FALSE, 0,
                                    vertexPosition);
              glVertexAttribPointer(tex_coord, 2, GL_FLOAT, GL_FALSE, 0,
@@ -3526,14 +3502,17 @@ fprintf(stderr, "????\n");
              glEnableVertexAttribArray(vertex);
              glEnableVertexAttribArray(tex_coord);
 
-//             glDisableVertexAttribArray(SHAD_TEXUV);
-  //           glDisableVertexAttribArray(SHAD_TEXUV2);
-    //         glDisableVertexAttribArray(SHAD_TEXUV3);
+             //glDisableVertexAttribArray(SHAD_TEXUV);
+             glDisableVertexAttribArray(SHAD_TEXUV2);
+             glDisableVertexAttribArray(SHAD_TEXUV3);
+             glDisableVertexAttribArray(SHAD_COLOR);
+             glDisableVertexAttribArray(SHAD_TEXA);
+             glDisableVertexAttribArray(SHAD_TEXSAM);
 
-             glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-//             if (!orig_vert) glDisableVertexAttribArray(vertex);
-  //           if (!orig_tex) glDisableVertexAttribArray(tex_coord);
+             if (!orig_vert) glDisableVertexAttribArray(vertex);
+             if (!orig_tex) glDisableVertexAttribArray(tex_coord);
 
              glDeleteFramebuffers(1, &aa_fbo);
              glDeleteTextures(1, &aa_tex);
