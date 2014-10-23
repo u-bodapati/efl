@@ -3173,10 +3173,13 @@ evas_object_image_render(Evas_Object *eo_obj, Evas_Object_Protected_Data *obj, v
         if ((obj->map->cur.map) && (obj->map->cur.map->count > 3) && (obj->map->cur.usemap))
           {
              evas_object_map_update(eo_obj, x, y, imagew, imageh, uvw, uvh);
+             ERR("before render map!");
 
              evas_draw_image_map_async_check(
                  obj, output, context, surface, pixels, obj->map->spans,
                  o->cur->smooth_scale | obj->map->cur.map->smooth, 0, do_async);
+             ERR("after render map!");
+
           }
         else
           {
