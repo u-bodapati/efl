@@ -2762,9 +2762,70 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
          anti_alias = gc->pipe[i].array.anti_alias;
 
          GLshort *vertices = (unsigned char *)gc->pipe[i].array.vertex;
+/*
+         fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
+             anti_alias,
+             gc->pipe[i].array.num,
+             (float) vertices[0],
+             (float) vertices[1],
+             (float) vertices[3],
+             (float) vertices[4],
+             (float) vertices[6],
+             (float) vertices[7],
+             (float) vertices[9],
+             (float) vertices[10],
+             (float) vertices[12],
+             (float) vertices[13],
+             (float) vertices[15],
+             (float) vertices[16]);
+*/
+         //hermet
+        if (anti_alias)
+          {
+             int j;
+             GLshort min_x = gw, min_y = gh;
+             GLshort max_x = -1, max_y = -1;
+             for (j = 0; j < 18; j += 3)
+               {
+                  if (vertices[j] < min_x) min_x = vertices[j];
+                  if (vertices[j] > max_x) max_x = vertices[j];
+                  if (vertices[j + 1] < min_y) min_y = vertices[j + 1];
+                  if (vertices[j + 1] > max_y) max_y = vertices[j + 1];
+               }
 
-         fprintf(stderr, "pipe(%d) aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
-             i,
+             aa_x = min_x;
+             aa_y = min_y;
+             aa_w = max_x - min_x;
+             aa_h = max_y - min_y;
+
+if (gc->shared->foc)
+  {
+     aa_y = gh - (aa_y + aa_h);
+  }
+
+
+fprintf(stderr, "foc(%d) min(%d %d) max(%d %d) pos(%d %d) size(%d %d)\n", gc->shared->foc, min_x, min_y, max_x, max_y, aa_x, aa_y, aa_w, aa_h);
+
+             vertices[0] -= aa_x;
+             vertices[1] -= (aa_y + 250);
+
+             vertices[3] -= aa_x;
+             vertices[4] -= (aa_y + 250);
+
+             vertices[6] -= aa_x;
+             vertices[7] -= (aa_y + 250);
+
+             vertices[9] -= aa_x;
+             vertices[10] -= (aa_y + 250);
+
+             vertices[12] -= aa_x;
+             vertices[13] -= (aa_y + 250);
+
+             vertices[15] -= aa_x;
+             vertices[16] -= (aa_y + 250);
+
+
+         fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
              anti_alias,
              gc->pipe[i].array.num,
              (float) vertices[0],
@@ -2780,46 +2841,6 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              (float) vertices[15],
              (float) vertices[16]);
 
-         //hermet
-        if (anti_alias)
-          {
-             int j;
-             GLshort min_x = gw, min_y = gh;
-             GLshort max_x = -1, max_y = -1;
-             for (j = 0; j < 18; j += 3)
-               {
-                  if (vertices[j] < min_x) min_x = vertices[j];
-                  if (vertices[j] > max_x) max_x = vertices[j];
-                  if (vertices[j + 1] < min_y) min_y = vertices[j + 1];
-                  if (vertices[j + 1] > max_y) max_y = vertices[j + 1];
-               }
-             aa_x = min_x;
-             aa_y = min_y;
-             aa_w = max_x - min_x;
-             aa_h = max_y - min_y;
-
-fprintf(stderr, "foc(%d) min(%d %d) max(%d %d) size(%d %d)\n", gc->shared->foc, min_x, min_y, max_x, max_y, aa_w, aa_h);
-if (gc->shared->foc == 0)
-  {
-             vertices[0] -= aa_x;
-             vertices[1] -= (aa_y);
-
-             vertices[3] -= aa_x;
-             vertices[4] -= (aa_y);
-
-             vertices[6] -= aa_x;
-             vertices[7] -= (aa_y);
-
-             vertices[9] -= aa_x;
-             vertices[10] -= (aa_y);
-
-             vertices[12] -= aa_x;
-             vertices[13] -= (aa_y);
-
-             vertices[15] -= aa_x;
-             vertices[16] -= (aa_y);
-  }
-
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
              glGetIntegerv(GL_TEXTURE_BINDING_2D, &orig_tex);
@@ -2829,7 +2850,7 @@ if (gc->shared->foc == 0)
              glGenFramebuffers(1, &aa_fbo);
              glBindFramebuffer(GL_FRAMEBUFFER, aa_fbo);
 
-             ///Texture
+             //Texture
              glGenTextures(1, &aa_tex);
              glBindTexture(GL_TEXTURE_2D, aa_tex);
              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -2865,9 +2886,10 @@ if (gc->shared->foc == 0)
 
              if (gc->shared->foc)
                {
-                  int px, py, vx, vy, vw = 0, vh = 0, ax = 0, ay = 0, ppx = 0, ppy = 0;
-                  px = gc->shared->px;
-                  py = gc->shared->py + aa_y;
+                  int px, py, vx, vy, vw = 0, vh = 0, ax = 0, ay = 0, ppx = 0,
+                      ppy = 0;
+                  px = (gc->shared->px - aa_x);
+                  py = (gc->shared->py - aa_y);
                   int w = aa_w;
                   int h = aa_h;
 
@@ -2875,7 +2897,6 @@ if (gc->shared->foc == 0)
                   ppy = py;
 
                   fprintf(stderr, "focccccc! (%d %d %d %d) gc->shared->px(%d) gc->shared->py(%d)\n", px, py, w, h, gc->shared->px, gc->shared->py);
-
 
                   vx = ((w / 2) - ppx);
                   if (vx >= 0)
