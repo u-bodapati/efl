@@ -20,7 +20,7 @@
 #define XDG_VERSION 4
 
 /* local function prototypes */
-static Eina_Bool _ecore_wl_shutdown(Eina_Bool close);
+static int _ecore_wl_shutdown(Eina_Bool close);
 static Eina_Bool _ecore_wl_cb_idle_enterer(void *data);
 static Eina_Bool _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl);
 static void _ecore_wl_cb_handle_global(void *data, struct wl_registry *registry, unsigned int id, const char *interface, unsigned int version EINA_UNUSED);
@@ -443,10 +443,16 @@ ecore_wl_server_mode_set(Eina_Bool on)
 }
 
 /* local functions */
-static Eina_Bool
+static int
 _ecore_wl_shutdown(Eina_Bool close)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (_ecore_wl_init_count < 1)
+     {
+        ERR("Ecore_Wayland Shutdown called without Ecore_Wayland Init");
+        return 0;
+     }
 
    if (--_ecore_wl_init_count != 0) return _ecore_wl_init_count;
    if (!_ecore_wl_disp) return _ecore_wl_init_count;

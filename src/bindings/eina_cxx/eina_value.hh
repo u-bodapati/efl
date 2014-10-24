@@ -5,6 +5,7 @@
 
 #include <eina_stringshare.hh>
 #include <eina_type_traits.hh>
+#include <eina_throw.hh>
 
 /**
  * @addtogroup Eina_Cxx_Data_Types_Group
@@ -269,7 +270,6 @@ struct _eina_value_traits<std::string>
     char* c_str;
     ::eina_value_get(v, &c_str);
     std::string r(c_str);
-    ::free(c_str);
     return r;
   }
 };
