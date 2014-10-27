@@ -2798,47 +2798,44 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              aa_w = max_x - min_x;
              aa_h = max_y - min_y;
 
-             if (gc->shared->foc)
-               {
-                  aa_y = gh - (aa_y + aa_h);
-               }
-
-
              fprintf(stderr, "foc(%d) min(%d %d) max(%d %d) pos(%d %d) size(%d %d)\n", gc->shared->foc, min_x, min_y, max_x, max_y, aa_x, aa_y, aa_w, aa_h);
 
-             vertices[0] -= aa_x;
-             vertices[1] -= (aa_y);
+             if (!gc->shared->foc)
+               {
+                  vertices[0] -= aa_x;
+                  vertices[1] -= aa_y;
 
-             vertices[3] -= aa_x;
-             vertices[4] -= (aa_y);
+                  vertices[3] -= aa_x;
+                  vertices[4] -= aa_y;
 
-             vertices[6] -= aa_x;
-             vertices[7] -= (aa_y);
+                  vertices[6] -= aa_x;
+                  vertices[7] -= aa_y;
 
-             vertices[9] -= aa_x;
-             vertices[10] -= (aa_y);
+                  vertices[9] -= aa_x;
+                  vertices[10] -= aa_y;
 
-             vertices[12] -= aa_x;
-             vertices[13] -= (aa_y);
+                  vertices[12] -= aa_x;
+                  vertices[13] -= aa_y;
 
-             vertices[15] -= aa_x;
-             vertices[16] -= (aa_y);
+                  vertices[15] -= aa_x;
+                  vertices[16] -= aa_y;
+               }
 
-         fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
-             anti_alias,
-             gc->pipe[i].array.num,
-             (float) vertices[0],
-             (float) vertices[1],
-             (float) vertices[3],
-             (float) vertices[4],
-             (float) vertices[6],
-             (float) vertices[7],
-             (float) vertices[9],
-             (float) vertices[10],
-             (float) vertices[12],
-             (float) vertices[13],
-             (float) vertices[15],
-             (float) vertices[16]);
+             fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
+                     anti_alias,
+                     gc->pipe[i].array.num,
+                     (float) vertices[0],
+                     (float) vertices[1],
+                     (float) vertices[3],
+                     (float) vertices[4],
+                     (float) vertices[6],
+                     (float) vertices[7],
+                     (float) vertices[9],
+                     (float) vertices[10],
+                     (float) vertices[12],
+                     (float) vertices[13],
+                     (float) vertices[15],
+                     (float) vertices[16]);
 
              glGetIntegerv(GL_FRAMEBUFFER_BINDING, &orig_fbo);
              glGetIntegerv(GL_RENDERBUFFER_BINDING, &orig_rbo);
@@ -2879,6 +2876,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              glClearColor(0.0f, 0.0f, 0.2f, 0.2f);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
              glViewport(0, 0, (int) aa_w, (int) aa_h);
 
              GLfloat proj[16];
@@ -2887,8 +2885,8 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                {
                   int px, py, vx, vy, vw = 0, vh = 0, ax = 0, ay = 0, ppx = 0,
                       ppy = 0;
-                  px = (gc->shared->px);
-                  py = (gc->shared->py);
+                  px = gc->shared->px;
+                  py = gc->shared->py;
                   int w = gw;
                   int h = gh;
 
