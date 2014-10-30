@@ -616,7 +616,15 @@ _surface_cap_cache_save()
 
    /* use mkstemp for writing */
    snprintf(tmp_file, sizeof(tmp_file), "%s.XXXXXX", cap_file_path);
+
+#ifndef _WIN32
+   mode_t old_umask = umask(S_IRWXG|S_IRWXO);
+#endif
    tmpfd = mkstemp(tmp_file);
+#ifndef _WIN32
+   umask(old_umask);
+#endif
+
    if (tmpfd < 0) goto error;
    close(tmpfd);
 
@@ -1392,9 +1400,15 @@ evgl_engine_init(void *eng_data, const EVGL_Interface *efunc)
 
    // Initialize Extensions
    if (efunc->proc_address_get && efunc->ext_string_get)
-      evgl_api_ext_init(efunc->proc_address_get, efunc->ext_string_get(eng_data));
+     {
+        if (!evgl_api_ext_init(efunc->proc_address_get, efunc->ext_string_get(eng_data)))
+          {
+             ERR("Extensions failed to load. This shouldn't happen, Evas GL load fails.");
+             goto error;
+          }
+     }
    else
-      ERR("Proc address get function not available.  Extension not initialized.");
+     ERR("Proc address get function not available. Extensions not initialized.");
 
    if (efunc->ext_string_get)
      DBG("GLUE Extension String: %s", efunc->ext_string_get(eng_data));

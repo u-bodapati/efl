@@ -1,5 +1,5 @@
 EFL_VERSION([1], [12], [0], [release])
-AC_INIT([efl], [efl_version-alpha1], [enlightenment-devel@lists.sourceforge.net])
+AC_INIT([efl], [efl_version-beta1], [enlightenment-devel@lists.sourceforge.net])
 
 AC_PREREQ([2.60])
 AC_CONFIG_SRCDIR([configure.ac])
@@ -960,6 +960,7 @@ EINA_CONFIG([HAVE_PTHREAD_AFFINITY], [test "x${efl_have_setaffinity}" = "xyes"])
 EINA_CONFIG([HAVE_DEBUG_THREADS], [test "x${want_debug_threads}" = "xyes"])
 EINA_CONFIG([HAVE_POSIX_SPINLOCK], [test "x${efl_have_posix_threads_spinlock}" = "xyes"])
 EINA_CONFIG([HAVE_OSX_SPINLOCK], [test "x${efl_have_osx_spinlock}" = "xyes"])
+EINA_CONFIG([HAVE_OSX_SEMAPHORE], [test "x${have_darwin}" = "xyes"])
 
 ### Modules
 

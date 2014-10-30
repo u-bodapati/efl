@@ -30,9 +30,17 @@ static const Ecore_Test_Case etc[] = {
   { "Ecore_Evas", ecore_test_ecore_evas },
   { "Ecore_Animators", ecore_test_animator },
   { "Ecore_Test_Ccore_Thread_Eina_Thread_Queue", ecore_test_ecore_thread_eina_thread_queue },
+  { "Ecore_File", ecore_test_ecore_file },
 #if HAVE_ECORE_WAYLAND
   { "Ecore_Wayland", ecore_test_ecore_wayland },
 #endif
+#if HAVE_ECORE_DRM
+  { "Ecore_Drm", ecore_test_ecore_drm },
+#endif
+#if HAVE_ECORE_FB
+  { "Ecore_Fb", ecore_test_ecore_fb },
+#endif
+  { "Ecore_Input", ecore_test_ecore_input },
   { NULL, NULL }
 };
 

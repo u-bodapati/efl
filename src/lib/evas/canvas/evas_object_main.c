@@ -35,6 +35,7 @@ static const Evas_Object_Protected_State default_state = {
 static const Evas_Object_Filter_Data default_filter = {
   NULL, NULL, NULL, NULL, EINA_FALSE, EINA_FALSE
 };
+const void * const evas_object_filter_cow_default = &default_filter;
 
 Eina_Cow *evas_object_proxy_cow = NULL;
 Eina_Cow *evas_object_map_cow = NULL;
@@ -687,13 +688,18 @@ _evas_object_eo_base_destructor(Eo *eo_obj, Evas_Object_Protected_Data *obj)
           eo_do(proxy, evas_obj_text_filter_source_set(NULL, eo_obj));
      }
 
-   EINA_COW_WRITE_BEGIN(evas_object_proxy_cow, obj->proxy,
-                        Evas_Object_Proxy_Data, proxy_src)
+   /* Eina_Cow has no way to know if we are going to really change something
+    or not. So before calling the cow, let's check if we want to do something */
+   if (obj->proxy->proxy_textures)
      {
-        EINA_LIST_FREE(proxy_src->proxy_textures, texture)
-          eo_do(texture, evas_3d_texture_source_set(NULL));
+        EINA_COW_WRITE_BEGIN(evas_object_proxy_cow, obj->proxy,
+                             Evas_Object_Proxy_Data, proxy_src)
+          {
+             EINA_LIST_FREE(proxy_src->proxy_textures, texture)
+               eo_do(texture, evas_3d_texture_source_set(NULL));
+          }
+        EINA_COW_WRITE_END(evas_object_proxy_cow, obj->proxy, proxy_src);
      }
-   EINA_COW_WRITE_END(evas_object_proxy_cow, obj->proxy, proxy_src);
 
    if (obj->cur->clipper) evas_object_clip_unset(eo_obj);
    evas_object_map_set(eo_obj, NULL);

@@ -475,7 +475,8 @@ eng_window_free(Outbuf *gw)
         _evas_gl_x11_rgba_vi = NULL;
      }
 #else
-   __glXMakeContextCurrent(gw->disp, 0, gw->context);
+   if (!__glXMakeContextCurrent(gw->disp, 0, gw->context))
+     ERR("glXMakeContextCurrent() failed!");
    glXDestroyWindow(gw->disp, gw->glxwin);
    if (ref == 0)
      {
@@ -805,7 +806,7 @@ eng_best_visual_get(Evas_Engine_Info_GL_X11 *einfo)
                   else
                     {
                        XVisualInfo *xvi, vi_in;
-                       int nvi, i;
+                       int nvi, j;
                        XRenderPictFormat *fmt;
 
                        rgba_fbconf = configs[0];
@@ -818,10 +819,10 @@ eng_best_visual_get(Evas_Engine_Info_GL_X11 *einfo)
                                             &vi_in, &nvi);
                        if (xvi)
                          {
-                            for (i = 0; i < nvi; i++)
+                            for (j = 0; j < nvi; j++)
                               {
                                  fmt = XRenderFindVisualFormat(einfo->info.display,
-                                                               xvi[i].visual);
+                                                               xvi[j].visual);
                                  if ((fmt->type == PictTypeDirect) &&
                                      (fmt->direct.alphaMask))
                                    {
@@ -829,7 +830,7 @@ eng_best_visual_get(Evas_Engine_Info_GL_X11 *einfo)
                                         malloc(sizeof(XVisualInfo));
                                       if (_evas_gl_x11_rgba_vi)
                                         memcpy(_evas_gl_x11_rgba_vi,
-                                               &(xvi[i]), sizeof(XVisualInfo));
+                                               &(xvi[j]), sizeof(XVisualInfo));
                                       break;
                                    }
                               }

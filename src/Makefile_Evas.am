@@ -1166,8 +1166,9 @@ modules_evas_engines_gl_drm_module_la_CPPFLAGS = -I$(top_builddir)/src/lib/efl \
 modules_evas_engines_gl_drm_module_la_LIBADD = \
 @USE_EVAS_LIBS@ \
 @USE_ECORE_DRM_LIBS@ \
-@evas_engine_gl_drm_libs@
-modules_evas_engines_gl_drm_module_la_DEPENDENCIES = @USE_EVAS_INTERNAL_LIBS@
+@evas_engine_gl_drm_libs@ \
+@USE_EEZE_INTERNAL_LIBS@
+modules_evas_engines_gl_drm_module_la_DEPENDENCIES = @USE_EVAS_INTERNAL_LIBS@ @USE_EEZE_INTERNAL_LIBS@ @USE_ECORE_DRM_INTERNAL_LIBS@
 modules_evas_engines_gl_drm_module_la_LDFLAGS = -module @EFL_LTMODULE_FLAGS@
 modules_evas_engines_gl_drm_module_la_LIBTOOLFLAGS = --tag=disable-static
 endif
@@ -1833,7 +1834,8 @@ bin_evas_evas_cserve2_slave_CPPFLAGS +=  \
 -I$(top_builddir)/src/lib/efl \
 -I$(top_srcdir)/src/static_libs/rg_etc \
 -I$(top_srcdir)/src/lib/evas/ \
-@evas_image_loader_tgv_cflags@
+@evas_image_loader_tgv_cflags@ \
+@NEON_CFLAGS@
 if ! ENABLE_LIBLZ4
 bin_evas_evas_cserve2_slave_CPPFLAGS += \
 -I$(top_srcdir)/src/static_libs/lz4
@@ -1858,6 +1860,7 @@ modules_evas_loaders_tgv_module_la_CPPFLAGS = \
 -I$(top_srcdir)/src/static_libs/rg_etc \
 -I$(top_srcdir)/src/lib/evas/ \
 @EVAS_CFLAGS@ \
+@NEON_CFLAGS@ \
 @evas_image_loader_tgv_cflags@
 if ! ENABLE_LIBLZ4
 modules_evas_loaders_tgv_module_la_CPPFLAGS += \
