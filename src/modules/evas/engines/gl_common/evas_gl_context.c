@@ -2762,7 +2762,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
          anti_alias = gc->pipe[i].array.anti_alias;
 
          GLshort *vertices = (unsigned char *)gc->pipe[i].array.vertex;
-/*
+
          fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
              anti_alias,
              gc->pipe[i].array.num,
@@ -2778,7 +2778,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              (float) vertices[13],
              (float) vertices[15],
              (float) vertices[16]);
-*/
+
          //hermet
         if (anti_alias)
           {
@@ -2800,8 +2800,6 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
              fprintf(stderr, "foc(%d) min(%d %d) max(%d %d) pos(%d %d) size(%d %d)\n", gc->shared->foc, min_x, min_y, max_x, max_y, aa_x, aa_y, aa_w, aa_h);
 
-             if (!gc->shared->foc)
-               {
                   vertices[0] -= aa_x;
                   vertices[1] -= aa_y;
 
@@ -2819,7 +2817,6 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
                   vertices[15] -= aa_x;
                   vertices[16] -= aa_y;
-               }
 
              fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
                      anti_alias,
@@ -2887,8 +2884,8 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                       ppy = 0;
                   px = gc->shared->px;
                   py = gc->shared->py;
-                  int w = gw;
-                  int h = gh;
+                  int w = aa_w;
+                  int h = aa_h;
 
                   ppx = px;
                   ppy = py;
@@ -3554,7 +3551,10 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              GLshort vertexPosition[18];
              float textureCoord[12] = { 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
                                         0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f };
-             vertexPosition[0] = aa_x;
+
+if (!gc->shared->foc)
+  {
+				 vertexPosition[0] = aa_x;
              vertexPosition[1] = aa_y;
              vertexPosition[2] = 0;
 
@@ -3577,6 +3577,33 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              vertexPosition[15] = aa_x;
              vertexPosition[16] = aa_y + aa_h;
              vertexPosition[17] = 0;
+  }
+else
+  {
+				 vertexPosition[0] = vertices[0];
+             vertexPosition[1] = vertices[1];
+             vertexPosition[2] = 0;
+
+             vertexPosition[3] = vertices[3];
+             vertexPosition[4] = vertices[4];
+             vertexPosition[5] = 0;
+
+             vertexPosition[6] = vertices[6];
+             vertexPosition[7] = vertices[7];
+             vertexPosition[8] = 0;
+
+             vertexPosition[9] = vertices[9];
+             vertexPosition[10] = vertices[10];
+             vertexPosition[11] = 0;
+
+             vertexPosition[12] = vertices[12];
+             vertexPosition[13] = vertices[13];
+             vertexPosition[14] = 0;
+
+             vertexPosition[15] = vertices[15];
+             vertexPosition[16] = vertices[16];
+             vertexPosition[17] = 0;
+  }
 
              glVertexAttribPointer(vertex, 3, GL_SHORT, GL_FALSE, 0,
                                    vertexPosition);
