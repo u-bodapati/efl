@@ -63,8 +63,10 @@ void main() {
      vec4 v4 = texture2D(uSourceTex, vTexCoord.xy);
 
      if((lumaB < lumaMin) || (lumaB > lumaMax)){
-          gl_FragColor = vec4(rgbA, v4.w);
+//          gl_FragColor = vec4(rgbA, v4.w);
+			 gl_FragColor.rgb = rgbA;
      }else{
-          gl_FragColor = vec4(rgbB, v4.w);
+//          gl_FragColor = vec4(rgbB, v4.w);
+			 gl_FragColor.rgb = rgbB;
      }
 }

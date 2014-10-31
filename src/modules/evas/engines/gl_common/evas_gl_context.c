@@ -2724,6 +2724,52 @@ start_tiling(Evas_Engine_GL_Context *gc EINA_UNUSED,
      }
 }
 
+static void
+anti_alias_target_render(GLuint aa_prog, GLuint aa_tex, GLuint orig_prog, GLuint orig_fbo, GLuint orig_tex, int gw, int gh)
+{
+   GLshort vertex_pos[18] = {0, 0, 0, gw, 0, 0, gw, gh, 0,
+                             0, 0, 0, gw, gh, 0, 0, gh, 0};
+   float tex_coord[12] = {0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+                          0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
+   int loc_tex_coord, loc_vertex;
+   GLfloat mat_proj[16];
+
+   glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
+   glUseProgram(aa_prog);
+
+   glViewport(0, 0, gw, gh);
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+   glDisable(GL_DEPTH_TEST);
+
+   //Set Projection Matrix
+   matrix_ortho(mat_proj, 0, gw, 0, gh, -1000000.0, 1000000.0, 0, gw, gh,
+                1, 1.0);
+   glUniformMatrix4fv(glGetUniformLocation(aa_prog, "mvp"), 1, GL_FALSE,
+                      mat_proj);
+
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_2D, aa_tex);
+
+   glUniform1i(glGetUniformLocation(aa_prog, "uSourceTex"), 0);
+   glUniform2f(glGetUniformLocation(aa_prog, "resolution"),
+               (float) gw, (float) gh);
+
+   loc_vertex = glGetAttribLocation(aa_prog, "vertex");
+   loc_tex_coord = glGetAttribLocation(aa_prog, "tex_coord");
+
+   glVertexAttribPointer(loc_vertex, 3, GL_SHORT, GL_FALSE, 0, vertex_pos);
+   glVertexAttribPointer(loc_tex_coord, 2, GL_FLOAT, GL_FALSE, 0, tex_coord);
+   glEnableVertexAttribArray(loc_vertex);
+   glEnableVertexAttribArray(loc_tex_coord);
+
+   glDrawArrays(GL_TRIANGLES, 0, 6);
+
+   glUseProgram(orig_prog);
+   glBindTexture(GL_TEXTURE_2D, orig_tex);
+}
+
 static Eina_Bool
 anti_alias_target_set(int target_width, int target_height, GLint cur_tex, GLuint *aa_fbo, GLuint *aa_tex, GLint *orig_fbo)
 {
@@ -2799,91 +2845,32 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
          //TODO: Anti Alias is enabled?
          anti_alias = gc->pipe[i].array.anti_alias;
 
-         GLshort *vertices = (GLshort *)gc->pipe[i].array.vertex;
+         if (anti_alias)
+           {
+              //Debug Info 
+              GLshort *vertices = (GLshort *)gc->pipe[i].array.vertex;
+              fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
+                      anti_alias,
+                      gc->pipe[i].array.num,
+                      (float) vertices[0],
+                      (float) vertices[1],
+                      (float) vertices[3],
+                      (float) vertices[4],
+                      (float) vertices[6],
+                      (float) vertices[7],
+                      (float) vertices[9],
+                      (float) vertices[10],
+                      (float) vertices[12],
+                      (float) vertices[13],
+                      (float) vertices[15],
+                      (float) vertices[16]);
 
-         fprintf(stderr, "aa(%d) array_num(%d) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f) (%0.1f %0.1f)\n",
-             anti_alias,
-             gc->pipe[i].array.num,
-             (float) vertices[0],
-             (float) vertices[1],
-             (float) vertices[3],
-             (float) vertices[4],
-             (float) vertices[6],
-             (float) vertices[7],
-             (float) vertices[9],
-             (float) vertices[10],
-             (float) vertices[12],
-             (float) vertices[13],
-             (float) vertices[15],
-             (float) vertices[16]);
-
-         //hermet
-        if (anti_alias)
-          {
-             anti_alias_target_set(gw, gh, gc->pipe[i].shader.cur_tex,
-                                   &aa_fbo, &aa_tex, &orig_fbo);
-#if 0
-             if (gc->shared->foc)
-               {
-                  int px, py, vx, vy, vw = 0, vh = 0;
-                  int ppx = 0, ppy = 0;
-                  int rot = 0;
-                  int w, h, foc = gc->shared->foc;
-                  GLfloat mat_proj[16];
-
-                  px = gc->shared->px;
-                  py = gc->shared->py;
-
-                  ppx = px;
-                  ppy = py;
-
-                  w = gc->pipe[0].shader.surface->w;
-                  h = gc->pipe[0].shader.surface->h;
-                  w = gw;
-                  h = gh;
-
-                  vx = ((w / 2) - ppx);
-                  if (vx >= 0)
-                    {
-                       vw = w + (2 * vx);
-                    }
-                  else
-                    {
-                       vw = w - (2 * vx);
-                       vx = 0;
-                    }
-
-                  vy = ((h / 2) - ppy);
-                  if (vy < 0)
-                    {
-                       vh = h - (2 * vy);
-                       vy = -vy;
-                    }
-                  else
-                    {
-                       vh = h + (2 * vy);
-                       vy = 0;
-                    }
-
-                  fprintf(stderr, "AHHH. (%d %d %d %d)\n",
-                          -2 * vx, -2 * vy, vw, vh);
-
-                  matrix_ortho(mat_proj, 0, vw, 0, vh,
-                               -1000000.0, 1000000.0,
-                               rot, vw, vh,
-                               foc, 0.0);
-
-                  if (gc->pipe[i].shader.cur_prog !=
-                      gc->state.current.cur_prog)
-                    {
-                       glUseProgram(gc->pipe[i].shader.cur_prog);
-                       glUniformMatrix4fv(glGetUniformLocation(gc->pipe[i].shader.cur_prog, "mvp"), 1, GL_FALSE, mat_proj);
-
-                       GLERR(__FUNCTION__, __FILE__, __LINE__, "");
-                    }
-               }
-#endif
-          }
+              if (!anti_alias_target_set(gw, gh, gc->pipe[i].shader.cur_tex,
+                                         &aa_fbo, &aa_tex, &orig_fbo))
+                {
+                   anti_alias = EINA_FALSE;
+                }
+           }
 
         setclip = EINA_FALSE;
         pipe_done++;
@@ -3445,59 +3432,12 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
           }
 
         //Post Processing Anti-Aliasing
-        //hermet
         if (anti_alias)
           {
-             GLuint loc_tex, loc_res;
-             GLuint aa_prog = shared->shader[SHADER_FILTER_FXAA].prog;
-
-             glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
-             glUseProgram(aa_prog);
-
-             glViewport(0, 0, (int) gw, (int) gh);
-
-             GLfloat mat_proj[16];
-             matrix_ortho(mat_proj,
-                          0, gw, 0, gh,
-                          -1000000.0, 1000000.0,
-                          0, gw, gh,
-                          1, 1.0);
-             glUniformMatrix4fv(glGetUniformLocation(aa_prog, "mvp"), 1,
-                                GL_FALSE, mat_proj);
-
-             glEnable(GL_BLEND);
-             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-             glDisable(GL_DEPTH_TEST);
-
-             glActiveTexture(GL_TEXTURE0);
-             glBindTexture(GL_TEXTURE_2D, aa_tex);
-
-             loc_tex =
-                glGetUniformLocation(aa_prog, "uSourceTex");
-             glUniform1i(loc_tex, 0);
-
-             loc_res =
-                glGetUniformLocation(aa_prog, "resolution");
-             glUniform2f(loc_res, (float) gw, (float) gh);
-
-             int vertex = glGetAttribLocation(aa_prog, "vertex");
-             int tex_coord = glGetAttribLocation(aa_prog, "tex_coord");
-
-             GLshort vertexPosition[18] = {0, 0, 0, gw, 0, 0, gw, gh, 0,
-                                           0, 0, 0, gw, gh, 0, 0, gh, 0};
-             float textureCoord[12] = {0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-                                       0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
-             glVertexAttribPointer(vertex, 3, GL_SHORT, GL_FALSE, 0,
-                                   vertexPosition);
-             glVertexAttribPointer(tex_coord, 2, GL_FLOAT, GL_FALSE, 0,
-                                   textureCoord);
-             glEnableVertexAttribArray(vertex);
-             glEnableVertexAttribArray(tex_coord);
-
-             glDrawArrays(GL_TRIANGLES, 0, 6);
-
-             glUseProgram(gc->pipe[i].shader.cur_prog);
-             glBindTexture(GL_TEXTURE_2D, gc->pipe[i].shader.cur_tex);
+             anti_alias_target_render(shared->shader[SHADER_FILTER_FXAA].prog,
+                                      aa_tex, gc->pipe[i].shader.cur_prog,
+                                      orig_fbo, gc->pipe[i].shader.cur_tex,
+                                      gw, gh);
           }
 
         gc->state.current.cur_prog  = gc->pipe[i].shader.cur_prog;
