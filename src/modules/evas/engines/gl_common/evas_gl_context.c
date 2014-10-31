@@ -2728,9 +2728,6 @@ static Eina_Bool
 anti_alias_target_set(int target_width, int target_height, GLint cur_tex, GLuint *aa_fbo, GLuint *aa_tex, GLint *orig_fbo)
 {
    static GLuint fbo = GL_INVALID_VALUE;
-#if 0
-   static GLuint rbo = GL_INVALID_VALUE;
-#endif
    static GLuint tex = GL_INVALID_VALUE;
 
    GLenum ret;
@@ -2752,19 +2749,8 @@ anti_alias_target_set(int target_width, int target_height, GLint cur_tex, GLuint
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, target_width, target_height, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, 0);
    glBindTexture(GL_TEXTURE_2D, cur_tex);
-   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                          GL_TEXTURE_2D, tex, 0);
-   //RenderBuffer
-#if 0
-   if (rbo == GL_INVALID_VALUE)
-     {
-        glGenRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
-                              GL_RENDERBUFFER, rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-     }
-#endif
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                          tex, 0);
 
    ret = glCheckFramebufferStatus(GL_FRAMEBUFFER);
    if (ret != GL_FRAMEBUFFER_COMPLETE)
