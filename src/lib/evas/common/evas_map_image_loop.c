@@ -1,3 +1,7 @@
+#ifdef SCALE_USING_MMX
+#undef SCALE_USING_MMX
+#endif
+
 #ifdef SMOOTH
 {
 # ifdef SCALE_USING_MMX
@@ -163,6 +167,29 @@
         cv += cd; // col
 #    endif
 #   else
+#if 1
+        if (ww == w)
+          {
+             if (ledge_dir != 0)
+               {
+                  int k = 0;
+                  DATA32 tt = val1;
+                  int d = abs(prev_span->x1 - cur_span->x1);
+                  float d2 = (float) d;
+                  for (; k < d; k++)
+                    {
+                       DATA32 t = 0x00000000;
+                       printf("(k:%d) before = %x, ", k, tt);
+                       float xx = ((float) (d - k))/ 12.0f;
+                       printf("%d %d %f ", d - k, d + 1, xx);
+                       val1 = INTERP_256((int) (xx * 256.0f), tt, t);
+                       printf("after = %x\n", val1);
+//                       *(((int *) d) - 1 - k) = val1;
+                    }
+               }
+          }
+#endif
+
         *d   = val1;
 #   endif
 #  endif

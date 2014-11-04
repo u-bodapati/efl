@@ -1394,13 +1394,11 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
              obj->layer->evas->engine.func->context_multiplier_unset
                (e->engine.data.output, context);
              obj->layer->evas->engine.func->context_render_op_set
-                (e->engine.data.output, context, obj->cur->render_op);
-             ERR("before render map!");
+               (e->engine.data.output, context, obj->cur->render_op);
              evas_draw_image_map_async_check
-                (obj, e->engine.data.output, context, surface,
-                 obj->map->surface, obj->map->spans,
-                 obj->map->cur.map->smooth, 0, do_async);
-             ERR("after render map!");
+               (obj, e->engine.data.output, context, surface,
+                obj->map->surface, obj->map->spans,
+                obj->map->cur.map->smooth, 0, do_async);
           }
         // FIXME: needs to cache these maps and
         // keep them only rendering updates
@@ -1650,7 +1648,7 @@ evas_render_updates_internal(Evas *eo_e,
 
    e = eo_data_scope_get(eo_e, EVAS_CANVAS_CLASS);
    if (!e->changed) return EINA_FALSE;
-fprintf(stderr, "-----------------------------------------------------------\n");
+
    if (e->rendering)
      {
         if (do_async)
@@ -1671,7 +1669,7 @@ fprintf(stderr, "-----------------------------------------------------------\n")
    evas_call_smarts_calculate(eo_e);
 
    RD("[--- RENDER EVAS (size: %ix%i)\n", e->viewport.w, e->viewport.h);
-
+printf("-----------------------------------\n");
    _cb_always_call(eo_e, EVAS_CALLBACK_RENDER_PRE, NULL);
 
    /* Check if the modified object mean recalculating every thing */

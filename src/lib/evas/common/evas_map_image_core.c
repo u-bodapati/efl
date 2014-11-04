@@ -2,6 +2,10 @@
 {
    if (smooth)
      {
+        Span *prev_span = NULL, *cur_span = NULL;
+        Line *line = &(spans[0]);
+        prev_span = &(line->span[0]);
+
         for (y = ystart; y <= yend; y++)
           {
              int x, w, ww;
@@ -20,6 +24,9 @@
              MOV_A2R(ALPHA_255, mm5)
 #endif
              line = &(spans[y - ystart]);
+
+             cur_span = &(line->span[0]);
+
              for (i = 0; i < 2; i++)
                {
                   Span *span;
@@ -37,6 +44,16 @@
                   if (dv <= 0) continue;
 
                   ww = w;
+
+                  int ledge_dir;
+
+                  if ((cur_span->x1 - prev_span->x1) < 0) ledge_dir = -1;
+                  else if ((cur_span->x1 - prev_span->x1) < 0) ledge_dir = 1;
+                  else ledge_dir = 0;
+
+                  printf("y: %d, span: %d width(%d) edge(%d - %d) prev(%d - %d)"
+                         " dir(%d)\n", y, i, ww, cur_span->x1, cur_span->x2,
+                         prev_span->x1, prev_span->x2, ledge_dir);
 
                   //correct elaborate u point
                   u = span->u[0] << FPI;
@@ -120,6 +137,7 @@
                        func(buf, NULL, mul_col, d, w);
                     }
                }
+             prev_span = cur_span;
           }
      }
    else
