@@ -2,10 +2,6 @@
 {
    if (smooth)
      {
-        Span *prev_span = NULL, *cur_span = NULL;
-        Line *line = &(spans[0]);
-        prev_span = &(line->span[0]);
-
         for (y = ystart; y <= yend; y++)
           {
              int x, w, ww;
@@ -25,8 +21,6 @@
 #endif
              line = &(spans[y - ystart]);
 
-             cur_span = &(line->span[0]);
-
              for (i = 0; i < 2; i++)
                {
                   Span *span;
@@ -43,14 +37,7 @@
                   dv = (span->o2 - span->o1);
                   if (dv <= 0) continue;
 
-                  int ledge_diff = cur_span->x1 - prev_span->x1;
-                  int abs_ledge_diff = abs(ledge_diff);
-
-                  ww = w + abs_ledge_diff;
-
-                  printf("y: %d, span: %d width(%d) cur_pix(%d - %d) prev_pix(%d - %d)"
-                         " ledge_diff(%d)\n", y, i, ww, cur_span->x1, cur_span->x2,
-                         prev_span->x1, prev_span->x2, ledge_diff);
+                  ww = (w + line->aa_left_len);
 
                   //correct elaborate u point
                   u = span->u[0] << FPI;
@@ -130,11 +117,10 @@
                   if (!direct)
                     {
                        d = dst->image.data;
-                       d += (y * dst->cache_entry.w) + x;
-                       func(buf, NULL, mul_col, d, w);
+                       d += (y * dst->cache_entry.w) + x - line->aa_left_len;
+                       func(buf, NULL, mul_col, d, w + line->aa_left_len);
                     }
                }
-             prev_span = cur_span;
           }
      }
    else

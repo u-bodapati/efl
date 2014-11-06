@@ -76,6 +76,9 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
    // calculate the spans list
    _calc_spans(p, spans, ystart, yend, cx, cy, cw, ch);
 
+   // calculate anti alias edges
+   _calc_aa_edges(spans, ystart, yend);
+
    // walk through spans and render
 
    // if operation is solid, bypass buf and draw func and draw direct to dst

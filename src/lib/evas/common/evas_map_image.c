@@ -30,6 +30,9 @@ struct _Span
 struct _Line
 {
    Span span[2];
+   int aa_left_cov;
+   int aa_left_len;
+   Eina_Bool vertical;
 };
 
 static inline FPc
@@ -79,6 +82,72 @@ _interpolated_clip_span(Span *s, int c1, int c2, Eina_Bool interp_col)
         s->x2 = c2;
         s->o2 = c2 << FP;
         // FIXME: do s->z2
+     }
+}
+
+static void
+_calc_aa_edges(Line *spans, int ystart, int yend)
+{
+   typedef struct aa_edge {
+      int x, y;
+   } aa_edge;
+
+   int y, idx, ry, ridx;
+   aa_edge edge1;
+   aa_edge edge2;;
+
+   edge1.x = spans[0].span[0].x1;
+   edge1.y = 0;
+
+   for (y = (ystart + 1); y < yend; y++)
+     {
+        idx = (y - ystart);
+
+        //Start Edge?
+        if (edge1.x == -1)
+          {
+             edge1.x = spans[idx].span[0].x1;
+             edge1.y = idx;
+             continue;
+          }
+
+        //Got it! - Left Direction
+        if (edge1.x > spans[idx].span[0].x1)
+          {
+             printf("idx:%d (%d %d)\n", idx, spans[idx].span[0].x1, edge1.x);
+             //Horizontal Edge
+             if ((idx - edge1.y) == 1)
+               {
+                  ridx = (idx - 1);
+                  spans[ridx].aa_left_len = (edge1.x - spans[idx].span[0].x1);
+                  spans[ridx].aa_left_cov =
+                     (256 / (spans[ridx].aa_left_len + 1));
+               }
+             //Vertical Edge
+             else if ((edge1.x - spans[idx].span[0].x1) == 1)
+               {
+                  int coverage = (256 / ((idx - edge1.y) + 1));
+
+                  for (ry = 0; ry < (idx - edge1.y); ry++)
+                    {
+                       ridx = (idx - 1) - ry;
+                       spans[ridx].aa_left_len = 1;
+                       spans[ridx].aa_left_cov = 256 - (coverage * (ry + 1));
+
+                       printf("idx(%d): aa_left_len(%d) aa_left_cov(%d)\n",
+                              ridx, spans[ridx].aa_left_len,
+                              spans[ridx].aa_left_cov);
+                    }
+               }
+             //No Edge ?
+             else
+               {
+                  //TODO:
+               }
+
+             edge1.x = spans[idx].span[0].x1;
+             edge1.y = idx;
+          }
      }
 }
 

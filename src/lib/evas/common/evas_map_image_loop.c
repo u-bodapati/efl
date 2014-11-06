@@ -168,24 +168,23 @@
 #    endif
 #   else
 #if 1
-        if (ww > w)
+        if ((ww > w) && (line->aa_left_len > 0))
           {
-             if (ledge_diff != 0)
+             int k = 0;
+             DATA32 col = val1;
+             DATA32 ret;
+             for (k = 0; k < line->aa_left_len; k++)
                {
-                  int k = 0;
-                  DATA32 tt = val1;
-                  for (k = 0; k < abs_ledge_diff; k++)
-                    {
-                       int xx = (((abs_ledge_diff - k) << FP) / abs_ledge_diff) >> FP1;
-                       printf("%d (k:%d) before = %x, ", xx, k, tt);
-                       tt = INTERP_256(200, tt, 0x00000000);
-                       printf("after = %x\n", tt);
-                       *d = tt;
-                       ww--;
-                       d++;
-                    }
-                  printf("\n");
+                  printf("k: %d    cov: %d    before = 0x%x, ",
+                         k, line->aa_left_cov * (k + 1), col);
+                  ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
+                                   0x00000000);
+                  printf("after = 0x%x\n", ret);
+                  *d = ret;
+                  ww--;
+                  d++;
                }
+             printf("\n");
           }
 #endif
 
