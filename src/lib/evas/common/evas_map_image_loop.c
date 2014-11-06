@@ -168,24 +168,23 @@
 #    endif
 #   else
 #if 1
-        if (ww == w)
+        if (ww > w)
           {
-             if (ledge_dir != 0)
+             if (ledge_diff != 0)
                {
                   int k = 0;
                   DATA32 tt = val1;
-                  int d = abs(prev_span->x1 - cur_span->x1);
-                  float d2 = (float) d;
-                  for (; k < d; k++)
+                  for (k = 0; k < abs_ledge_diff; k++)
                     {
-                       DATA32 t = 0x00000000;
-                       printf("(k:%d) before = %x, ", k, tt);
-                       float xx = ((float) (d - k))/ 12.0f;
-                       printf("%d %d %f ", d - k, d + 1, xx);
-                       val1 = INTERP_256((int) (xx * 256.0f), tt, t);
-                       printf("after = %x\n", val1);
-//                       *(((int *) d) - 1 - k) = val1;
+                       int xx = (((abs_ledge_diff - k) << FP) / abs_ledge_diff) >> FP1;
+                       printf("%d (k:%d) before = %x, ", xx, k, tt);
+                       tt = INTERP_256(200, tt, 0x00000000);
+                       printf("after = %x\n", tt);
+                       *d = tt;
+                       ww--;
+                       d++;
                     }
+                  printf("\n");
                }
           }
 #endif

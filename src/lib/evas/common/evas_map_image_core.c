@@ -43,17 +43,14 @@
                   dv = (span->o2 - span->o1);
                   if (dv <= 0) continue;
 
-                  ww = w;
+                  int ledge_diff = cur_span->x1 - prev_span->x1;
+                  int abs_ledge_diff = abs(ledge_diff);
 
-                  int ledge_dir;
+                  ww = w + abs_ledge_diff;
 
-                  if ((cur_span->x1 - prev_span->x1) < 0) ledge_dir = -1;
-                  else if ((cur_span->x1 - prev_span->x1) < 0) ledge_dir = 1;
-                  else ledge_dir = 0;
-
-                  printf("y: %d, span: %d width(%d) edge(%d - %d) prev(%d - %d)"
-                         " dir(%d)\n", y, i, ww, cur_span->x1, cur_span->x2,
-                         prev_span->x1, prev_span->x2, ledge_dir);
+                  printf("y: %d, span: %d width(%d) cur_pix(%d - %d) prev_pix(%d - %d)"
+                         " ledge_diff(%d)\n", y, i, ww, cur_span->x1, cur_span->x2,
+                         prev_span->x1, prev_span->x2, ledge_diff);
 
                   //correct elaborate u point
                   u = span->u[0] << FPI;
