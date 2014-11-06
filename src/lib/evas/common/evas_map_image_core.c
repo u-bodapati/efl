@@ -117,8 +117,8 @@
                   if (!direct)
                     {
                        d = dst->image.data;
-                       d += (y * dst->cache_entry.w) + x - line->aa_left_len;
-                       func(buf, NULL, mul_col, d, w + line->aa_left_len);
+                       d += (y * dst->cache_entry.w) + x;
+                       func(buf, NULL, mul_col, d, w);
                     }
                }
           }
