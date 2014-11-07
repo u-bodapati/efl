@@ -87,12 +87,31 @@ _interpolated_clip_span(Span *s, int c1, int c2, Eina_Bool interp_col)
 static void
 _calc_aa_edges(Line *spans, int ystart, int yend)
 {
-   typedef struct aa_edge {
-      int x, y;
-   } aa_edge;
+
+#define HORIZONTAL_AA(xx) \
+   do \
+     { \
+        spans[(xx)].aa_left_len = (edge1.x - spans[idx].span[0].x1); \
+        spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+     } \
+   while (0)
+
+#define VERTICAL_AA(rewind, y_advance) \
+   do \
+     { \
+        coverage = (256 / ((rewind) + 1)); \
+        for (ry = 0; ry < (rewind); ry++) \
+          { \
+             ridx = (idx - 1) - ry + (y_advance); \
+             spans[ridx].aa_left_len = 1; \
+             spans[ridx].aa_left_cov = (256 - (coverage * (ry + 1))); \
+          } \
+      } \
+   while(0)
 
    int y, idx, ry, ridx;
-   aa_edge edge1;
+   int coverage;
+   Evas_Coord_Point edge1 = { -1, -1 };
 
    //Find Start Edge
    for (y = ystart; y < yend; y++)
@@ -104,6 +123,9 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
         break;
      }
 
+   //No Edges
+   if (edge1.y == -1) return;
+
    //Calculates AA Edges
    for (y++; y < yend; y++)
      {
@@ -113,56 +135,28 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
         if (edge1.x > spans[idx].span[0].x1)
           {
              //Horizontal Edge
-             if (((idx - edge1.y) == 1))
+             if ((idx - edge1.y) == 1)
                {
-                  ridx = (idx - 1);
-                  spans[ridx].aa_left_len = (edge1.x - spans[idx].span[0].x1);
-                  spans[ridx].aa_left_cov =
-                     (256 / (spans[ridx].aa_left_len + 1));
+                  //Middle
+                  HORIZONTAL_AA((idx - 1));
 
-                  //Remains... Last Span?
-                  if ((y + 1) == yend)
-                    {
-                       printf("@@@@@@@@@@\n");
-                       ridx = (idx);
-                       spans[ridx].aa_left_len =
-                          (edge1.x - spans[idx].span[0].x1);
-                       spans[ridx].aa_left_cov =
-                          (256 / (spans[ridx].aa_left_len + 1));
-                    }
+                  //Left Overs
+                  if ((y + 1) == yend) HORIZONTAL_AA(idx);
                }
              //Vertical Edge
              else if ((edge1.x - spans[idx].span[0].x1) == 1)
                {
-                  int coverage = (256 / ((idx - edge1.y) + 1));
+                  //Middle
+                  VERTICAL_AA((idx - edge1.y), 0);
 
-                  //Rewinds
-                  for (ry = 0; ry < (idx - edge1.y); ry++)
-                    {
-                       ridx = (idx - 1) - ry;
-                       spans[ridx].aa_left_len = 1;
-                       spans[ridx].aa_left_cov = 256 - (coverage * (ry + 1));
-                    }
-
-                  //Remains... Last Span?
+                  //Left Overs
                   if ((y + (idx - edge1.y)) >= yend)
-                    {
-                       printf("?????????\n");
-                       int remains = yend - y;
-
-                       //Rewinds
-                       for (ry = 0; ry < remains; ry++)
-                         {
-                            ridx = (idx - 1 + remains) - ry;
-                            spans[ridx].aa_left_len = 1;
-                            spans[ridx].aa_left_cov = 256 - (coverage * (ry + 1));
-                         }
-                    }
+                    VERTICAL_AA((yend - y), (yend - y));
                }
-             //No Edge ?
+             //No Edge
              else
                {
-                  //TODO:
+                  //TODO: ?
                }
              edge1.x = spans[idx].span[0].x1;
              edge1.y = idx;
