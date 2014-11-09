@@ -16,7 +16,7 @@
 
 #define FPFPI1 (1 << (FP + FPI))
 
-#define HORIZONTAL_AA(xx) \
+#define AA_HORIZ_LEFT_DIR(xx) \
    do \
      { \
         spans[(xx)].aa_left_len = (edge1.x - spans[idx].span[0].x1); \
@@ -24,7 +24,15 @@
      } \
    while (0)
 
-#define VERTICAL_AA(rewind, y_advance) \
+#define AA_HORIZ_RIGHT_DIR(xx) \
+   do \
+     { \
+        spans[(xx)].aa_left_len = (edge2.x - edge1.x); \
+        spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+     } \
+   while (0)
+
+#define AA_VERT_LEFT_DIR(rewind, y_advance) \
    do \
      { \
         coverage = (256 / ((rewind) + 1)); \
@@ -36,6 +44,20 @@
           } \
       } \
    while(0)
+
+#define AA_VERT_RIGHT_DIR(rewind, y_advance) \
+   do \
+     { \
+        coverage = (256 / ((rewind) + 1)); \
+        for (ry = 0; ry < (rewind); ry++) \
+          { \
+             ridx = (idx - 1) - ry + (y_advance); \
+             spans[ridx].aa_left_len = 1; \
+             spans[ridx].aa_left_cov = (coverage * (ry + 1)); \
+          } \
+     } \
+   while (0)
+
 
 typedef struct _Line Line;
 typedef struct _Span Span;
@@ -109,14 +131,15 @@ static void
 _calc_aa_edges(Line *spans, int ystart, int yend)
 {
 
-   int y, idx, ry, ridx;
+   int y, ry, ridx;
+   int idx = 0;
    int coverage;
    Evas_Coord_Point edge1 = { -1, -1 };
+   Evas_Coord_Point edge2 = { -1, -1 };
 
    //Find Start Edge
-   for (y = ystart; y < yend; y++)
+   for (y = ystart; y < yend; y++, idx++)
      {
-        idx = (y - ystart);
         if (spans[idx].span[0].x1 == -1) continue;
         edge1.x = spans[idx].span[0].x1;
         edge1.y = idx;
@@ -127,10 +150,8 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
    if (edge1.y == -1) return;
 
    //Calculates AA Edges
-   for (y++; y < yend; y++)
+   for (y++, idx++; y < yend; y++, idx++)
      {
-        idx = (y - ystart);
-
         //Got it! - Left Direction
         if (edge1.x > spans[idx].span[0].x1)
           {
@@ -138,28 +159,65 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
              if ((idx - edge1.y) == 1)
                {
                   //Middle
-                  HORIZONTAL_AA((idx - 1));
+                  AA_HORIZ_LEFT_DIR((idx - 1));
 
-                  //Left Overs
-                  if ((y + 1) == yend) HORIZONTAL_AA(idx);
+                  //Leftovers
+                  if ((y + 1) == yend) AA_HORIZ_LEFT_DIR(idx);
                }
              //Vertical Edge
              else if ((edge1.x - spans[idx].span[0].x1) == 1)
                {
                   //Middle
-                  VERTICAL_AA((idx - edge1.y), 0);
+                  AA_VERT_LEFT_DIR((idx - edge1.y), 0);
 
-                  //Left Overs
+                  //Leftovers
                   if ((y + (idx - edge1.y)) >= yend)
-                    VERTICAL_AA((yend - y), (yend - y));
-               }
-             //No Edge
-             else
-               {
-                  //TODO: ?
+                    AA_VERT_LEFT_DIR((yend - y), (yend - y));
                }
              edge1.x = spans[idx].span[0].x1;
              edge1.y = idx;
+          }
+        //Got it! - Right Direction
+        else if (edge1.x < spans[idx].span[0].x1)
+          {
+             //Previous Edge
+             edge1.x = spans[idx - 1].span[0].x1;
+             edge1.y = idx - 1;
+             edge2.x = spans[idx].span[0].x1;
+             edge2.y = idx;
+
+             //Find Next Edge
+             for (y++, idx++; y < yend; y++, idx++)
+               {
+                  //Got it ! - Right Direction
+                  if (edge2.x < spans[idx].span[0].x1)
+                    {
+                       //Horizontal Edge
+                       if ((edge2.y - edge1.y) == 1)
+                         {
+                            //Middle
+                            AA_HORIZ_RIGHT_DIR(edge2.y);
+
+                            //Leftovers
+                            if ((y + 1) == yend) AA_HORIZ_RIGHT_DIR(idx);
+                         }
+                       //Vertical Edge
+                       else
+                         {
+                            //Middle
+                            AA_VERT_RIGHT_DIR(edge2.y - edge1.y, 0);
+
+                            //Leftovers
+                            if ((y + rewind) >= yend)
+                              AA_VERT_RIGHT_DIR((yend - y), (yend - y));
+
+                         }
+                       edge1.x = edge2.x;
+                       edge1.y = edge2.y;
+                    }
+                  edge2.x = spans[idx].span[0].x1;
+                  edge2.y = idx;
+               }
           }
      }
 }

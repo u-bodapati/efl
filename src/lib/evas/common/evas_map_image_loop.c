@@ -175,16 +175,15 @@
              DATA32 ret;
              for (k = 0; k < line->aa_left_len; k++)
                {
-    //              printf("k: %d    cov: %d    before = 0x%x, ",
-      //                   k, line->aa_left_cov * (k + 1), col);
                   ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
                                    0x00000000);
-        //          printf("after = 0x%x\n", ret);
+//                printf("k: %d  cov: %d  before = 0x%x  after = 0x%x\n",
+//                        k, line->aa_left_cov * (k + 1), col, ret);
                   *d = ret;
                   ww--;
                   d++;
                }
-         //    printf("\n");
+//             printf("\n");
           }
 #endif
 
