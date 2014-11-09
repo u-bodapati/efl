@@ -282,7 +282,7 @@ invalid_signature:
 static const Eldbus_Method methods[] = {
       {
         "ReceiveArray", ELDBUS_ARGS({"as", "array_of_strings"}),
-        NULL, _receive_array
+        NULL, _receive_array, 0
       },
       {
         "ReceiveArrayOfStringIntWithSize",
@@ -291,11 +291,11 @@ static const Eldbus_Method methods[] = {
       },
       {
         "SendVariantData", ELDBUS_ARGS({"v", "variant_data"}),
-        NULL, _send_variant
+        NULL, _send_variant, 0
       },
       {
        "ReceiveVariantData", NULL, ELDBUS_ARGS({"v", "variant_data"}),
-       _receive_variant
+       _receive_variant, 0
       },
       {
         "SendArrayInt", NULL,
@@ -303,29 +303,29 @@ static const Eldbus_Method methods[] = {
       },
       {
         "SendArray", NULL, ELDBUS_ARGS({"as", "array_string"}),
-        _send_array
+        _send_array, 0
       },
       {
         "PlusOne", ELDBUS_ARGS({"i", "integer"}),
-        ELDBUS_ARGS({"i", "integer_plus_one"}), _plus_one
+        ELDBUS_ARGS({"i", "integer_plus_one"}), _plus_one, 0
       },
       {
         "DoubleContainner", ELDBUS_ARGS({"a(ii)", "array1"}, {"a(ii)", "array2"}),
-        NULL, _double_container
+        NULL, _double_container, 0
       },
       { }
 };
 
 static const Eldbus_Property properties[] = {
-      { "Resp2", "s", NULL, _properties_set },
-      { "text", "s" },
-      { "int32", "i", NULL, _properties_set },
-      { "st", "(ss)" },
+      { "Resp2", "s", NULL, _properties_set, 0 },
+      { "text", "s", NULL, NULL, 0 },
+      { "int32", "i", NULL, _properties_set, 0 },
+      { "st", "(ss)", NULL, NULL, 0 },
       { }
 };
 
 static const Eldbus_Service_Interface_Desc iface_desc = {
-   IFACE, methods, NULL, properties, _properties_get
+   IFACE, methods, NULL, properties, _properties_get, NULL
 };
 
 static Eina_Bool _emit_changed(void *data)
@@ -384,6 +384,7 @@ main(void)
 
    free(resp2);
    ecore_timer_del(timer);
+   eldbus_service_interface_unregister(iface);
    eldbus_connection_unref(conn);
 
    eldbus_shutdown();
