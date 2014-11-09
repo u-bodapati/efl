@@ -16,6 +16,27 @@
 
 #define FPFPI1 (1 << (FP + FPI))
 
+#define HORIZONTAL_AA(xx) \
+   do \
+     { \
+        spans[(xx)].aa_left_len = (edge1.x - spans[idx].span[0].x1); \
+        spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+     } \
+   while (0)
+
+#define VERTICAL_AA(rewind, y_advance) \
+   do \
+     { \
+        coverage = (256 / ((rewind) + 1)); \
+        for (ry = 0; ry < (rewind); ry++) \
+          { \
+             ridx = (idx - 1) - ry + (y_advance); \
+             spans[ridx].aa_left_len = 1; \
+             spans[ridx].aa_left_cov = (256 - (coverage * (ry + 1))); \
+          } \
+      } \
+   while(0)
+
 typedef struct _Line Line;
 typedef struct _Span Span;
 
@@ -87,27 +108,6 @@ _interpolated_clip_span(Span *s, int c1, int c2, Eina_Bool interp_col)
 static void
 _calc_aa_edges(Line *spans, int ystart, int yend)
 {
-
-#define HORIZONTAL_AA(xx) \
-   do \
-     { \
-        spans[(xx)].aa_left_len = (edge1.x - spans[idx].span[0].x1); \
-        spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
-     } \
-   while (0)
-
-#define VERTICAL_AA(rewind, y_advance) \
-   do \
-     { \
-        coverage = (256 / ((rewind) + 1)); \
-        for (ry = 0; ry < (rewind); ry++) \
-          { \
-             ridx = (idx - 1) - ry + (y_advance); \
-             spans[ridx].aa_left_len = 1; \
-             spans[ridx].aa_left_cov = (256 - (coverage * (ry + 1))); \
-          } \
-      } \
-   while(0)
 
    int y, idx, ry, ridx;
    int coverage;
