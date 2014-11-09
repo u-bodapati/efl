@@ -180,6 +180,8 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
         //Got it! - Right Direction
         else if (edge1.x < spans[idx].span[0].x1)
           {
+             Eina_Bool leftover = EINA_FALSE;
+
              //Previous Edge
              edge1.x = spans[idx - 1].span[0].x1;
              edge1.y = idx - 1;
@@ -199,25 +201,45 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                             AA_HORIZ_RIGHT_DIR(edge2.y);
 
                             //Leftovers
-                            if ((y + 1) == yend) AA_HORIZ_RIGHT_DIR(idx);
+                            if ((y + 1) == yend)
+                              {
+                                 AA_HORIZ_RIGHT_DIR(idx);
+                                 leftover = EINA_TRUE;
+                              }
                          }
                        //Vertical Edge
                        else
                          {
                             //Middle
-                            AA_VERT_RIGHT_DIR(edge2.y - edge1.y, 0);
+                            AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
 
                             //Leftovers
-                            if ((y + rewind) >= yend)
-                              AA_VERT_RIGHT_DIR((yend - y), (yend - y));
-
+                            if ((y + (edge2.y - edge1.y)) >= yend)
+                              {
+                                 AA_VERT_RIGHT_DIR((yend - y), (yend - y));
+                                 leftover = EINA_TRUE;
+                              }
                          }
                        edge1.x = edge2.x;
                        edge1.y = edge2.y;
                     }
+/*                  //Revert Direction? - Left Direction
+                  else if (edge2.x > spans[idx].span[0].x1)
+                    {
+
+
+
+
+                    }
+
+*/
                   edge2.x = spans[idx].span[0].x1;
                   edge2.y = idx;
                }
+
+             //Handle Leftovers...
+             if ((y == yend) && !leftover)
+               AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
           }
      }
 }
