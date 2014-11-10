@@ -19,6 +19,7 @@
 #define AA_HORIZ_LEFT_DIR(xx) \
    do \
      { \
+        printf("%d: hl\n", xx); \
         spans[(xx)].aa_left_len = (edge1.x - spans[idx].span[0].x1); \
         spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
      } \
@@ -27,6 +28,7 @@
 #define AA_HORIZ_RIGHT_DIR(xx) \
    do \
      { \
+        printf("%d: hr\n", xx); \
         spans[(xx)].aa_left_len = (edge2.x - edge1.x); \
         spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
      } \
@@ -39,6 +41,7 @@
         for (ry = 0; ry < (rewind); ry++) \
           { \
              ridx = (idx - 1) - ry + (y_advance); \
+             printf("%d: vl\n", ridx); \
              spans[ridx].aa_left_len = 1; \
              spans[ridx].aa_left_cov = (256 - (coverage * (ry + 1))); \
           } \
@@ -52,6 +55,7 @@
         for (ry = 0; ry < (rewind); ry++) \
           { \
              ridx = (idx - 1) - ry + (y_advance); \
+             printf("%d: vr\n", ridx); \
              spans[ridx].aa_left_len = 1; \
              spans[ridx].aa_left_cov = (coverage * (ry + 1)); \
           } \
@@ -152,6 +156,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
    //Calculates AA Edges
    for (y++, idx++; y < yend; y++, idx++)
      {
+        printf("xxxxxxxxx (%d) \n", idx);
         //Got it! - Left Direction
         if (edge1.x > spans[idx].span[0].x1)
           {
@@ -172,7 +177,11 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
 
                   //Leftovers
                   if ((y + (idx - edge1.y)) >= yend)
+                    {
+                       printf("leftover! (idx: %d\n", idx);
                     AA_VERT_LEFT_DIR((yend - y), (yend - y));
+                    break;
+                    }
                }
              edge1.x = spans[idx].span[0].x1;
              edge1.y = idx;
@@ -180,14 +189,13 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
         //Got it! - Right Direction
         else if (edge1.x < spans[idx].span[0].x1)
           {
-             Eina_Bool leftover = EINA_FALSE;
+             Eina_Bool leftover = EINA_TRUE;
 
              //Previous Edge
              edge1.x = spans[idx - 1].span[0].x1;
              edge1.y = idx - 1;
              edge2.x = spans[idx].span[0].x1;
              edge2.y = idx;
-
              //Find Next Edge
              for (y++, idx++; y < yend; y++, idx++)
                {
@@ -204,7 +212,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                             if ((y + 1) == yend)
                               {
                                  AA_HORIZ_RIGHT_DIR(idx);
-                                 leftover = EINA_TRUE;
+                                 leftover = EINA_FALSE;
                               }
                          }
                        //Vertical Edge
@@ -217,29 +225,39 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                             if ((y + (edge2.y - edge1.y)) >= yend)
                               {
                                  AA_VERT_RIGHT_DIR((yend - y), (yend - y));
-                                 leftover = EINA_TRUE;
+                                 leftover = EINA_FALSE;
+                                 y = yend;
+                                 break;
                               }
                          }
                        edge1.x = edge2.x;
                        edge1.y = edge2.y;
                     }
-/*                  //Revert Direction? - Left Direction
+                  //Revert Direction? - Left Direction
                   else if (edge2.x > spans[idx].span[0].x1)
                     {
+                       //Horizontal Edge
+                       if ((edge2.y - edge1.y) == 1)
+                         AA_HORIZ_RIGHT_DIR(edge2.y);
+                       //Vertical Edge
+                       else
+                         AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
 
-
-
-
+                       edge1.x = spans[idx].span[0].x1;
+                       edge1.y = idx;
+                       printf("revers!!! %d\n", idx);
+                       break;
                     }
-
-*/
                   edge2.x = spans[idx].span[0].x1;
                   edge2.y = idx;
                }
 
              //Handle Leftovers...
-             if ((y == yend) && !leftover)
+             if (leftover && (y == yend))
+               {
+                  printf("left over???\n");
                AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
+               }
           }
      }
 }
