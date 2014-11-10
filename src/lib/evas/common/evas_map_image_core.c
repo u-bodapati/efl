@@ -39,7 +39,7 @@
                   dv = (span->o2 - span->o1);
                   if (dv <= 0) continue;
 
-                  ww = (w + line->aa_left_len);
+                  ww = w;
 
                   //correct elaborate u point
                   u = span->u[0] << FPI;
@@ -133,7 +133,8 @@
 #endif
 
                        d += (y * dst->cache_entry.w) + (x - line->aa_left_len);
-                       func(buf, NULL, mul_col, d, (w + line->aa_left_len));
+                       func(buf, NULL, mul_col, d,
+                            (w + (line->aa_left_len + line->aa_right_len)));
                     }
                }
           }

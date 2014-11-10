@@ -168,7 +168,8 @@
 #    endif
 #   else
 #if 1
-        if ((ww > w) && (line->aa_left_len > 0))
+        //Left Edge Anti Anliasing
+        if ((ww == w) && (line->aa_left_len > 0))
           {
              int k = 0;
              DATA32 col = val1;
@@ -177,17 +178,28 @@
                {
                   ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
                                    0x00000000);
-//                printf("k: %d  cov: %d  before = 0x%x  after = 0x%x\n",
-//                        k, line->aa_left_cov * (k + 1), col, ret);
                   *d = ret;
-                  ww--;
                   d++;
                }
-//             printf("\n");
           }
 #endif
+        *d = val1;
 
-        *d   = val1;
+        //Right Edge Anti Aliasing
+        if ((ww == 1) && (line->aa_right_len > 0))
+          {
+             d++;
+             int k = 0;
+             DATA32 col = val1;
+             DATA32 ret;
+             for (k = 0; k < line->aa_right_len; k++)
+               {
+                  ret = INTERP_256(256 - (line->aa_right_cov * (k + 1)), col,
+                                   0x00000000);
+                  *d = ret;
+                  d++;
+               }
+          }
 #   endif
 #  endif
         u += ud;
@@ -195,6 +207,7 @@
 # endif //COLBLACK
         d++;
         ww--;
+
      }
 }
 #else
