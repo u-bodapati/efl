@@ -150,8 +150,10 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
    if (edge1.y == -1) return;
 
    //Calculates AA Edges
-   for (y++, idx++; y <= yend; y++, idx++)
+   for (y++, idx++; y < yend; y++, idx++)
      {
+        if (spans[idx].span[0].x1 == -1) continue;
+
         //Got it! - Left Direction
         if (edge1.x > spans[idx].span[0].x1)
           {
@@ -162,7 +164,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                   AA_HORIZ_LEFT_DIR((idx - 1));
 
                   //Leftovers
-                  if ((y + 1) > yend)
+                  if ((y + 1) == yend)
                     {
                        AA_HORIZ_LEFT_DIR(idx);
                        break;
@@ -175,7 +177,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                   AA_VERT_LEFT_DIR((idx - edge1.y), 0);
 
                   //Leftovers
-                  if ((y + (idx - edge1.y)) > yend)
+                  if ((y + (idx - edge1.y)) >= yend)
                     {
                        AA_VERT_LEFT_DIR((yend - y), (yend - y));
                        break;
@@ -195,8 +197,10 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
              edge2.x = spans[idx].span[0].x1;
              edge2.y = idx;
              //Find Next Edge
-             for (y++, idx++; y <= yend; y++, idx++)
+             for (y++, idx++; y < yend; y++, idx++)
                {
+                  if (spans[idx].span[0].x1 == -1) continue;
+
                   //Got it ! - Right Direction
                   if (edge2.x < spans[idx].span[0].x1)
                     {
@@ -207,7 +211,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                             AA_HORIZ_RIGHT_DIR(edge2.y);
 
                             //Leftovers
-                            if ((y + 1) > yend)
+                            if ((y + 1) == yend)
                               {
                                  AA_HORIZ_RIGHT_DIR(idx);
                                  leftover = EINA_FALSE;
@@ -221,7 +225,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                             AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
 
                             //Leftovers
-                            if ((y + (edge2.y - edge1.y)) > yend)
+                            if ((y + (edge2.y - edge1.y)) >= yend)
                               {
                                  AA_VERT_RIGHT_DIR((yend - y), (yend - y));
                                  leftover = EINA_FALSE;
@@ -251,7 +255,7 @@ _calc_aa_edges(Line *spans, int ystart, int yend)
                }
 
              //Handle Leftovers...
-             if (leftover && (y > yend))
+             if (leftover && (y == yend))
                AA_VERT_RIGHT_DIR((edge2.y - edge1.y), 0);
           }
      }
