@@ -141,6 +141,7 @@ _calc_aa_right_edges(Line *spans, int idx, int y, int yend,
    int ry, ridx;
 
    if (spans[idx].span[0].x2 == -1) return EINA_FALSE;
+   if ((edge1->y >= idx) || (edge2->y >= idx)) return EINA_TRUE;
 
    //Got it! - Right Direction
    if (edge1->x < spans[idx].span[0].x2)
@@ -306,6 +307,7 @@ _calc_aa_left_edges(Line *spans, int idx, int y, int yend,
    int ry, ridx;
 
    if (spans[idx].span[0].x1 == -1) return EINA_FALSE;
+   if ((edge1->y >= idx) || (edge2->y >= idx)) return EINA_TRUE;
 
    //Got it! - Left Direction
    if (edge1->x > spans[idx].span[0].x1)

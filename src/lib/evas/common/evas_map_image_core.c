@@ -2,8 +2,6 @@
 {
    if (smooth)
      {
-        Eina_Bool aa_interp_first_span = EINA_TRUE;
-
         for (y = ystart; y <= yend; y++)
           {
              int x, w, ww;
@@ -119,19 +117,6 @@
                   if (!direct)
                     {
                        d = dst->image.data;
-
-                       /* TRICK!: Interpolate first span on upper direction, 
-                          in just case if first span is ended up with edge. */
-#if 0 
-                       if (aa_interp_first_span)
-                         {
-                            d += ((y - 1) * dst->cache_entry.w) + x;
-                            func(buf, NULL, mul_col, d, w);
-                            d = dst->image.data;
-                            aa_interp_first_span = EINA_FALSE;
-                         }
-#endif
-
                        d += (y * dst->cache_entry.w) + (x - line->aa_left_len);
                        func(buf, NULL, mul_col, d,
                             (w + (line->aa_left_len + line->aa_right_len)));
