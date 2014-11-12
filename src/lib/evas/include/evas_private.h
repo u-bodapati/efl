@@ -1680,13 +1680,12 @@ Eina_Bool evas_render_mapped(Evas_Public_Data *e, Evas_Object *obj,
                              Evas_Object_Protected_Data *source_pd,
                              void *context, void *surface, int off_x, int off_y,
                              int mapped, int ecx, int ecy, int ecw, int ech,
-                             Evas_Proxy_Render_Data *proxy_render_data
-#ifdef REND_DBG
-                             , int level
-#endif
-                             , Eina_Bool do_async);
+                             Evas_Proxy_Render_Data *proxy_render_data,
+                             int level, Eina_Bool use_mapped_ctx, Eina_Bool do_async);
 void evas_render_invalidate(Evas *e);
 void evas_render_object_recalc(Evas_Object *obj);
+void evas_render_proxy_subrender(Evas *eo_e, Evas_Object *eo_source, Evas_Object *eo_proxy,
+                                 Evas_Object_Protected_Data *proxy_obj, Eina_Bool do_async);
 
 Eina_Bool evas_map_inside_get(const Evas_Map *m, Evas_Coord x, Evas_Coord y);
 Eina_Bool evas_map_coords_get(const Evas_Map *m, Evas_Coord x, Evas_Coord y, Evas_Coord *mx, Evas_Coord *my, int grab);

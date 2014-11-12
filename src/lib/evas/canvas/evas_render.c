@@ -89,6 +89,10 @@ do                                  \
    eina_array_flush(array);                           \
 }
 
+/* save typing */
+#define ENFN evas->engine.func
+#define ENDT evas->engine.data.output
+
 typedef struct _Render_Updates Render_Updates;
 struct _Render_Updates
 {
@@ -390,11 +394,7 @@ _evas_render_phase1_object_process(Evas_Public_Data *e, Evas_Object *eo_obj,
                                    int restack,
                                    int *redraw_all,
                                    Eina_Bool mapped_parent,
-                                   Eina_Bool src_changed
-#ifdef REND_DBG
-                                   , int level
-#endif
-                                  )
+                                   Eina_Bool src_changed, int level)
 {
    Eina_Bool clean_them = EINA_FALSE;
    int is_active;
@@ -490,11 +490,8 @@ _evas_render_phase1_object_process(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                                obj->restack,
                                                                redraw_all,
                                                                EINA_TRUE,
-                                                               src_changed
-#ifdef REND_DBG
-                                                               , level + 1
-#endif
-                                                              );
+                                                               src_changed,
+                                                               level + 1);
                          }
                     }
                }
@@ -544,11 +541,8 @@ _evas_render_phase1_object_process(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                      obj->restack,
                                                      redraw_all,
                                                      mapped_parent,
-                                                     src_changed
-#ifdef REND_DBG
-                                                     , level + 1
-#endif
-                                                    );
+                                                     src_changed,
+                                                     level + 1);
                }
           }
         else
@@ -615,11 +609,8 @@ _evas_render_phase1_object_process(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                              restack,
                                                              redraw_all,
                                                              mapped_parent,
-                                                             src_changed
-#ifdef REND_DBG
-                                                             , level + 1
-#endif
-                                                            );
+                                                             src_changed,
+                                                             level + 1);
                        }
                }
              else
@@ -661,11 +652,8 @@ _evas_render_phase1_object_process(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                      delete_objects,
                                                      render_objects,
                                                      restack,
-                                                     redraw_all
-#ifdef REND_DBG
-                                                     , level + 1
-#endif
-                                                    );
+                                                     redraw_all,
+                                                     level + 1);
                }
           }
 */
@@ -696,11 +684,7 @@ _evas_render_phase1_process(Evas_Public_Data *e,
           {
              clean_them |= _evas_render_phase1_object_process
                 (e, obj->object, active_objects, restack_objects, delete_objects,
-                 render_objects, 0, redraw_all, EINA_FALSE, EINA_FALSE
-#ifdef REND_DBG
-                 , 1
-#endif
-                );
+                 render_objects, 0, redraw_all, EINA_FALSE, EINA_FALSE, 1);
           }
      }
    RD("  ---]\n");
@@ -1126,11 +1110,8 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
                    Evas_Object_Protected_Data *obj, void *context,
                    void *surface, int off_x, int off_y, int mapped, int ecx,
                    int ecy, int ecw, int ech,
-                   Evas_Proxy_Render_Data *proxy_render_data
-#ifdef REND_DBG
-                   , int level
-#endif
-                   , Eina_Bool do_async)
+                   Evas_Proxy_Render_Data *proxy_render_data, int level,
+                   Eina_Bool use_mapped_ctx, Eina_Bool do_async)
 {
    void *ctx;
    Evas_Object_Protected_Data *obj2;
@@ -1299,11 +1280,10 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                            obj->map->surface,
                                                            off_x2, off_y2, 1,
                                                            ecx, ecy, ecw, ech,
-                                                           proxy_render_data
-#ifdef REND_DBG
-                                                           , level + 1
-#endif
-                                                           , do_async);
+                                                           proxy_render_data,
+                                                           level + 1,
+                                                           EINA_FALSE,
+                                                           do_async);
                           /* We aren't sure this object will be rendered by
                              normal(not proxy) drawing after, we reset this
                              only in case of normal drawing. For optmizing,
@@ -1419,7 +1399,10 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
           {
              RDI(level);
              RD("        draw child of mapped obj\n");
-             ctx = e->engine.func->context_new(e->engine.data.output);
+             if (use_mapped_ctx)
+               ctx = context;
+             else
+               ctx = e->engine.func->context_new(e->engine.data.output);
              if (obj->is_smart)
                {
                   EINA_INLIST_FOREACH
@@ -1429,11 +1412,10 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
                                                            obj2, ctx, surface,
                                                            off_x, off_y, 1,
                                                            ecx, ecy, ecw, ech,
-                                                           proxy_render_data
-#ifdef REND_DBG
-                                                           , level + 1
-#endif
-                                                           , do_async);
+                                                           proxy_render_data,
+                                                           level + 1,
+                                                           EINA_FALSE,
+                                                           do_async);
                           /* We aren't sure this object will be rendered by
                              normal(not proxy) drawing after, we reset this
                              only in case of normal drawing. For optmizing,
@@ -1459,7 +1441,8 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
 				    e->engine.data.output, ctx,
                                     surface, off_x, off_y, EINA_FALSE);
                }
-             e->engine.func->context_free(e->engine.data.output, ctx);
+             if (!use_mapped_ctx)
+               e->engine.func->context_free(e->engine.data.output, ctx);
           }
         else
           {
@@ -1498,6 +1481,81 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
    RD("      }\n");
 
    return clean_them;
+}
+
+/*
+ * Render the source object when a proxy is set.
+ * Used to force a draw if necessary, else just makes sure it's available.
+ * Called from: image objects and text with filters.
+ * TODO: 3d objects subrender should probably be merged here as well.
+ */
+void
+evas_render_proxy_subrender(Evas *eo_e, Evas_Object *eo_source, Evas_Object *eo_proxy,
+                            Evas_Object_Protected_Data *proxy_obj, Eina_Bool do_async)
+{
+   Evas_Public_Data *evas = eo_data_scope_get(eo_e, EVAS_CANVAS_CLASS);
+   Evas_Object_Protected_Data *source;
+   Eina_Bool source_clip = EINA_FALSE;
+   void *ctx;
+   int w, h;
+
+   if (!eo_source) return;
+   source = eo_data_scope_get(eo_source, EVAS_OBJECT_CLASS);
+
+   w = source->cur->geometry.w;
+   h = source->cur->geometry.h;
+
+   EINA_COW_WRITE_BEGIN(evas_object_proxy_cow, source->proxy,
+                        Evas_Object_Proxy_Data, proxy_write)
+     {
+        proxy_write->redraw = EINA_FALSE;
+
+        /* We need to redraw surface then */
+        if ((proxy_write->surface) &&
+            ((proxy_write->w != w) || (proxy_write->h != h)))
+          {
+             ENFN->image_map_surface_free(ENDT, proxy_write->surface);
+             proxy_write->surface = NULL;
+          }
+
+        /* FIXME: Hardcoded alpha 'on' */
+        /* FIXME (cont): Should see if the object has alpha */
+        if (!proxy_write->surface)
+          {
+             proxy_write->surface = ENFN->image_map_surface_new(ENDT, w, h, 1);
+             if (!proxy_write->surface) goto end;
+             proxy_write->w = w;
+             proxy_write->h = h;
+          }
+
+        ctx = ENFN->context_new(ENDT);
+        ENFN->context_color_set(ENDT, ctx, 0, 0,0, 0);
+        ENFN->context_render_op_set(ENDT, ctx,EVAS_RENDER_COPY);
+        ENFN->rectangle_draw(ENDT, ctx, proxy_write->surface, 0, 0, w, h, do_async);
+        ENFN->context_free(ENDT, ctx);
+
+        ctx = ENFN->context_new(ENDT);
+
+        if (eo_isa(eo_proxy, EVAS_IMAGE_CLASS))
+          eo_do(eo_proxy, source_clip = evas_obj_image_source_clip_get());
+
+        Evas_Proxy_Render_Data proxy_render_data = {
+             .eo_proxy = eo_proxy,
+             .proxy_obj = proxy_obj,
+             .eo_src = eo_source,
+             .source_clip = source_clip
+        };
+        evas_render_mapped(evas, eo_source, source, ctx, proxy_write->surface,
+                           -source->cur->geometry.x,
+                           -source->cur->geometry.y,
+                           1, 0, 0, evas->output.w, evas->output.h,
+                           &proxy_render_data, 1, EINA_TRUE, do_async);
+
+        ENFN->context_free(ENDT, ctx);
+        proxy_write->surface = ENFN->image_dirty_region(ENDT, proxy_write->surface, 0, 0, w, h);
+     }
+ end:
+   EINA_COW_WRITE_END(evas_object_proxy_cow, source->proxy, proxy_write);
 }
 
 static void
@@ -1967,11 +2025,9 @@ printf("-----------------------------------\n");
                                                              surface, off_x + fx,
                                                              off_y + fy, 0,
                                                              cx, cy, cw, ch,
-                                                             NULL
-#ifdef REND_DBG
-                                                             , 1
-#endif
-                                                             , do_async);
+                                                             NULL, 1,
+                                                             EINA_FALSE,
+                                                             do_async);
                             e->engine.func->context_cutout_clear(e->engine.data.output,
                                                                  e->engine.data.context);
                          }
