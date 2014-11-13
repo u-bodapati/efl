@@ -761,6 +761,7 @@ struct _RGBA_Pipe_Op
 	 int                 npoints;
 	 int                 smooth;
 	 int                 level;
+         Eina_Bool           anti_alias: 1;
       } map;
    } op;
 

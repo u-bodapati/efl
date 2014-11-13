@@ -4,7 +4,7 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
           int clip_x, int clip_y, int clip_w, int clip_h,
           DATA32 mul_col, int render_op,
           RGBA_Map_Point *p,
-          int smooth, int level EINA_UNUSED) // level unused for now - for future use
+          int smooth, int anti_alias, int level EINA_UNUSED) // level unused for now - for future use
 {
    int i;
    int cx, cy, cw, ch;
@@ -77,7 +77,7 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
    _calc_spans(p, spans, ystart, yend, cx, cy, cw, ch);
 
    // calculate anti alias edges
-   _calc_aa_edges(spans, ystart, yend);
+   if (anti_alias) _calc_aa_edges(spans, ystart, yend);
 
    // walk through spans and render
 
@@ -118,7 +118,7 @@ static void
 FUNC_NAME_DO(RGBA_Image *src, RGBA_Image *dst,
              RGBA_Draw_Context *dc,
              const RGBA_Map_Spans *ms,
-             int smooth, int level EINA_UNUSED) // level unused for now - for future use
+             int smooth, int anti_alias EINA_UNUSED, int level EINA_UNUSED) // level unused for now - for future use
 {
    Line *spans;
    DATA32 *buf = NULL, *sp;

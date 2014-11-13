@@ -1375,6 +1375,8 @@ evas_render_mapped(Evas_Public_Data *e, Evas_Object *eo_obj,
                (e->engine.data.output, context);
              obj->layer->evas->engine.func->context_render_op_set
                (e->engine.data.output, context, obj->cur->render_op);
+             obj->layer->evas->engine.func->context_anti_alias_set
+                (e->engine.data.output, context, obj->cur->anti_alias);
              evas_draw_image_map_async_check
                (obj, e->engine.data.output, context, surface,
                 obj->map->surface, obj->map->spans,
