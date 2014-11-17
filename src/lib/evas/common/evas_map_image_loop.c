@@ -160,115 +160,31 @@
         val1 = INTERP_256(rv, val3, val1); // col
 #   ifdef COLMUL
 #    ifdef COLSAME
-
-        //Left Edge Anti Anliasing
-        if ((ww == w) && (line->aa_left_len > 0))
-          {
-             int k = 0;
-             DATA32 col = MUL4_SYM(c1, val1);
-             DATA32 ret;
-             for (k = 0; k < line->aa_left_len; k++)
-               {
-                  ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
-          }
-
         *d = MUL4_SYM(c1, val1);
-
-        //Right Edge Anti Aliasing
-        if ((ww == 1) && (line->aa_right_len > 0))
-          {
-             d++;
-             int k = 0;
-             DATA32 col = MUL4_SYM(c1, val1);
-             DATA32 ret;
-             for (k = 0; k < line->aa_right_len; k++)
-               {
-                  ret = INTERP_256(256 - (line->aa_right_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
-          }
-
 #    else
         val2 = INTERP_256((cv >> 16), c2, c1); // col
-
-        //Left Edge Anti Anliasing
-        if ((ww == w) && (line->aa_left_len > 0))
-          {
-             printf("%d\n", line->aa_left_len);
-             int k = 0;
-             DATA32 col = MUL4_SYM(val2, val1);
-             DATA32 ret;
-             for (k = 0; k < line->aa_left_len; k++)
-               {
-                  ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
-          }
-
         *d   = MUL4_SYM(val2, val1); // col
         cv += cd; // col
-
-        //Right Edge Anti Aliasing
-        if ((ww == 1) && (line->aa_right_len > 0))
-          {
-             d++;
-             int k = 0;
-             printf("%d\n", line->aa_right_len);
-             DATA32 col = MUL4_SYM(val2, val1);
-             DATA32 ret;
-             for (k = 0; k < line->aa_right_len; k++)
-               {
-                  ret = INTERP_256(256 - (line->aa_right_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
-          }
-
-
 #    endif
 #   else
-#if 1
         //Left Edge Anti Anliasing
-        if ((ww == w) && (line->aa_left_len > 0))
+        tmp = (w - ww);
+        if (tmp < line->aa_left_len)
           {
-             int k = 0;
-             DATA32 col = val1;
-             DATA32 ret;
-             for (k = 0; k < line->aa_left_len; k++)
-               {
-                  ret = INTERP_256((line->aa_left_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
+             val1 = INTERP_256((line->aa_left_cov * (tmp + 1)), val1,
+                               0x00000000);
           }
-#endif
+        //Right Edge Anti Aliasing
+        tmp = (line->aa_right_len - ww);
+
+        if (tmp >= 0)
+          {
+             val1 = INTERP_256(256 - (line->aa_right_cov * (tmp + 1)), val1,
+                               0x00000000);
+          }
+
         *d = val1;
 
-        //Right Edge Anti Aliasing
-        if ((ww == 1) && (line->aa_right_len > 0))
-          {
-             d++;
-             int k = 0;
-             DATA32 col = val1;
-             DATA32 ret;
-             for (k = 0; k < line->aa_right_len; k++)
-               {
-                  ret = INTERP_256(256 - (line->aa_right_cov * (k + 1)), col,
-                                   0x00000000);
-                  *d = ret;
-                  d++;
-               }
-          }
 #   endif
 #  endif
         u += ud;
@@ -276,7 +192,6 @@
 # endif //COLBLACK
         d++;
         ww--;
-
      }
 }
 #else

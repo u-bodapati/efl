@@ -118,7 +118,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_right_len = 1; \
              spans[ridx].aa_right_cov = \
-               (coverage * (ry + ((cov_range) - (rewind)))); \
+               (coverage * ry); \
           } \
       } \
    while(0)
@@ -133,14 +133,16 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_right_len = 1; \
              spans[ridx].aa_right_cov = \
-                (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
+                (256 - (coverage * ry)); \
           } \
+        first = EINA_FALSE; \
      } \
    while (0)
 
    int y, idx = 0;
    int coverage;
    int ry, ridx;
+   Eina_Bool first = EINA_TRUE;
    Evas_Coord_Point edge1 = { -1, -1 };
    Evas_Coord_Point edge2 = { -1, -1 };
 
@@ -168,12 +170,12 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              if ((idx - edge2.y) == 1)
                {
                   //Middle
-                  HORIZ_RE_RD((idx - 1));
+                  HORIZ_RE_RD(idx);
 
                   //Leftovers
                   if ((y + 1) == yend)
                     {
-                       HORIZ_RE_RD(idx);
+                       HORIZ_RE_RD((idx + 1));
                        return;
                     }
                }
@@ -205,11 +207,12 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                        if ((edge2.y - edge1.y) == 1)
                          {
                             //Middle
-                            HORIZ_RE_LD(edge2.y);
+                            HORIZ_RE_LD(edge1.y);
 
                             //Leftovers
-                            if (y == yend)
+                            if ((y + 1) == yend)
                               {
+                                 HORIZ_RE_LD(edge2.y);
                                  HORIZ_RE_LD(idx);
                                  return;
                               }
@@ -217,10 +220,15 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                        //Vertical Edge
                        else
                          {
+                            //Missed
+                            if (first)
+                              {
+                                 VERT_RE_LD((edge1.y + 1), -(edge2.y - edge1.y),
+                                            (edge2.y - edge1.y));
+                              }
                             //Middle
                             VERT_RE_LD((edge2.y - edge1.y), 0,
                                        (edge2.y - edge1.y));
-
                             //Leftovers
                             if ((y + (edge2.y - edge1.y)) >= yend)
                               {
@@ -311,12 +319,14 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
              spans[ridx].aa_left_cov = \
                 (coverage * (ry + ((cov_range) - (rewind)))); \
           } \
+        first = EINA_FALSE; \
      } \
    while (0)
 
    int y, idx = 0;
    int coverage;
    int ry, ridx;
+   Eina_Bool first = EINA_TRUE;
    Evas_Coord_Point edge1 = { -1, -1 };
    Evas_Coord_Point edge2 = { -1, -1 };
 
@@ -344,12 +354,12 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
              if ((idx - edge2.y) == 1)
                {
                   //Middle
-                  HORIZ_LE_LD((idx - 1));
+                  HORIZ_LE_LD(idx);
 
                   //Leftovers
                   if ((y + 1) == yend)
                     {
-                       HORIZ_LE_LD(idx);
+                       HORIZ_LE_LD((idx + 1));
                        return;
                     }
                }
@@ -378,15 +388,17 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                   //Got it ! - Right Direction
                   if (edge2.x < spans[idx].span[0].x1)
                     {
+
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
                          {
                             //Middle
-                            HORIZ_LE_RD(edge2.y);
+                            HORIZ_LE_RD(edge1.y);
 
                             //Leftovers
-                            if (y == yend)
+                            if ((y + 1) == yend)
                               {
+                                 HORIZ_LE_RD(edge2.y);
                                  HORIZ_LE_RD(idx);
                                  return;
                               }
@@ -394,10 +406,15 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        //Vertical Edge
                        else
                          {
+                            //Missed
+                            if (first)
+                              {
+                                 VERT_LE_RD((edge1.y + 1), -(edge2.y - edge1.y),
+                                            (edge2.y - edge1.y));
+                              }
                             //Middle
                             VERT_LE_RD((edge2.y - edge1.y), 0,
                                        (edge2.y - edge1.y));
-
                             //Leftovers
                             if ((y + (edge2.y - edge1.y)) >= yend)
                               {

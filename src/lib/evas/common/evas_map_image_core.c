@@ -4,7 +4,7 @@
      {
         for (y = ystart; y <= yend; y++)
           {
-             int x, w, ww;
+             int x, w, ww, tmp;
              FPc u, v, u2, v2, ud, vd, dv;
              DATA32 *d, *s;
 #ifdef COLMUL
@@ -117,9 +117,8 @@
                   if (!direct)
                     {
                        d = dst->image.data;
-                       d += (y * dst->cache_entry.w) + (x - line->aa_left_len);
-                       func(buf, NULL, mul_col, d,
-                            (w + (line->aa_left_len + line->aa_right_len)));
+                       d += (y * dst->cache_entry.w) + x;
+                       func(buf, NULL, mul_col, d, w);
                     }
                }
           }
