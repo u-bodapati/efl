@@ -113,12 +113,12 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    do \
      { \
         coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < (rewind + 1); ry++) \
+        for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_right_len = 1; \
              spans[ridx].aa_right_cov = \
-               (coverage * (ry + (cov_range - rewind))); \
+               (coverage * (ry + ((cov_range) - (rewind)))); \
           } \
       } \
    while(0)
@@ -128,12 +128,12 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    do \
      { \
         coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < (rewind + 1); ry++) \
+        for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_right_len = 1; \
              spans[ridx].aa_right_cov = \
-                (256 - (coverage * (ry + (cov_range - rewind)))); \
+                (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
           } \
      } \
    while (0)
@@ -289,12 +289,12 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
    do \
      { \
         coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < (rewind + 1); ry++) \
+        for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_left_len = 1; \
              spans[ridx].aa_left_cov = \
-             (256 - (coverage * (ry + (cov_range - rewind)))); \
+             (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
           } \
       } \
    while(0)
@@ -304,12 +304,12 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
    do \
      { \
         coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < (rewind + 1); ry++) \
+        for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (idx - ry) + (y_advance); \
              spans[ridx].aa_left_len = 1; \
              spans[ridx].aa_left_cov = \
-                (coverage * (ry + (cov_range - rewind))); \
+                (coverage * (ry + ((cov_range) - (rewind)))); \
           } \
      } \
    while (0)
