@@ -645,6 +645,20 @@ typedef enum _Evas_3D_Wrap_Mode
 } Evas_3D_Wrap_Mode;
 
 /**
+ * Mesh Primitive
+ *
+ * @since 1.12
+ * @ingroup Evas_3D_Types
+ */
+typedef enum _Evas_3D_Mesh_Primitive
+{
+   EVAS_3D_MESH_PRIMITIVE_NONE = 0,
+   EVAS_3D_MESH_PRIMITIVE_CUBE = 1,
+   EVAS_3D_MESH_PRIMITIVE_SPHERE = 2
+} Evas_3D_Mesh_Primitive;
+
+
+/**
  * Texture filters
  *
  * @since 1.10
@@ -712,9 +726,11 @@ typedef enum _Evas_3D_Material_Attrib
  */
 typedef enum _Evas_3D_Mesh_File_Type
 {
-   EVAS_3D_MESH_FILE_TYPE_MD2 = 0,   /**< Quake's MD2 mesh file format */
-   EVAS_3D_MESH_FILE_TYPE_OBJ,
-   EVAS_3D_MESH_FILE_TYPE_EET,
+   EVAS_3D_MESH_FILE_TYPE_NONE = 0, /**< Noone from read formats */
+   EVAS_3D_MESH_FILE_TYPE_MD2,      /**< Quake's MD2 mesh file format */
+   EVAS_3D_MESH_FILE_TYPE_OBJ,      /**< Wavefront OBJ file format */
+   EVAS_3D_MESH_FILE_TYPE_EET,      /**< EET - own EFL file format */
+   EVAS_3D_MESH_FILE_TYPE_PLY,      /**< Stanford PLY mesh file format */
 } Evas_3D_Mesh_File_Type;
 
 #include "canvas/evas_image.eo.h"

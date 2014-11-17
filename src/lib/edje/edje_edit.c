@@ -10046,6 +10046,35 @@ _edje_generate_source_of_program(Evas_Object *obj, const char *program, Eina_Str
    return ret;
 }
 
+static void
+_edje_source_with_double_values_append(const char *param_name, char val_num, double val1, double val2, Eina_Strbuf *buf, Eina_Bool *ret_value)
+{
+   Eina_Strbuf *string;
+   Eina_Bool ret = EINA_TRUE;
+
+   if ((val_num != 1) && (val_num != 2))
+     {
+        *ret_value = EINA_FALSE;
+        return;
+     }
+
+   string = eina_strbuf_new();
+   if (param_name)
+     eina_strbuf_append_printf(string, "%s:", param_name);
+   eina_strbuf_append_printf(string,
+                             (val1 == (int)val1) ? " %.1f" : " %g",
+                             val1);
+   if (val_num == 2)
+     eina_strbuf_append_printf(string,
+                               (val2 == (int)val2) ? " %.1f" : " %g",
+                               val2);
+   eina_strbuf_append(string, ";\n");
+   BUF_APPEND(eina_strbuf_string_get(string));
+
+   *ret_value = ret;
+   eina_strbuf_free(string);
+}
+
 static Eina_Bool
 _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *state, double value, Eina_Strbuf *buf)
 {
@@ -10055,7 +10084,8 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
 
    GET_PD_OR_RETURN(EINA_FALSE);
 
-   BUF_APPENDF(I4"description { state: \"%s\" %g;\n", pd->state.name, pd->state.value);
+   BUF_APPENDF(I4"description { state: \"%s\"", pd->state.name);
+   _edje_source_with_double_values_append(NULL, 1, pd->state.value, 0, buf, &ret);
    //TODO Support inherit
 
    if (!pd->visible)
@@ -10084,7 +10114,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
    }
 
    if (pd->align.x != 0.5 || pd->align.y != 0.5)
-     BUF_APPENDF(I5"align: %g %g;\n", TO_DOUBLE(pd->align.x), TO_DOUBLE(pd->align.y));
+     _edje_source_with_double_values_append(I5"align", 2,
+                                            TO_DOUBLE(pd->align.x),
+                                            TO_DOUBLE(pd->align.y),
+                                            buf, &ret);
 
    //TODO Support fixed
 
@@ -10092,14 +10125,20 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
      BUF_APPENDF(I5"min: %d %d;\n", pd->min.w, pd->min.h);
    if (pd->max.w != -1 || pd->max.h != -1)
      BUF_APPENDF(I5"max: %d %d;\n", pd->max.w, pd->max.h);
-   if (pd->minmul.w != 0 || pd->minmul.h != 0)
-     BUF_APPENDF(I5"minmul: %g %g;\n", TO_DOUBLE(pd->minmul.w), TO_DOUBLE(pd->minmul.h));
+   if ((pd->minmul.have) && (pd->minmul.w != 1 || pd->minmul.h != 1))
+     _edje_source_with_double_values_append(I5"minmul", 2,
+                                            TO_DOUBLE(pd->minmul.w),
+                                            TO_DOUBLE(pd->minmul.h),
+                                            buf, &ret);
 
    if (pd->step.x && pd->step.y)
      BUF_APPENDF(I5"step: %d %d;\n", TO_INT(pd->step.x), TO_INT(pd->step.y));
 
    if (pd->aspect.min || pd->aspect.max)
-      BUF_APPENDF(I5"aspect: %g %g;\n", TO_DOUBLE(pd->aspect.min), TO_DOUBLE(pd->aspect.max));
+      _edje_source_with_double_values_append(I5"aspect", 2,
+                                             TO_DOUBLE(pd->aspect.min),
+                                             TO_DOUBLE(pd->aspect.max),
+                                             buf, &ret);
    if (pd->aspect.prefer)
       BUF_APPENDF(I5"aspect_preference: %s;\n", prefers[(int) pd->aspect.prefer]);
 
@@ -10134,7 +10173,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
      {
 	BUF_APPEND(I5"rel1 {\n");
 	if (pd->rel1.relative_x || pd->rel1.relative_y)
-	  BUF_APPENDF(I6"relative: %g %g;\n", TO_DOUBLE(pd->rel1.relative_x), TO_DOUBLE(pd->rel1.relative_y));
+	  _edje_source_with_double_values_append(I6"relative", 2,
+	                                         TO_DOUBLE(pd->rel1.relative_x),
+	                                         TO_DOUBLE(pd->rel1.relative_y),
+	                                         buf, &ret);
 	if (pd->rel1.offset_x || pd->rel1.offset_y)
 	  BUF_APPENDF(I6"offset: %d %d;\n", pd->rel1.offset_x, pd->rel1.offset_y);
 	if (pd->rel1.id_x != -1 && pd->rel1.id_x == pd->rel1.id_y)
@@ -10156,7 +10198,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
      {
 	BUF_APPEND(I5"rel2 {\n");
 	if (TO_DOUBLE(pd->rel2.relative_x) != 1.0 || TO_DOUBLE(pd->rel2.relative_y) != 1.0)
-	  BUF_APPENDF(I6"relative: %g %g;\n", TO_DOUBLE(pd->rel2.relative_x), TO_DOUBLE(pd->rel2.relative_y));
+	  _edje_source_with_double_values_append(I6"relative", 2,
+	                                         TO_DOUBLE(pd->rel2.relative_x),
+	                                         TO_DOUBLE(pd->rel2.relative_y),
+	                                         buf, &ret);
 	if (pd->rel2.offset_x != -1 || pd->rel2.offset_y != -1)
 	  BUF_APPENDF(I6"offset: %d %d;\n", pd->rel2.offset_x, pd->rel2.offset_y);
 	if (pd->rel2.id_x != -1 && pd->rel2.id_x == pd->rel2.id_y)
@@ -10216,11 +10261,17 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
              if (pd->map.rot.id_center != -1)
                BUF_APPENDF(I7"center: \"%s\";\n", _edje_part_name_find(ed, pd->map.rot.id_center));
              if (TO_DOUBLE(pd->map.rot.x) != 0.0)
-               BUF_APPENDF(I7"x: %g;\n", TO_DOUBLE(pd->map.rot.x));
+               _edje_source_with_double_values_append(I7"x", 1,
+                                                      TO_DOUBLE(pd->map.rot.x),
+                                                      0.0, buf, &ret);
              if (TO_DOUBLE(pd->map.rot.y) != 0.0)
-               BUF_APPENDF(I7"y: %g;\n", TO_DOUBLE(pd->map.rot.y));
+               _edje_source_with_double_values_append(I7"y", 1,
+                                                      TO_DOUBLE(pd->map.rot.y),
+                                                      0.0, buf, &ret);
              if (TO_DOUBLE(pd->map.rot.z) != 0.0)
-               BUF_APPENDF(I7"z: %g;\n", TO_DOUBLE(pd->map.rot.z));
+               _edje_source_with_double_values_append(I7"z", 1,
+                                                      TO_DOUBLE(pd->map.rot.z),
+                                                      0.0, buf, &ret);
 
              BUF_APPEND(I6"}\n");
           }
@@ -10281,7 +10332,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
            {
                BUF_APPEND(I6"origin {\n");
                if (img->image.fill.pos_rel_x || img->image.fill.pos_rel_y)
-                 BUF_APPENDF(I7"relative: %g %g;\n", TO_DOUBLE(img->image.fill.pos_rel_x), TO_DOUBLE(img->image.fill.pos_rel_y));
+                 _edje_source_with_double_values_append(I7"relative", 2,
+                                                        TO_DOUBLE(img->image.fill.pos_rel_x),
+                                                        TO_DOUBLE(img->image.fill.pos_rel_y),
+                                                        buf, &ret);
                if (img->image.fill.pos_abs_x || img->image.fill.pos_abs_y)
                  BUF_APPENDF(I7"offset: %d %d;\n", img->image.fill.pos_abs_x, img->image.fill.pos_abs_y);
                BUF_APPEND(I6"}\n");
@@ -10292,7 +10346,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
            {
                BUF_APPEND(I6"size {\n");
                if (img->image.fill.rel_x != 1.0 || img->image.fill.rel_y != 1.0)
-                 BUF_APPENDF(I7"relative: %g %g;\n", TO_DOUBLE(img->image.fill.rel_x), TO_DOUBLE(img->image.fill.rel_y));
+                 _edje_source_with_double_values_append(I7"relative", 2,
+                                                        TO_DOUBLE(img->image.fill.rel_x),
+                                                        TO_DOUBLE(img->image.fill.rel_y),
+                                                        buf, &ret);
                if (img->image.fill.abs_x || img->image.fill.abs_y)
                  BUF_APPENDF(I7"offset: %d %d;\n", img->image.fill.abs_x, img->image.fill.abs_y);
                BUF_APPEND(I6"}\n");
@@ -10331,7 +10388,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
 	  {
 		BUF_APPEND(I6"origin {\n");
 		if (pro->proxy.fill.pos_rel_x || pro->proxy.fill.pos_rel_y)
-		  BUF_APPENDF(I7"relative: %g %g;\n", TO_DOUBLE(pro->proxy.fill.pos_rel_x), TO_DOUBLE(pro->proxy.fill.pos_rel_y));
+		  _edje_source_with_double_values_append(I7"relative", 2,
+		                                         TO_DOUBLE(pro->proxy.fill.pos_rel_x),
+		                                         TO_DOUBLE(pro->proxy.fill.pos_rel_y),
+		                                         buf, &ret);
 		if (pro->proxy.fill.pos_abs_x || pro->proxy.fill.pos_abs_y)
 		  BUF_APPENDF(I7"offset: %d %d;\n", pro->proxy.fill.pos_abs_x, pro->proxy.fill.pos_abs_y);
 		BUF_APPEND(I6"}\n");
@@ -10342,7 +10402,10 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
 	  {
 		BUF_APPEND(I6"size {\n");
 		if (pro->proxy.fill.rel_x != 1.0 || pro->proxy.fill.rel_y != 1.0)
-		  BUF_APPENDF(I7"relative: %g %g;\n", TO_DOUBLE(pro->proxy.fill.rel_x), TO_DOUBLE(pro->proxy.fill.rel_y));
+		  _edje_source_with_double_values_append(I7"relative", 2,
+		                                         TO_DOUBLE(pro->proxy.fill.rel_x),
+		                                         TO_DOUBLE(pro->proxy.fill.rel_y),
+		                                         buf, &ret);
 		if (pro->proxy.fill.abs_x || pro->proxy.fill.abs_y)
 		  BUF_APPENDF(I7"offset: %d %d;\n", pro->proxy.fill.abs_x, pro->proxy.fill.abs_y);
 		BUF_APPEND(I6"}\n");
@@ -10382,15 +10445,20 @@ _edje_generate_source_of_state(Evas_Object *obj, const char *part, const char *s
 	if (txt->text.fit_x || txt->text.fit_y)
 	  BUF_APPENDF(I6"fit: %d %d;\n", txt->text.fit_x, txt->text.fit_y);
     if (txt->text.min_x || txt->text.min_y)
-  	  BUF_APPENDF(I6"min: \"%d\" \"%d\";\n", txt->text.min_x, txt->text.min_y);
+  	  BUF_APPENDF(I6"min: %d %d;\n", txt->text.min_x, txt->text.min_y);
     if (txt->text.max_x || txt->text.max_y)
       BUF_APPENDF(I6"max: %d %d;\n", txt->text.max_x, txt->text.max_y);
 	if (TO_DOUBLE(txt->text.align.x) != 0.5 || TO_DOUBLE(txt->text.align.y) != 0.5)
-	  BUF_APPENDF(I6"align: %g %g;\n", TO_DOUBLE(txt->text.align.x), TO_DOUBLE(txt->text.align.y));
+		  _edje_source_with_double_values_append(I6"align", 2,
+		                                         TO_DOUBLE(txt->text.align.x),
+		                                         TO_DOUBLE(txt->text.align.y),
+		                                         buf, &ret);
         //TODO Support source
         //TODO Support text_source
 	if (txt->text.ellipsis)
-	  BUF_APPENDF(I6"ellipsis: %g;\n", txt->text.ellipsis);
+	  _edje_source_with_double_values_append(I6"ellipsis", 1,
+	                                         txt->text.ellipsis,
+	                                         0.0, buf, &ret);
 	BUF_APPEND(I5"}\n");
      }
 
@@ -10576,7 +10644,10 @@ _edje_generate_source_of_part(Evas_Object *obj, Edje_Part *ep, Eina_Strbuf *buf)
                                 item->padding.t, item->padding.b);
 
                   if (TO_DOUBLE(item->align.x) != 0.5 || TO_DOUBLE(item->align.y) != 0.5)
-                    BUF_APPENDF(I7"align: %g %g;\n", TO_DOUBLE(item->align.x), TO_DOUBLE(item->align.y));
+                    _edje_source_with_double_values_append(I7"align", 2,
+                                                           TO_DOUBLE(item->align.x),
+                                                           TO_DOUBLE(item->align.y),
+                                                           buf, &ret);
 
                   if (edje_edit_part_type_get(obj, part) == EDJE_PART_TYPE_TABLE)
                     BUF_APPENDF(I7"position: %d %d;\n", item->col, item->row);
@@ -10724,6 +10795,31 @@ _edje_generate_source_of_sounds(Edje_Sound_Directory *sound_directory, Eina_Strb
    BUF_APPEND(I1"}\n");
 }
 
+static void
+_edje_limits_source_generate(const Edje *ed, Eina_Strbuf *buf, Eina_Bool *res)
+{
+   Eina_Bool ret = *res;
+   unsigned int i;
+
+   if (!ed->collection->limits.vertical_count &&
+       !ed->collection->limits.horizontal_count) return;
+
+   BUF_APPEND(I2"limits {\n");
+
+   for(i = 0; i < ed->collection->limits.vertical_count; i++)
+     BUF_APPENDF(I3"vertical: \"%s\" %d;\n",
+                 ed->collection->limits.vertical[i]->name,
+                 ed->collection->limits.vertical[i]->value);
+   for(i = 0; i < ed->collection->limits.horizontal_count; i++)
+     BUF_APPENDF(I3"horizontal: \"%s\" %d;\n",
+                 ed->collection->limits.horizontal[i]->name,
+                 ed->collection->limits.horizontal[i]->value);
+
+   BUF_APPEND(I2"}\n");
+
+   *res = ret;
+}
+
 static Eina_Bool
 _edje_generate_source_of_group(Edje *ed, Edje_Part_Collection_Directory_Entry *pce, Eina_Strbuf *buf)
 {
@@ -10782,6 +10878,9 @@ _edje_generate_source_of_group(Edje *ed, Edje_Part_Collection_Directory_Entry *p
      }
    broadcast = edje_edit_group_broadcast_signal_get(obj);
    if (!broadcast) BUF_APPENDF(I2"broadcast_signal: %d;\n", broadcast);
+
+   /* Limits */
+   _edje_limits_source_generate(ed, buf, &ret);
 
    /* Data */
    if (pc->data)
