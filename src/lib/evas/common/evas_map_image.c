@@ -210,10 +210,11 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                             HORIZ_RE_LD(edge1.y);
 
                             //Leftovers
-                            if ((y + 1) == yend)
+                            if ((y + 1)== yend)
                               {
                                  HORIZ_RE_LD(edge2.y);
                                  HORIZ_RE_LD(idx);
+                                 HORIZ_RE_LD((idx + 1));
                                  return;
                               }
                          }
@@ -400,6 +401,7 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                               {
                                  HORIZ_LE_RD(edge2.y);
                                  HORIZ_LE_RD(idx);
+                                 HORIZ_LE_RD(idx + 1);
                                  return;
                               }
                          }
@@ -413,17 +415,42 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                                             (edge2.y - edge1.y));
                               }
                             //Middle
-                            VERT_LE_RD((edge2.y - edge1.y), 0,
+                            VERT_LE_RD((edge2.y - edge1.y),
+                                       -(edge2.y - edge1.y),
                                        (edge2.y - edge1.y));
                             //Leftovers
-                            if ((y + (edge2.y - edge1.y)) >= yend)
+                            if ((y + (idx - edge2.y)) >= yend)
                               {
-                                 VERT_LE_RD((yend - y), (yend - y), (yend - y));
+                                 edge1.x = edge2.x;
+                                 edge1.y = edge2.y;
+                                 edge2.x = spans[idx].span[0].x1;
+                                 edge2.y = idx;
+                                 VERT_LE_RD((edge2.y - edge1.y), 0,
+                                            (edge2.y - edge1.y));
+//                                 VERT_LE_RD((yend - y), (yend - y),
+//                                            (edge2.y - edge1.y));
+                                 int cov_range = edge2.y - edge1.y;
+                                 int rewind = yend - y;
+                                 int y_advance = yend - y;
+                                 coverage = (256 / ((cov_range) + 1));
+
+                                for (ry = 1; ry < ((rewind) + 1); ry++)
+                                  {
+                                     ridx = (idx - ry) + (y_advance);
+                                     spans[ridx].aa_left_len = 1;
+                                     spans[ridx].aa_left_cov =
+                               (coverage * (ry + ((cov_range) - (rewind))));
+                                     printf("idx:%d \n", ridx);
+                                  }
+
+
                                  return;
                               }
                          }
                        edge1.x = edge2.x;
                        edge1.y = edge2.y;
+                       edge2.x = spans[idx].span[0].x1;
+                       edge2.y = idx;
                     }
                /*
                   //Revert Direction? - Left Direction
@@ -444,8 +471,6 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        break;
                     } 
                 */
-                  edge2.x = spans[idx].span[0].x1;
-                  edge2.y = idx;
                   first = EINA_FALSE;
                }
           }
