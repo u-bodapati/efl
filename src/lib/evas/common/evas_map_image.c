@@ -94,8 +94,8 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
 #define HORIZ_RE_RD(xx) \
    do \
      { \
-        spans[(xx)].aa_right_len = (spans[idx].span[0].x2 - edge2.x); \
-        spans[(xx)].aa_right_cov = (256 / (spans[(xx)].aa_right_len + 1)); \
+        spans[(xx-1)].aa_right_len = (spans[idx].span[0].x2 - edge2.x); \
+        spans[(xx-1)].aa_right_cov = (256 / (spans[(xx-1)].aa_right_len + 1)); \
      } \
    while (0)
 
@@ -257,14 +257,10 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                   first = EINA_FALSE;
                }
           }
-
-        //Leftovers
-//        if (((y + 1) == yend) && (edge1.x < spans[idx].span[0].x2))
-  //        {
-    //         VERT_RE_RD((idx - edge2.y + 1), 1, (edge2.y - edge1.y));
-      //       return;
-        //  }
      }
+   //Leftovers
+   if (edge2.x > edge1.x)
+     VERT_RE_RD((idx - edge2.y), 0, (edge2.y - edge1.y));
 }
 
 static void
@@ -274,8 +270,8 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
 #define HORIZ_LE_LD(xx) \
    do \
      { \
-        spans[(xx)].aa_left_len = (edge2.x - spans[idx].span[0].x1); \
-        spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+        spans[(xx-1)].aa_left_len = (edge2.x - spans[idx].span[0].x1); \
+        spans[(xx-1)].aa_left_cov = (256 / (spans[(xx-1)].aa_left_len + 1)); \
      } \
    while (0)
 
@@ -352,7 +348,7 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                   //Leftovers
                   if ((y + 1) == yend)
                     {
-                       HORIZ_LE_LD((idx + 1));
+                       HORIZ_LE_LD(idx + 1);
                        return;
                     }
                }
@@ -438,14 +434,10 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                   first = EINA_FALSE;
                }
           }
-
-        //Leftovers
- //       if (((y + 1) == yend) && (edge1.x > spans[idx].span[0].x1))
-          {
-   //          VERT_LE_LD(idx - edge2.y + 1, 1, (edge2.y - edge1.y));
-    //         return;
-          }
      }
+   //Leftovers
+   if (edge1.x > edge2.x)
+     VERT_LE_LD((idx - edge2.y), 0, (edge2.y - edge1.y));
 }
 
 static void
