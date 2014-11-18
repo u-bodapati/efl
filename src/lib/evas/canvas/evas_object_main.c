@@ -1385,8 +1385,6 @@ _evas_object_color_get(Eo *eo_obj EINA_UNUSED, Evas_Object_Protected_Data *obj, 
 EOLIAN static void
 _evas_object_anti_alias_set(Eo *eo_obj, Evas_Object_Protected_Data *obj, Eina_Bool anti_alias)
 {
-	printf("obj(%p) (%d)\n", obj, anti_alias);
-
 	if (obj->delete_me) return;
    anti_alias = !!anti_alias;
    if (obj->cur->anti_alias == anti_alias)return;

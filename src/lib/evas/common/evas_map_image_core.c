@@ -4,7 +4,7 @@
      {
         for (y = ystart; y <= yend; y++)
           {
-             int x, w, ww, tmp;
+             int x, w, ww;
              FPc u, v, u2, v2, ud, vd, dv;
              DATA32 *d, *s;
 #ifdef COLMUL

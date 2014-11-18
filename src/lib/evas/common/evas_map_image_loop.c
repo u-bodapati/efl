@@ -167,6 +167,8 @@
         cv += cd; // col
 #    endif
 #   else
+        int tmp;
+
         //Left Edge Anti Anliasing
         tmp = (w - ww);
         if (tmp < line->aa_left_len)
@@ -179,8 +181,8 @@
 
         if (tmp >= 0)
           {
-             val1 = INTERP_256(256 - (line->aa_right_cov * (tmp + 1)), val1,
-                               0x00000000);
+        //     val1 = INTERP_256(256 - (line->aa_right_cov * (tmp + 1)), val1,
+          //                     0x00000000);
           }
 
         *d = val1;

@@ -135,7 +135,6 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              spans[ridx].aa_right_cov = \
                 (256 - (coverage * ry)); \
           } \
-        first = EINA_FALSE; \
      } \
    while (0)
 
@@ -188,6 +187,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              edge1.y = edge2.y;
              edge2.x = spans[idx].span[0].x2;
              edge2.y = idx;
+             first = EINA_FALSE;
           }
         //Got it! - Left Direction
         else if (edge2.x > spans[idx].span[0].x2)
@@ -259,6 +259,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                     }
                   edge2.x = spans[idx].span[0].x2;
                   edge2.y = idx;
+                  first = EINA_FALSE;
                }
           }
 
@@ -319,7 +320,6 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
              spans[ridx].aa_left_cov = \
                 (coverage * (ry + ((cov_range) - (rewind)))); \
           } \
-        first = EINA_FALSE; \
      } \
    while (0)
 
@@ -373,6 +373,7 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
              edge1.y = edge2.y;
              edge2.x = spans[idx].span[0].x1;
              edge2.y = idx;
+             first = EINA_FALSE;
           }
         //Got it! - Right Direction
         else if (edge2.x < spans[idx].span[0].x1)
@@ -388,7 +389,6 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                   //Got it ! - Right Direction
                   if (edge2.x < spans[idx].span[0].x1)
                     {
-
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
                          {
@@ -425,6 +425,7 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        edge1.x = edge2.x;
                        edge1.y = edge2.y;
                     }
+               /*
                   //Revert Direction? - Left Direction
                   else if (edge2.x > spans[idx].span[0].x1)
                     {
@@ -441,9 +442,11 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        edge1.x = spans[idx].span[0].x1;
                        edge1.y = idx;
                        break;
-                    }
+                    } 
+                */
                   edge2.x = spans[idx].span[0].x1;
                   edge2.y = idx;
+                  first = EINA_FALSE;
                }
           }
 
