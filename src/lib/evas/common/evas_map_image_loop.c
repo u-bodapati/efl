@@ -178,9 +178,6 @@
           }
         //Right Edge Anti Aliasing
         tmp = (line->aa_right_len - ww);
-
-//		  printf("y: %d tmp(%d) len(%d)\n", y, tmp, line->aa_right_len);
-
         if (tmp >= 0)
           {
              val1 = INTERP_256(256 - (line->aa_right_cov * (tmp + 1)), val1,
