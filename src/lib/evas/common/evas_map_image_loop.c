@@ -1,3 +1,4 @@
+
 #ifdef SCALE_USING_MMX
 #undef SCALE_USING_MMX
 #endif
@@ -167,22 +168,8 @@
         cv += cd; // col
 #    endif
 #   else
-        int tmp;
-
-        //Left Edge Anti Anliasing
-        tmp = (w - ww);
-        if (tmp < line->aa_left_len)
-          {
-             val1 = INTERP_256((line->aa_left_cov * (tmp + 1)), val1,
-                               0x00000000);
-          }
-        //Right Edge Anti Aliasing
-        tmp = (line->aa_right_len - ww);
-        if (tmp >= 0)
-          {
-             val1 = INTERP_256(256 - (line->aa_right_cov * (tmp + 1)), val1,
-                               0x00000000);
-          }
+        if (anti_alias)
+          val1 = aa_convert(line, ww, w, aa_left_range, val1);
 
         *d = val1;
 

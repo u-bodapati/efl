@@ -5,6 +5,7 @@
         for (y = ystart; y <= yend; y++)
           {
              int x, w, ww;
+             int aa_left_range;
              FPc u, v, u2, v2, ud, vd, dv;
              DATA32 *d, *s;
 #ifdef COLMUL
@@ -36,6 +37,8 @@
 
                   dv = (span->o2 - span->o1);
                   if (dv <= 0) continue;
+
+                  if (anti_alias) aa_left_range = w - line->aa_len[0];
 
                   ww = w;
 

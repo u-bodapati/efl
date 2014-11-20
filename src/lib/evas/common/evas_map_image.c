@@ -30,11 +30,8 @@ struct _Span
 struct _Line
 {
    Span span[2];
-   int aa_left_cov;
-   int aa_left_len;
-   int aa_right_cov;
-   int aa_right_len;
-
+   int aa_cov[2];
+   int aa_len[2];
 };
 
 static inline FPc
@@ -87,6 +84,24 @@ _interpolated_clip_span(Span *s, int c1, int c2, Eina_Bool interp_col)
      }
 }
 
+static inline DATA32
+aa_convert(Line *line, int ww, int w, int aa_left_range, DATA32 val)
+{
+   //Left Edge Anti Anliasing
+   if (aa_left_range < ww)
+     {
+        return INTERP_256((line->aa_cov[0] * (w - ww + 1)), val,
+                          0x00000000);
+     }
+   //Right Edge Anti Aliasing
+   if (line->aa_len[1] >= ww)
+     {
+        return INTERP_256(256 - (line->aa_cov[1] * (line->aa_len[1] - ww + 1)),
+                          val, 0x00000000);
+     }
+   return val;
+}
+
 static void
 _calc_aa_right_edges(Line *spans, int ystart, int yend)
 {
@@ -95,11 +110,11 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    do \
      { \
         tmp = (spans[y].span[0].x2 - edge2.x); \
-        if (tmp > spans[(xx)].aa_right_len) \
+        if (tmp > spans[(xx)].aa_len[1]) \
           { \
-             spans[(xx)].aa_right_len = tmp; \
-             spans[(xx)].aa_right_cov = \
-               (256 / (spans[(xx)].aa_right_len + 1)); \
+             spans[(xx)].aa_len[1] = tmp; \
+             spans[(xx)].aa_cov[1] = \
+               (256 / (spans[(xx)].aa_len[1] + 1)); \
           } \
         last_aa = 1; \
      } \
@@ -110,11 +125,11 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    do \
      { \
         tmp = (edge1.x - edge2.x); \
-        if (tmp > spans[(xx)].aa_right_len) \
+        if (tmp > spans[(xx)].aa_len[1]) \
           { \
-             spans[(xx)].aa_right_len = tmp; \
-             spans[(xx)].aa_right_cov = \
-                (256 / (spans[(xx)].aa_right_len + 1)); \
+             spans[(xx)].aa_len[1] = tmp; \
+             spans[(xx)].aa_cov[1] = \
+                (256 / (spans[(xx)].aa_len[1] + 1)); \
           } \
         last_aa = 3; \
      } \
@@ -128,9 +143,9 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
         for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_right_len > 1) continue; \
-             spans[ridx].aa_right_len = 1; \
-             spans[ridx].aa_right_cov = \
+             if (spans[ridx].aa_len[1] > 1) continue; \
+             spans[ridx].aa_len[1] = 1; \
+             spans[ridx].aa_cov[1] = \
                (coverage * (ry + (cov_range - (rewind)))); \
           } \
         last_aa = 2; \
@@ -146,9 +161,9 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
         for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_right_len > 1) continue; \
-             spans[ridx].aa_right_len = 1; \
-             spans[ridx].aa_right_cov = \
+             if (spans[ridx].aa_len[1] > 1) continue; \
+             spans[ridx].aa_len[1] = 1; \
+             spans[ridx].aa_cov[1] = \
                 (256 - (coverage * (ry + (cov_range - (rewind))))); \
           } \
         last_aa = 4; \
@@ -173,7 +188,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    int ry, ridx;
    Evas_Coord_Point edge1 = { -1, -1 };
    Evas_Coord_Point edge2 = { -1, -1 };
-   int last_aa = 0;
+   int last_aa = 0; //1: horiz_ld, 2: vert_ld 3: horiz_rd, 4: vert_rd
 
    yend -= ystart;
 
@@ -287,10 +302,10 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
    do \
      { \
         tmp = (edge2.x - spans[y].span[0].x1); \
-        if (tmp > spans[(xx)].aa_left_len) \
+        if (tmp > spans[(xx)].aa_len[0]) \
           { \
-             spans[(xx)].aa_left_len = tmp; \
-             spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+             spans[(xx)].aa_len[0] = tmp; \
+             spans[(xx)].aa_cov[0] = (256 / (spans[(xx)].aa_len[0] + 1)); \
           } \
         last_aa = 1; \
      } \
@@ -301,10 +316,10 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
    do \
      { \
         tmp = (edge2.x - edge1.x); \
-        if (tmp > spans[(xx)].aa_left_len) \
+        if (tmp > spans[(xx)].aa_len[0]) \
           { \
-             spans[(xx)].aa_left_len = tmp; \
-             spans[(xx)].aa_left_cov = (256 / (spans[(xx)].aa_left_len + 1)); \
+             spans[(xx)].aa_len[0] = tmp; \
+             spans[(xx)].aa_cov[0] = (256 / (spans[(xx)].aa_len[0] + 1)); \
           } \
         last_aa = 3; \
      } \
@@ -318,9 +333,9 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
         for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_left_len > 1) continue; \
-             spans[ridx].aa_left_len = 1; \
-             spans[ridx].aa_left_cov = \
+             if (spans[ridx].aa_len[0] > 1) continue; \
+             spans[ridx].aa_len[0] = 1; \
+             spans[ridx].aa_cov[0] = \
              (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
           } \
         last_aa = 2; \
@@ -336,9 +351,9 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
         for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_left_len > 1) continue; \
-             spans[ridx].aa_left_len = 1; \
-             spans[ridx].aa_left_cov = \
+             if (spans[ridx].aa_len[0] > 1) continue; \
+             spans[ridx].aa_len[0] = 1; \
+             spans[ridx].aa_cov[0] = \
                 (coverage * (ry + (cov_range - (rewind)))); \
           } \
         last_aa = 4; \
