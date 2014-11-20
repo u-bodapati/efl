@@ -102,58 +102,21 @@ aa_convert(Line *line, int ww, int w, int aa_left_range, DATA32 val)
    return val;
 }
 
-static void
-_calc_aa_right_edges(Line *spans, int ystart, int yend)
-{
-//Horizontal Right Edge, Right Direction
-#define HORIZ_RE_RD(xx) \
+#define NEXT(xx) \
    do \
      { \
-        tmp = (spans[y].span[0].x2 - edge2.x); \
-        if (tmp > spans[(xx)].aa_len[1]) \
+        if (spans[y].span[0].x1 != -1) \
           { \
-             spans[(xx)].aa_len[1] = tmp; \
-             spans[(xx)].aa_cov[1] = \
-               (256 / (spans[(xx)].aa_len[1] + 1)); \
+             edge1.x = edge2.x; \
+             edge1.y = edge2.y; \
+             edge2.x = (xx); \
+             edge2.y = y; \
           } \
-        last_aa = 1; \
      } \
    while (0)
 
-//Horizontal Right Edge, Left Direction
-#define HORIZ_RE_LD(xx) \
-   do \
-     { \
-        tmp = (edge1.x - edge2.x); \
-        if (tmp > spans[(xx)].aa_len[1]) \
-          { \
-             spans[(xx)].aa_len[1] = tmp; \
-             spans[(xx)].aa_cov[1] = \
-                (256 / (spans[(xx)].aa_len[1] + 1)); \
-          } \
-        last_aa = 3; \
-     } \
-   while (0)
-
-//Vertical Right Edge, Right Direction
-#define VERT_RE_RD(rewind, y_advance, cov_range) \
-   do \
-     { \
-        coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < ((rewind) + 1); ry++) \
-          { \
-             ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_len[1] > 1) continue; \
-             spans[ridx].aa_len[1] = 1; \
-             spans[ridx].aa_cov[1] = \
-               (coverage * (ry + (cov_range - (rewind)))); \
-          } \
-        last_aa = 2; \
-      } \
-   while(0)
-
-//Vertical Right Edge, Left Direction
-#define VERT_RE_LD(rewind, y_advance) \
+//Vertical Inside Direction
+#define VERT_INSIDE(dir, rewind, y_advance) \
    do \
      { \
         cov_range = edge2.y - edge1.y; \
@@ -161,28 +124,81 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
         for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
              ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_len[1] > 1) continue; \
-             spans[ridx].aa_len[1] = 1; \
-             spans[ridx].aa_cov[1] = \
-                (256 - (coverage * (ry + (cov_range - (rewind))))); \
+             if (spans[ridx].aa_len[(dir)] > 1) continue; \
+             spans[ridx].aa_len[(dir)] = 1; \
+             if ((dir) == 1) \
+               { \
+                  spans[ridx].aa_cov[(dir)] = \
+                     (256 - (coverage * (ry + (cov_range - (rewind))))); \
+               } \
+             else \
+               { \
+                  spans[ridx].aa_cov[(dir)] = \
+                     (coverage * (ry + (cov_range - (rewind)))); \
+               } \
           } \
         last_aa = 4; \
      } \
    while (0)
 
-#define RE_RELOAD() \
+//Vertical Outside Direction
+#define VERT_OUTSIDE(dir, rewind, y_advance, cov_range) \
    do \
      { \
-        if (spans[y].span[0].x1 != -1) \
+        coverage = (256 / ((cov_range) + 1)); \
+        for (ry = 1; ry < ((rewind) + 1); ry++) \
           { \
-             edge1.x = edge2.x; \
-             edge1.y = edge2.y; \
-             edge2.x = spans[y].span[0].x2; \
-             edge2.y = y; \
+             ridx = (y - ry) + (y_advance); \
+             if (spans[ridx].aa_len[(dir)] > 1) continue; \
+             spans[ridx].aa_len[(dir)] = 1; \
+             if (dir == 1) \
+               { \
+                  spans[ridx].aa_cov[(dir)] = \
+                     (coverage * (ry + (cov_range - (rewind)))); \
+               } \
+             else \
+               { \
+                  spans[ridx].aa_cov[(dir)] = \
+                     (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
+               } \
           } \
+        last_aa = 2; \
+     } \
+   while(0)
+
+//Horizontal Inside Direction
+#define HORIZ_INSIDE(dir, yy, xx, xx2) \
+   do \
+     { \
+        tmp = (xx - xx2); \
+        if (tmp > spans[(yy)].aa_len[(dir)]) \
+          { \
+             spans[(yy)].aa_len[(dir)] = tmp; \
+             spans[(yy)].aa_cov[(dir)] = \
+                (256 / (spans[(yy)].aa_len[(dir)] + 1)); \
+          } \
+        last_aa = 3; \
      } \
    while (0)
 
+//Horizontal Outside Direction
+#define HORIZ_OUTSIDE(dir, yy, xx, xx2) \
+   do \
+     { \
+        tmp = (xx) - (xx2); \
+        if (tmp > spans[(yy)].aa_len[(dir)]) \
+          { \
+             spans[(yy)].aa_len[(dir)] = tmp; \
+             spans[(yy)].aa_cov[(dir)] = \
+                (256 / (spans[(yy)].aa_len[(dir)] + 1)); \
+          } \
+        last_aa = 1; \
+     } \
+   while (0)
+
+static void
+_calc_aa_right_edges(Line *spans, int ystart, int yend)
+{
    int y, tmp;
    int coverage, cov_range;
    int ry, ridx;
@@ -210,30 +226,30 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
              //Horizontal Edge
              if ((y - edge2.y) == 1)
                {
-                  HORIZ_RE_RD(y);
+                  HORIZ_OUTSIDE(1, y, spans[y].span[0].x2, edge2.x);
 
                   //Leftovers
                   if ((y + 1) == yend)
                     {
-                       HORIZ_RE_RD((y + 1));
+                       HORIZ_OUTSIDE(1, (y + 1), spans[y].span[0].x2, edge2.x);
                        return;
                     }
                }
              //Vertical Edge
              else if ((spans[y].span[0].x2 - edge2.x) == 1)
                {
-                  VERT_RE_RD((y - edge2.y), 0, (y - edge2.y));
+                  VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
                   if ((spans[y + 1].span[0].x2 - spans[y].span[0].x2) == 1)
-                    HORIZ_RE_RD(y);
+                    HORIZ_OUTSIDE(1, y, spans[y].span[0].x2, edge2.x);
                }
-             RE_RELOAD();
+             NEXT(spans[y].span[0].x2);
           }
         //Left Direction
         else if (edge2.x > spans[y].span[0].x2)
           {
              if (last_aa == 2)
                {
-                  VERT_RE_RD((y - edge2.y), 0, (y - edge2.y));
+                  VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
 
                   if (spans[y].span[0].x1 != -1)
                     {
@@ -243,7 +259,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                        edge2.y = y;
                     }
                }
-             else RE_RELOAD();
+             else NEXT(spans[y].span[0].x2);
 
              //Find Next Edge
              for (y++; y <= yend; y++)
@@ -254,34 +270,34 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
                          {
-                            HORIZ_RE_LD(edge1.y);
+                            HORIZ_INSIDE(1, edge1.y, edge1.x, edge2.x);
 
                             //Leftovers
                             if ((y + 1) >= yend)
                               {
-                                 HORIZ_RE_LD(edge2.y);
-                                 HORIZ_RE_LD(y);
+                                 HORIZ_INSIDE(1, edge2.y, edge1.x, edge2.x);
+                                 HORIZ_INSIDE(1, y, edge1.x, edge2.x);
                                  return;
                               }
                          }
                        //Vertical Edge
                        else if ((edge1.x - edge2.x) == 1)
                          {
-                            VERT_RE_LD((edge2.y - edge1.y), -(y - edge2.y));
+                            VERT_INSIDE(1, (edge2.y - edge1.y), -(y - edge2.y));
                          }
-                       RE_RELOAD();
+                       NEXT(spans[y].span[0].x2);
                     }
                   //Revert Direction? - Right Direction
                   else if (edge2.x < spans[y].span[0].x2)
                     {
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
-                         HORIZ_RE_LD(edge1.y);
+                         HORIZ_INSIDE(1, edge1.y, edge1.x, edge2.x);
                        //Vertical Edge
                        else
-                         VERT_RE_LD((edge2.y - edge1.y), -(y - edge2.y));
+                         VERT_INSIDE(1, (edge2.y - edge1.y), -(y - edge2.y));
 
-                       RE_RELOAD();
+                       NEXT(spans[y].span[0].x2);
                        break;
                     }
                }
@@ -289,90 +305,14 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
      }
    //Leftovers
    if (edge2.x > edge1.x)
-     VERT_RE_RD((y - edge2.y), 0, (edge2.y - edge1.y));
+     VERT_OUTSIDE(1, (y - edge2.y), 0, (edge2.y - edge1.y));
    else if (edge1.x > edge2.x)
-     VERT_RE_LD(((y - 1) - edge2.y), -1);
+     VERT_INSIDE(1, ((y - 1) - edge2.y), -1);
 }
 
 static void
 _calc_aa_left_edges(Line *spans, int ystart, int yend)
 {
-//Horizontal Left Edge, Left Direction
-#define HORIZ_LE_LD(xx) \
-   do \
-     { \
-        tmp = (edge2.x - spans[y].span[0].x1); \
-        if (tmp > spans[(xx)].aa_len[0]) \
-          { \
-             spans[(xx)].aa_len[0] = tmp; \
-             spans[(xx)].aa_cov[0] = (256 / (spans[(xx)].aa_len[0] + 1)); \
-          } \
-        last_aa = 1; \
-     } \
-   while (0)
-
-//Horizontal Left Edge, Right Direction
-#define HORIZ_LE_RD(xx) \
-   do \
-     { \
-        tmp = (edge2.x - edge1.x); \
-        if (tmp > spans[(xx)].aa_len[0]) \
-          { \
-             spans[(xx)].aa_len[0] = tmp; \
-             spans[(xx)].aa_cov[0] = (256 / (spans[(xx)].aa_len[0] + 1)); \
-          } \
-        last_aa = 3; \
-     } \
-   while (0)
-
-//Vertical Left Edge, Left Direction
-#define VERT_LE_LD(rewind, y_advance, cov_range) \
-   do \
-     { \
-        coverage = (256 / ((cov_range) + 1)); \
-        for (ry = 1; ry < ((rewind) + 1); ry++) \
-          { \
-             ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_len[0] > 1) continue; \
-             spans[ridx].aa_len[0] = 1; \
-             spans[ridx].aa_cov[0] = \
-             (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
-          } \
-        last_aa = 2; \
-      } \
-   while(0)
-
-//Vertical Left Edge, Right Direction
-#define VERT_LE_RD(rewind, y_advance) \
-   do \
-     { \
-        cov_range = edge2.y - edge1.y; \
-        coverage = (256 / (cov_range + 1)); \
-        for (ry = 1; ry < ((rewind) + 1); ry++) \
-          { \
-             ridx = (y - ry) + (y_advance); \
-             if (spans[ridx].aa_len[0] > 1) continue; \
-             spans[ridx].aa_len[0] = 1; \
-             spans[ridx].aa_cov[0] = \
-                (coverage * (ry + (cov_range - (rewind)))); \
-          } \
-        last_aa = 4; \
-     } \
-   while (0)
-
-#define LE_RELOAD() \
-   do \
-     { \
-        if (spans[y].span[0].x1 != -1) \
-          { \
-             edge1.x = edge2.x; \
-             edge1.y = edge2.y; \
-             edge2.x = spans[y].span[0].x1; \
-             edge2.y = y; \
-          } \
-     } \
-   while (0)
-
    int y, tmp;
    int coverage, cov_range;
    int ry, ridx;
@@ -400,30 +340,30 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
              //Horizontal Edge
              if ((y - edge2.y) == 1)
                {
-                  HORIZ_LE_LD(y);
+                  HORIZ_OUTSIDE(0, y, edge2.x, spans[y].span[0].x1);
 
                   //Leftovers
                   if ((y + 1) == yend)
                     {
-                       HORIZ_LE_LD(y + 1);
+                       HORIZ_OUTSIDE(0, (y + 1), edge2.x, spans[y].span[0].x1);
                        return;
                     }
                }
              //Vertical Edge
              else if ((edge2.x - spans[y].span[0].x1) == 1)
                {
-                  VERT_LE_LD((y - edge2.y), 0, (y - edge2.y));
+                  VERT_OUTSIDE(0, (y - edge2.y), 0, (y - edge2.y));
                   if ((spans[y].span[0].x1 - spans[y + 1].span[0].x1) == 1)
-                    HORIZ_LE_LD(y);
+                    HORIZ_OUTSIDE(0, y, edge2.x, spans[y].span[0].x1);
                }
-             LE_RELOAD();
+             NEXT(spans[y].span[0].x1);
           }
         //Right Direction
         else if (edge2.x < spans[y].span[0].x1)
           {
              if (last_aa == 2)
                {
-                  VERT_LE_LD((y - edge2.y), 0, (y - edge2.y));
+                  VERT_OUTSIDE(0, (y - edge2.y), 0, (y - edge2.y));
 
                   if (spans[y].span[0].x1 != -1)
                     {
@@ -433,7 +373,7 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        edge2.y = y;
                     }
                }
-             else LE_RELOAD();
+             else NEXT(spans[y].span[0].x1);
 
              //Find Next Edge
              for (y++; y <= yend; y++)
@@ -444,34 +384,34 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
                          {
-                            HORIZ_LE_RD(edge1.y);
+                            HORIZ_INSIDE(0, edge1.y, edge2.x, edge1.x);
 
                             //Leftovers
                             if ((y + 1) >= yend)
                               {
-                                 HORIZ_LE_RD(edge2.y);
-                                 HORIZ_LE_RD(y);
+                                 HORIZ_INSIDE(0, edge2.y, edge2.x, edge1.x);
+                                 HORIZ_INSIDE(0, y, edge2.x, edge1.x);
                                  return;
                               }
                          }
                        //Vertical Edge
                        else if ((edge2.x - edge1.x) == 1)
                          {
-                            VERT_LE_RD((edge2.y - edge1.y), -(y - edge2.y));
+                            VERT_INSIDE(0, (edge2.y - edge1.y), -(y - edge2.y));
                          }
-                       LE_RELOAD();
+                       NEXT(spans[y].span[0].x1);
                     }
                   //Revert Direction? - Left Direction
                   else if (edge2.x > spans[y].span[0].x1)
                     {
                        //Horizontal Edge
                        if ((edge2.y - edge1.y) == 1)
-                         HORIZ_LE_RD(edge1.y);
+                         HORIZ_INSIDE(0, edge1.y, edge2.x, edge1.x);
                        //Vertical Edge
                        else
-                         VERT_LE_RD((edge2.y - edge1.y), -(y - edge2.y));
+                         VERT_INSIDE(0, (edge2.y - edge1.y), -(y - edge2.y));
 
-                       LE_RELOAD();
+                       NEXT(spans[y].span[0].x1);
                        break;
                     }
                }
@@ -479,9 +419,9 @@ _calc_aa_left_edges(Line *spans, int ystart, int yend)
      }
    //Leftovers
    if (edge1.x > edge2.x)
-     VERT_LE_LD((y - edge2.y), 0, (edge2.y - edge1.y));
+     VERT_OUTSIDE(0, (y - edge2.y), 0, (edge2.y - edge1.y));
    else if (edge2.x > edge1.x)
-     VERT_LE_RD(((y - 1) - edge2.y), -1);
+     VERT_INSIDE(0, ((y - 1) - edge2.y), -1);
 }
 
 static void
