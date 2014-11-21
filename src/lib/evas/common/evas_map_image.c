@@ -211,7 +211,7 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    //Find Start Edge
    for (y = 0; y < yend; y++)
      {
-        if (spans[y].span[0].x2 == -1) continue;
+        if (spans[y].span[0].x1 == -1) continue;
         edge1.x = edge2.x = spans[y].span[0].x2;
         edge1.y = edge2.y = y;
         break;
