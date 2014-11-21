@@ -218,6 +218,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
    Evas_Coord_Point edge1 = { -1, -1 };
    Evas_Coord_Point edge2 = { -1, -1 };
    int x1 = 0, x2 = 0;
+   int x3 = 0, x4 = 0;
    int last_aa = 0; //1: horiz_ld, 2: vert_ld 3: horiz_rd, 4: vert_rd
 
    yend -= ystart;
@@ -268,7 +269,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
               {
                  VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
 
-                 if (spans[y].span[0].x[eidx] != -1)
+                 if (spans[y].span[0].x[0] != -1)
                    {
                       edge1.x = spans[y - 1].span[0].x[eidx];
                       edge1.y = y - 1;
@@ -280,7 +281,18 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
             //Find Next Edge
             for (y++; y <= yend; y++)
               {
-                 READY();
+               if (eidx == 0)
+                 {
+                    x3 = edge2.x;
+                    x4 = edge1.x;
+                 }
+               else
+                 {
+                    x3 = edge1.x;
+                    x4 = edge2.x;
+                 }
+
+               READY();
 
                  //Inside Direction
                  if (x2 > x1)
@@ -288,18 +300,18 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                       //Horizontal Edge
                       if ((edge2.y - edge1.y) == 1)
                         {
-                           HORIZ_INSIDE(eidx, edge1.y, x2, x1);
+                           HORIZ_INSIDE(eidx, edge1.y, x3, x4);
 
                            //Leftovers
                            if ((y + 1) >= yend)
                              {
-                                HORIZ_INSIDE(eidx, edge2.y, x2, x1);
-                                HORIZ_INSIDE(eidx, y, x2, x1);
+                                HORIZ_INSIDE(eidx, edge2.y, x3, x4);
+                                HORIZ_INSIDE(eidx, y, x3, x4);
                                 return;
                              }
                         }
                       //Vertical Edge
-                      else if ((x2 - x1) == 1)
+                      else if ((x3 - x4) == 1)
                         {
                            VERT_INSIDE(eidx, (edge2.y - edge1.y),
                                        -(y - edge2.y));
@@ -311,7 +323,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                    {
                       //Horizontal Edge
                       if ((edge2.y - edge1.y) == 1)
-                        HORIZ_INSIDE(eidx, edge1.y, x1, x2);
+                        HORIZ_INSIDE(eidx, edge1.y, x3, x4);
                       //Vertical Edge
                       else
                         VERT_INSIDE(eidx, (edge2.y - edge1.y), -(y - edge2.y));
@@ -323,9 +335,9 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
          }
      }
    //Leftovers
-   if (x1 > x2)
+   if (edge2.x > edge1.x)
      VERT_OUTSIDE(eidx, (y - edge2.y), 0, (edge2.y - edge1.y));
-   else if (x2 > x1)
+   else if (edge1.x > edge2.x)
      VERT_INSIDE(eidx, ((y - 1) - edge2.y), -1);
 }
 
