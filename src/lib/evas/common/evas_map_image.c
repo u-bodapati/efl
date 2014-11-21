@@ -21,7 +21,7 @@ typedef struct _Span Span;
 
 struct _Span
 {
-   int x1, x2;
+   int x[2];
    FPc o1, o2, z1, z2;
    FPc  u[2], v[2];
    DATA32 col[2];
@@ -62,23 +62,23 @@ _interp_col(int x1, int x2, int p, DATA32 col1, DATA32 col2)
 static inline void
 _interpolated_clip_span(Span *s, int c1, int c2, Eina_Bool interp_col)
 {
-   if (s->x1 < c1)
+   if (s->x[0] < c1)
      {
-        s->u[0] = _interp(s->x1, s->x2, c1, s->u[0], s->u[1]);
-        s->v[0] = _interp(s->x1, s->x2, c1, s->v[0], s->v[1]);
+        s->u[0] = _interp(s->x[0], s->x[1], c1, s->u[0], s->u[1]);
+        s->v[0] = _interp(s->x[0], s->x[1], c1, s->v[0], s->v[1]);
         if (interp_col)
-          s->col[0] = _interp_col(s->x1, s->x2, c1, s->col[0], s->col[1]);
-        s->x1 = c1;
+          s->col[0] = _interp_col(s->x[0], s->x[1], c1, s->col[0], s->col[1]);
+        s->x[0] = c1;
         s->o1 = c1 << FP;
         // FIXME: do s->z1
      }
-   if (s->x2 > c2)
+   if (s->x[1] > c2)
      {
-        s->u[1] = _interp(s->x1, s->x2, c2, s->u[0], s->u[1]);
-        s->v[1] = _interp(s->x1, s->x2, c2, s->v[0], s->v[1]);
+        s->u[1] = _interp(s->x[0], s->x[1], c2, s->u[0], s->u[1]);
+        s->v[1] = _interp(s->x[0], s->x[1], c2, s->v[0], s->v[1]);
         if (interp_col)
-          s->col[1] = _interp_col(s->x1, s->x2, c2, s->col[0], s->col[1]);
-        s->x2 = c2;
+          s->col[1] = _interp_col(s->x[0], s->x[1], c2, s->col[0], s->col[1]);
+        s->x[1] = c2;
         s->o2 = c2 << FP;
         // FIXME: do s->z2
      }
@@ -102,10 +102,23 @@ aa_convert(Line *line, int ww, int w, int aa_left_range, DATA32 val)
    return val;
 }
 
+
+#define READY() \
+  if (eidx == 0) \
+    { \
+       x1 = edge2.x; \
+       x2 = spans[y].span[0].x[0]; \
+    } \
+  else \
+    { \
+       x1 = spans[y].span[0].x[1]; \
+       x2 = edge2.x; \
+    }
+
 #define NEXT(xx) \
    do \
      { \
-        if (spans[y].span[0].x1 != -1) \
+        if (spans[y].span[0].x[0] != -1) \
           { \
              edge1.x = edge2.x; \
              edge1.y = edge2.y; \
@@ -197,13 +210,14 @@ aa_convert(Line *line, int ww, int w, int aa_left_range, DATA32 val)
    while (0)
 
 static void
-_calc_aa_right_edges(Line *spans, int ystart, int yend)
+_calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
 {
    int y, tmp;
    int coverage, cov_range;
    int ry, ridx;
    Evas_Coord_Point edge1 = { -1, -1 };
    Evas_Coord_Point edge2 = { -1, -1 };
+   int x1 = 0, x2 = 0;
    int last_aa = 0; //1: horiz_ld, 2: vert_ld 3: horiz_rd, 4: vert_rd
 
    yend -= ystart;
@@ -211,8 +225,8 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    //Find Start Edge
    for (y = 0; y < yend; y++)
      {
-        if (spans[y].span[0].x1 == -1) continue;
-        edge1.x = edge2.x = spans[y].span[0].x2;
+        if (spans[y].span[0].x[0] == -1) continue;
+        edge1.x = edge2.x = spans[y].span[0].x[eidx];
         edge1.y = edge2.y = y;
         break;
      }
@@ -220,215 +234,108 @@ _calc_aa_right_edges(Line *spans, int ystart, int yend)
    //Calculates AA Edges
    for (y++; y <= yend; y++)
      {
-        //Right Direction
-        if (edge2.x < spans[y].span[0].x2)
-          {
-             //Horizontal Edge
-             if ((y - edge2.y) == 1)
-               {
-                  HORIZ_OUTSIDE(1, y, spans[y].span[0].x2, edge2.x);
+        READY();
 
-                  //Leftovers
-                  if ((y + 1) == yend)
-                    {
-                       HORIZ_OUTSIDE(1, (y + 1), spans[y].span[0].x2, edge2.x);
-                       return;
-                    }
-               }
-             //Vertical Edge
-             else if ((spans[y].span[0].x2 - edge2.x) == 1)
-               {
-                  VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
-                  if ((spans[y + 1].span[0].x2 - spans[y].span[0].x2) == 1)
-                    HORIZ_OUTSIDE(1, y, spans[y].span[0].x2, edge2.x);
-               }
-             NEXT(spans[y].span[0].x2);
-          }
-        //Left Direction
-        else if (edge2.x > spans[y].span[0].x2)
-          {
-             if (last_aa == 2)
-               {
-                  VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
+       //Outside Incremental
+       if (x1 > x2)
+         {
+            //Horizontal Edge
+            if ((y - edge2.y) == 1)
+              {
+                  HORIZ_OUTSIDE(eidx, y, x1, x2);
 
-                  if (spans[y].span[0].x1 != -1)
-                    {
-                       edge1.x = spans[y - 1].span[0].x2;
-                       edge1.y = y - 1;
-                       edge2.x = spans[y].span[0].x2;
-                       edge2.y = y;
-                    }
-               }
-             else NEXT(spans[y].span[0].x2);
+                 //Leftovers
+                 if ((y + 1) == yend)
+                   {
+                      HORIZ_OUTSIDE(1, (y + 1), x1, x2);
+                      return;
+                   }
+              }
+            //Vertical Edge
+            else if ((x1 - x2) == 1)
+              {
+                 VERT_OUTSIDE(eidx, (y - edge2.y), 0, (y - edge2.y));
+                 if (abs(spans[(y + 1)].span[0].x[eidx] -
+                         spans[y].span[0].x[eidx]) == 1)
+                   HORIZ_OUTSIDE(eidx, y, x1, x2);
+              }
+            NEXT(spans[y].span[0].x[eidx]);
+         }
+       //Inside Incremental
+       else if (x2 > x1)
+         {
+            if (last_aa == 2)
+              {
+                 VERT_OUTSIDE(1, (y - edge2.y), 0, (y - edge2.y));
 
-             //Find Next Edge
-             for (y++; y <= yend; y++)
-               {
-                  //Left Direction
-                  if (edge2.x > spans[y].span[0].x2)
-                    {
-                       //Horizontal Edge
-                       if ((edge2.y - edge1.y) == 1)
-                         {
-                            HORIZ_INSIDE(1, edge1.y, edge1.x, edge2.x);
+                 if (spans[y].span[0].x[eidx] != -1)
+                   {
+                      edge1.x = spans[y - 1].span[0].x[eidx];
+                      edge1.y = y - 1;
+                      edge2.x = spans[y].span[0].x[eidx];
+                      edge2.y = y;
+                   }
+                 else NEXT(spans[y].span[0].x[eidx]);
+              }
+            //Find Next Edge
+            for (y++; y <= yend; y++)
+              {
+                 READY();
 
-                            //Leftovers
-                            if ((y + 1) >= yend)
-                              {
-                                 HORIZ_INSIDE(1, edge2.y, edge1.x, edge2.x);
-                                 HORIZ_INSIDE(1, y, edge1.x, edge2.x);
-                                 return;
-                              }
-                         }
-                       //Vertical Edge
-                       else if ((edge1.x - edge2.x) == 1)
-                         {
-                            VERT_INSIDE(1, (edge2.y - edge1.y), -(y - edge2.y));
-                         }
-                       NEXT(spans[y].span[0].x2);
-                    }
-                  //Revert Direction? - Right Direction
-                  else if (edge2.x < spans[y].span[0].x2)
-                    {
-                       //Horizontal Edge
-                       if ((edge2.y - edge1.y) == 1)
-                         HORIZ_INSIDE(1, edge1.y, edge1.x, edge2.x);
-                       //Vertical Edge
-                       else
-                         VERT_INSIDE(1, (edge2.y - edge1.y), -(y - edge2.y));
+                 //Inside Direction
+                 if (x2 > x1)
+                   {
+                      //Horizontal Edge
+                      if ((edge2.y - edge1.y) == 1)
+                        {
+                           HORIZ_INSIDE(eidx, edge1.y, x2, x1);
 
-                       NEXT(spans[y].span[0].x2);
-                       break;
-                    }
-               }
-          }
+                           //Leftovers
+                           if ((y + 1) >= yend)
+                             {
+                                HORIZ_INSIDE(eidx, edge2.y, x2, x1);
+                                HORIZ_INSIDE(eidx, y, x2, x1);
+                                return;
+                             }
+                        }
+                      //Vertical Edge
+                      else if ((x2 - x1) == 1)
+                        {
+                           VERT_INSIDE(eidx, (edge2.y - edge1.y),
+                                       -(y - edge2.y));
+                        }
+                      NEXT(spans[y].span[0].x[eidx]);
+                   }
+                 //Reverse. Outside Direction
+                 else if (x2 < x1)
+                   {
+                      //Horizontal Edge
+                      if ((edge2.y - edge1.y) == 1)
+                        HORIZ_INSIDE(eidx, edge1.y, x1, x2);
+                      //Vertical Edge
+                      else
+                        VERT_INSIDE(eidx, (edge2.y - edge1.y), -(y - edge2.y));
+
+                      NEXT(spans[y].span[0].x[eidx]);
+                      break;
+                   }
+              }
+         }
      }
    //Leftovers
-   if (edge2.x > edge1.x)
-     VERT_OUTSIDE(1, (y - edge2.y), 0, (edge2.y - edge1.y));
-   else if (edge1.x > edge2.x)
-     VERT_INSIDE(1, ((y - 1) - edge2.y), -1);
-}
-
-static void
-_calc_aa_left_edges(Line *spans, int ystart, int yend)
-{
-   int y, tmp;
-   int coverage, cov_range;
-   int ry, ridx;
-   Evas_Coord_Point edge1 = { -1, -1 };
-   Evas_Coord_Point edge2 = { -1, -1 };
-   int last_aa = 0; //1: horiz_ld, 2: vert_ld 3: horiz_rd, 4: vert_rd
-
-   yend -= ystart;
-
-   //Find Start Edges
-   for (y = 0; y <= yend; y++)
-     {
-        if (spans[y].span[0].x1 == -1) continue;
-        edge1.x = edge2.x = spans[y].span[0].x1;
-        edge1.y = edge2.y = y;
-        break;
-     }
-
-   //Calculates AA Edges
-   for (y++; y <= yend; y++)
-     {
-        //Left Direction
-        if (edge2.x > spans[y].span[0].x1)
-          {
-             //Horizontal Edge
-             if ((y - edge2.y) == 1)
-               {
-                  HORIZ_OUTSIDE(0, y, edge2.x, spans[y].span[0].x1);
-
-                  //Leftovers
-                  if ((y + 1) == yend)
-                    {
-                       HORIZ_OUTSIDE(0, (y + 1), edge2.x, spans[y].span[0].x1);
-                       return;
-                    }
-               }
-             //Vertical Edge
-             else if ((edge2.x - spans[y].span[0].x1) == 1)
-               {
-                  VERT_OUTSIDE(0, (y - edge2.y), 0, (y - edge2.y));
-                  if ((spans[y].span[0].x1 - spans[y + 1].span[0].x1) == 1)
-                    HORIZ_OUTSIDE(0, y, edge2.x, spans[y].span[0].x1);
-               }
-             NEXT(spans[y].span[0].x1);
-          }
-        //Right Direction
-        else if (edge2.x < spans[y].span[0].x1)
-          {
-             if (last_aa == 2)
-               {
-                  VERT_OUTSIDE(0, (y - edge2.y), 0, (y - edge2.y));
-
-                  if (spans[y].span[0].x1 != -1)
-                    {
-                       edge1.x = spans[y - 1].span[0].x1;
-                       edge1.y = y - 1;
-                       edge2.x = spans[y].span[0].x1;
-                       edge2.y = y;
-                    }
-               }
-             else NEXT(spans[y].span[0].x1);
-
-             //Find Next Edge
-             for (y++; y <= yend; y++)
-               {
-                  //Right Direction
-                  if (edge2.x < spans[y].span[0].x1)
-                    {
-                       //Horizontal Edge
-                       if ((edge2.y - edge1.y) == 1)
-                         {
-                            HORIZ_INSIDE(0, edge1.y, edge2.x, edge1.x);
-
-                            //Leftovers
-                            if ((y + 1) >= yend)
-                              {
-                                 HORIZ_INSIDE(0, edge2.y, edge2.x, edge1.x);
-                                 HORIZ_INSIDE(0, y, edge2.x, edge1.x);
-                                 return;
-                              }
-                         }
-                       //Vertical Edge
-                       else if ((edge2.x - edge1.x) == 1)
-                         {
-                            VERT_INSIDE(0, (edge2.y - edge1.y), -(y - edge2.y));
-                         }
-                       NEXT(spans[y].span[0].x1);
-                    }
-                  //Revert Direction? - Left Direction
-                  else if (edge2.x > spans[y].span[0].x1)
-                    {
-                       //Horizontal Edge
-                       if ((edge2.y - edge1.y) == 1)
-                         HORIZ_INSIDE(0, edge1.y, edge2.x, edge1.x);
-                       //Vertical Edge
-                       else
-                         VERT_INSIDE(0, (edge2.y - edge1.y), -(y - edge2.y));
-
-                       NEXT(spans[y].span[0].x1);
-                       break;
-                    }
-               }
-          }
-     }
-   //Leftovers
-   if (edge1.x > edge2.x)
-     VERT_OUTSIDE(0, (y - edge2.y), 0, (edge2.y - edge1.y));
-   else if (edge2.x > edge1.x)
-     VERT_INSIDE(0, ((y - 1) - edge2.y), -1);
+   if (x1 > x2)
+     VERT_OUTSIDE(eidx, (y - edge2.y), 0, (edge2.y - edge1.y));
+   else if (x2 > x1)
+     VERT_INSIDE(eidx, ((y - 1) - edge2.y), -1);
 }
 
 static void
 _calc_aa_edges(Line *spans, int ystart, int yend)
 {
-   _calc_aa_left_edges(spans, ystart, yend);
-   _calc_aa_right_edges(spans, ystart, yend);
+   //left
+   _calc_aa_edges_internal(spans, 0, ystart, yend);
+   //right
+   _calc_aa_edges_internal(spans, 1, ystart, yend);
 }
 
 // 12.63 % of time - this can improve
@@ -464,31 +371,31 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              if (y == py[0])
                {
                   i = 0;
-                  spans[yp].span[i].x1 = p[leftp].x >> FP;
+                  spans[yp].span[i].x[0] = p[leftp].x >> FP;
                   spans[yp].span[i].o1 = p[leftp].x;
                   spans[yp].span[i].u[0] = p[leftp].u;
                   spans[yp].span[i].v[0] = p[leftp].v;
                   spans[yp].span[i].col[0] = p[leftp].col;
-                  spans[yp].span[i].x2 = p[rightp].x >> FP;
+                  spans[yp].span[i].x[1] = p[rightp].x >> FP;
                   spans[yp].span[i].o2 = p[rightp].x;
                   spans[yp].span[i].u[1] = p[rightp].u;
                   spans[yp].span[i].v[1] = p[rightp].v;
                   spans[yp].span[i].col[1] = p[rightp].col;
                   //Outside of the clipper
-                  if ((spans[yp].span[i].x1 >= (cx + cw)) ||
-                      (spans[yp].span[i].x2 < cx))
-                    spans[yp].span[i].x1 = -1;
+                  if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+                      (spans[yp].span[i].x[1] < cx))
+                    spans[yp].span[i].x[0] = -1;
                   else
                     {
                        _interpolated_clip_span(&(spans[yp].span[i]), cx,
                                               (cx + cw), interp_col);
                        i++;
-                       spans[yp].span[i].x1 = -1;
+                       spans[yp].span[i].x[0] = -1;
                     }
                }
              //The polygon shape seems not be completed definitely.
              else
-               spans[yp].span[0].x1 = -1;
+               spans[yp].span[0].x[0] = -1;
           }
         return;
      }
@@ -617,47 +524,47 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
         if (edge_num == 2)
           {
              i = 0;
-             spans[yp].span[i].x1 = edge[order[0]][2];
+             spans[yp].span[i].x[0] = edge[order[0]][2];
              spans[yp].span[i].o1 = edge[order[0]][3];
              spans[yp].span[i].u[0] = uv[order[0]][0];
              spans[yp].span[i].v[0] = uv[order[0]][1];
              spans[yp].span[i].col[0] = col[order[0]];
 
-             spans[yp].span[i].x2 = edge[order[1]][2];
+             spans[yp].span[i].x[1] = edge[order[1]][2];
              spans[yp].span[i].o2 = edge[order[1]][3];
              spans[yp].span[i].u[1] = uv[order[1]][0];
              spans[yp].span[i].v[1] = uv[order[1]][1];
              spans[yp].span[i].col[1] = col[order[1]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x1 >= (cx + cw)) ||
-                 (spans[yp].span[i].x2 < cx))
-               spans[yp].span[i].x1 = -1;
+             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+                 (spans[yp].span[i].x[1] < cx))
+               spans[yp].span[i].x[0] = -1;
              else
                {
                   _interpolated_clip_span(&(spans[yp].span[i]), cx, (cx + cw),
                                           interp_col);
                   i++;
-                  spans[yp].span[i].x1 = -1;
+                  spans[yp].span[i].x[0] = -1;
                }
           }
         else if (edge_num == 4)
           {
              i = 0;
-             spans[yp].span[i].x1 = edge[order[0]][2];
+             spans[yp].span[i].x[0] = edge[order[0]][2];
              spans[yp].span[i].u[0] = uv[order[0]][0];
              spans[yp].span[i].v[0] = uv[order[0]][1];
              spans[yp].span[i].col[0] = col[order[0]];
 
-             spans[yp].span[i].x2 = edge[order[1]][2];
+             spans[yp].span[i].x[1] = edge[order[1]][2];
              spans[yp].span[i].u[1] = uv[order[1]][0];
              spans[yp].span[i].v[1] = uv[order[1]][1];
              spans[yp].span[i].col[1] = col[order[1]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x1 >= (cx + cw)) ||
-                 (spans[yp].span[i].x2 < cx))
-               spans[yp].span[i].x1 = -1;
+             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+                 (spans[yp].span[i].x[1] < cx))
+               spans[yp].span[i].x[0] = -1;
              else
                {
                   _interpolated_clip_span(&(spans[yp].span[i]), cx, (cx + cw),
@@ -665,32 +572,32 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
                   i++;
                }
 
-             spans[yp].span[i].x1 = edge[order[2]][2];
+             spans[yp].span[i].x[0] = edge[order[2]][2];
              spans[yp].span[i].u[0] = uv[order[2]][0];
              spans[yp].span[i].v[0] = uv[order[2]][1];
              spans[yp].span[i].col[0] = col[order[2]];
 
-             spans[yp].span[i].x2 = edge[order[3]][2];
+             spans[yp].span[i].x[1] = edge[order[3]][2];
              spans[yp].span[i].u[1] = uv[order[3]][0];
              spans[yp].span[i].v[1] = uv[order[3]][1];
              spans[yp].span[i].col[1] = col[order[3]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x1 >= (cx + cw)) ||
-                 (spans[yp].span[i].x2 < cx))
-               spans[yp].span[i].x1 = -1;
+             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+                 (spans[yp].span[i].x[1] < cx))
+               spans[yp].span[i].x[0] = -1;
              else
                {
                   int l = cx;
 
-                  if (i > 0) l = spans[yp].span[i - 1].x2;
+                  if (i > 0) l = spans[yp].span[i - 1].x[1];
                   _interpolated_clip_span(&(spans[yp].span[i]), l, (cx + cw),
                                           interp_col);
                }
           }
         //The polygon shape seems not be completed definitely.
         else
-          spans[yp].span[0].x1 = -1;
+          spans[yp].span[0].x[0] = -1;
      }
 }
 
@@ -705,27 +612,27 @@ _clip_spans(Line *spans, int ystart, int yend,
 
    for (y = ystart, yp = 0; y <= yend; y++, yp++)
      {
-        if (spans[yp].span[0].x1 > -1)
+        if (spans[yp].span[0].x[0] > -1)
           {
-             if ((spans[yp].span[0].x1 >= (cx + cw)) ||
-                 (spans[yp].span[0].x2 < cx))
+             if ((spans[yp].span[0].x[0] >= (cx + cw)) ||
+                 (spans[yp].span[0].x[1] < cx))
                {
-                  spans[yp].span[0].x1 = -1;
+                  spans[yp].span[0].x[0] = -1;
                }
              else
                {
                   _interpolated_clip_span(&(spans[yp].span[0]), cx, (cx + cw),
                                           interp_col);
 
-                  if ((spans[yp].span[1].x1 >= (cx + cw)) ||
-                      (spans[yp].span[1].x2 < cx))
+                  if ((spans[yp].span[1].x[0] >= (cx + cw)) ||
+                      (spans[yp].span[1].x[1] < cx))
                     {
-                       spans[yp].span[1].x1 = -1;
+                       spans[yp].span[1].x[0] = -1;
                     }
                   else
                     {
                        _interpolated_clip_span(&(spans[yp].span[1]),
-                                               spans[yp].span[0].x2,
+                                               spans[yp].span[0].x[1],
                                                cx + cw, interp_col);
                     }
                }
