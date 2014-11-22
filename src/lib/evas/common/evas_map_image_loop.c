@@ -169,7 +169,7 @@
 #    endif
 #   else
         if (anti_alias)
-          val1 = aa_convert(line, ww, w, aa_left_range, val1);
+          val1 = _aa_coverage_apply(line, ww, w, val1);
 
         *d = val1;
 
