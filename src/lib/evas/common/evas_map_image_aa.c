@@ -105,7 +105,6 @@
         spans[(yy)].aa_len[(eidx)] = ((xx) - (xx2)); \
         spans[(yy)].aa_cov[(eidx)] = (256 / (spans[(yy)].aa_len[(eidx)] + 1)); \
      } \
-   prev_aa = 3; \
 }
 
 //Horizontal Outside Direction
@@ -116,7 +115,6 @@
         spans[(yy)].aa_len[(eidx)] = ((xx) - (xx2)); \
         spans[(yy)].aa_cov[(eidx)] = (256 / (spans[(yy)].aa_len[(eidx)] + 1)); \
      } \
-   prev_aa = 1; \
 }
 
 static inline DATA32
@@ -150,9 +148,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
    int tx2[2] = {0, 0};
 
    /* previous edge anti-aliased type.
-      1: horizontal_outside
       2: vertical outside
-      3: horizontal inside
       4: vertical inside */
    int prev_aa = 0;
 
@@ -174,7 +170,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
      {
        Eina_Bool leftover = EINA_FALSE;
 
-       if (spans[y].span[0].x[0] == -1) leftover = EINA_TRUE;
+       if (spans[y].span[0].x[eidx] == -1) leftover = EINA_TRUE;
 
        if (!leftover) READY_TX()
 
@@ -216,12 +212,12 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
               PUSH_EDGES(spans[y].span[0].x[eidx])
 
             /* Find next edge. We go forward 2 more index since this logic
-                predicts the edge by checking .. */
+               computes aa edges by looking back in advance 2 spans. */
             for (y++; y <= (yend + 2); y++)
               {
                  leftover = EINA_FALSE;
 
-                 if ((spans[y].span[0].x[0] == -1) || (y > yend))
+                 if ((spans[y].span[0].x[eidx] == -1) || (y > yend))
                    leftover = EINA_TRUE;
 
                  if (!leftover) READY_TX()
@@ -267,6 +263,25 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                    }
               }
          }
+     }
+
+   y = yend;
+
+   //Leftovers for verticals.
+   if (prev_aa == 2)
+     {
+      if (((eidx == 0) && (edge1.x > edge2.x)) ||
+          ((eidx == 1) && (edge1.x < edge2.x)))
+        VERT_OUTSIDE((y - edge2.y + 1), 1, (edge2.y - edge1.y));
+     }
+   else if (prev_aa == 4)
+     {
+        if (((eidx == 0) && (edge1.x < edge2.x)) ||
+           ((eidx == 1) && (edge1.x > edge2.x)))
+          {
+             VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
+             VERT_INSIDE((y - edge2.y) + 1, 1);
+          }
      }
 }
 
