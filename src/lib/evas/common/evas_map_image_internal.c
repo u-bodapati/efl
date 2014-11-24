@@ -49,7 +49,7 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
    if (ytop < cy) ystart = cy;
    else ystart = ytop;
    if (ybottom >= (cy + ch)) yend = (cy + ch) - 1;
-   else yend = ybottom;
+   else yend = ybottom - 1;
 
    // get some source image information
    sp = src->image.data;

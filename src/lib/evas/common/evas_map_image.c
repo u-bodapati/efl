@@ -130,7 +130,7 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
                   spans[yp].span[i].v[1] = p[rightp].v;
                   spans[yp].span[i].col[1] = p[rightp].col;
                   //Outside of the clipper
-                  if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+                  if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                       (spans[yp].span[i].x[1] < cx))
                     spans[yp].span[i].x[0] = -1;
                   else
@@ -285,9 +285,11 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              spans[yp].span[i].col[1] = col[order[1]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+             if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                  (spans[yp].span[i].x[1] < cx))
+             {
                spans[yp].span[i].x[0] = -1;
+             }
              else
                {
                   _interpolated_clip_span(&(spans[yp].span[i]), cx, (cx + cw),
@@ -310,7 +312,7 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              spans[yp].span[i].col[1] = col[order[1]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+             if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                  (spans[yp].span[i].x[1] < cx))
                spans[yp].span[i].x[0] = -1;
              else
@@ -331,9 +333,11 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              spans[yp].span[i].col[1] = col[order[3]];
 
              //Outside of the clipper
-             if ((spans[yp].span[i].x[0] >= (cx + cw)) ||
+             if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                  (spans[yp].span[i].x[1] < cx))
+             {
                spans[yp].span[i].x[0] = -1;
+             }
              else
                {
                   int l = cx;
@@ -345,7 +349,9 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
           }
         //The polygon shape seems not be completed definitely.
         else
+        {
           spans[yp].span[0].x[0] = -1;
+        }
      }
 }
 
@@ -512,7 +518,7 @@ _evas_common_map_rgba_span(RGBA_Map_Spans *span,
    // limit to the clip vertical bounds
    if (ytop < cy) span->ystart = cy;
    else span->ystart = ytop;
-   if (ybottom >= (cy + ch)) span->yend = (cy + ch) - 1;
+   if (ybottom > (cy + ch)) span->yend = (cy + ch);
    else span->yend = ybottom;
 
    // get some source image information

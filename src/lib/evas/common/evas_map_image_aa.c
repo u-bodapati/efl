@@ -162,8 +162,10 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
      }
 
    //Calculates AA Edges
-   for (y++; y < yend; y++)
+   for (y; y <= yend; y++)
      {
+       if (spans[y].span[0].x[0] == -1) break;
+
        READY_TX()
 
        //Case1. Outside Incremental
@@ -207,8 +209,9 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
             else PUSH_EDGES(spans[y].span[0].x[eidx])
 
             //Find next edge
-            for (y++; y < yend; y++)
+            for (y++; y <= yend; y++)
               {
+                 if (spans[y].span[0].x[0] == -1) break;
                  READY_TX()
                  if (reset_tx2)
                    {
@@ -261,10 +264,11 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
 
    //Leftovers
    y = yend;
+
    switch(prev_aa)
      {
         case 1:
-          HORIZ_OUTSIDE(eidx, y, tx[0], tx[1]);
+          HORIZ_OUTSIDE(eidx, (y - 1), tx[0], tx[1]);
           break;
         case 2:
            if (((eidx == 0) && (edge1.x > edge2.x)) ||
@@ -272,8 +276,9 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
           VERT_OUTSIDE(eidx, (y - edge2.y + 1), 1, (edge2.y - edge1.y));
           break;
         case 3:
-          HORIZ_INSIDE(eidx, edge1.y, tx2[0], tx2[1])
+         // HORIZ_INSIDE(eidx, edge1.y, tx2[0], tx2[1])
           HORIZ_INSIDE(eidx, (y - 1), tx2[0], tx2[1]);
+          HORIZ_INSIDE(eidx, (y), tx2[0], tx2[1]);
           break;
         case 4:
            if (((eidx == 0) && (edge1.x < edge2.x)) ||
