@@ -5,7 +5,8 @@
  *      Author: hermet
  */
 
-#define READY_TX() \
+#define  READY_TX() \
+{ \
   if (eidx == 0) \
     { \
        tx[0] = edge2.x; \
@@ -15,9 +16,11 @@
     { \
        tx[0] = spans[y].span[0].x[1]; \
        tx[1] = edge2.x; \
-    }
+    } \
+}
 
 #define READY_TX2() \
+{ \
    if (eidx == 0) \
      { \
         tx2[0] = edge2.x; \
@@ -28,6 +31,7 @@
        tx2[0] = edge1.x; \
        tx2[1] = edge2.x; \
     } \
+}
 
 #define PUSH_EDGES(xx) \
    if (spans[y].span[0].x[0] != -1) \
@@ -40,48 +44,46 @@
      }
 
 //Vertical Inside Direction
-#define VERT_INSIDE(dir, rewind, y_advance) \
+#define VERT_INSIDE(rewind, y_advance) \
 { \
    int cov_range = edge2.y - edge1.y; \
    int coverage = (256 / (cov_range + 1)); \
    int ry; \
+   int val; \
    for (ry = 1; ry < ((rewind) + 1); ry++) \
      { \
         int ridx = (y - ry) + (y_advance); \
-        if (spans[ridx].aa_len[(dir)] > 1) continue; \
-        spans[ridx].aa_len[(dir)] = 1; \
-        if ((dir) == 1) \
-          { \
-             spans[ridx].aa_cov[(dir)] = \
-                (256 - (coverage * (ry + (cov_range - (rewind))))); \
-          } \
+        if (spans[ridx].aa_len[eidx] > 1) continue; \
+        if (eidx == 1) \
+          val = (256 - (coverage * (ry + (cov_range - (rewind))))); \
         else \
-          { \
-             spans[ridx].aa_cov[(dir)] = \
-                (coverage * (ry + (cov_range - (rewind)))); \
-          } \
+          val = (coverage * (ry + (cov_range - (rewind)))); \
+        if ((spans[ridx].aa_len[eidx] == 0) || \
+            (val < spans[ridx].aa_cov[eidx])) \
+          spans[ridx].aa_cov[eidx] = val; \
+        spans[ridx].aa_len[eidx] = 1; \
      } \
    prev_aa = 4; \
 }
 
 //Vertical Outside Direction
-#define VERT_OUTSIDE(dir, rewind, y_advance, cov_range) \
+#define VERT_OUTSIDE(rewind, y_advance, cov_range) \
 { \
    int coverage = (256 / ((cov_range) + 1)); \
    int ry = 1; \
    for (; ry < ((rewind) + 1); ry++) \
      { \
         int ridx = (y - ry) + (y_advance); \
-        if (spans[ridx].aa_len[(dir)] > 1) continue; \
-        spans[ridx].aa_len[(dir)] = 1; \
-        if (dir == 1) \
+        if (spans[ridx].aa_len[(eidx)] > 1) continue; \
+        spans[ridx].aa_len[(eidx)] = 1; \
+        if (eidx == 1) \
           { \
-             spans[ridx].aa_cov[(dir)] = \
+             spans[ridx].aa_cov[(eidx)] = \
                 (coverage * (ry + (cov_range - (rewind)))); \
           } \
         else \
           { \
-             spans[ridx].aa_cov[(dir)] = \
+             spans[ridx].aa_cov[(eidx)] = \
                 (256 - (coverage * (ry + ((cov_range) - (rewind))))); \
           } \
      } \
@@ -89,23 +91,23 @@
 }
 
 //Horizontal Inside Direction
-#define HORIZ_INSIDE(dir, yy, xx, xx2) \
+#define HORIZ_INSIDE(yy, xx, xx2) \
 { \
-   if (((xx) - (xx2)) > spans[(yy)].aa_len[(dir)]) \
+   if (((xx) - (xx2)) > spans[(yy)].aa_len[(eidx)]) \
      { \
-        spans[(yy)].aa_len[(dir)] = ((xx) - (xx2)); \
-        spans[(yy)].aa_cov[(dir)] = (256 / (spans[(yy)].aa_len[(dir)] + 1)); \
+        spans[(yy)].aa_len[(eidx)] = ((xx) - (xx2)); \
+        spans[(yy)].aa_cov[(eidx)] = (256 / (spans[(yy)].aa_len[(eidx)] + 1)); \
      } \
    prev_aa = 3; \
 }
 
 //Horizontal Outside Direction
-#define HORIZ_OUTSIDE(dir, yy, xx, xx2) \
+#define HORIZ_OUTSIDE(yy, xx, xx2) \
 { \
-   if (((xx) - (xx2)) > spans[(yy)].aa_len[(dir)]) \
+   if (((xx) - (xx2)) > spans[(yy)].aa_len[(eidx)]) \
      { \
-        spans[(yy)].aa_len[(dir)] = ((xx) - (xx2)); \
-        spans[(yy)].aa_cov[(dir)] = (256 / (spans[(yy)].aa_len[(dir)] + 1)); \
+        spans[(yy)].aa_len[(eidx)] = ((xx) - (xx2)); \
+        spans[(yy)].aa_cov[(eidx)] = (256 / (spans[(yy)].aa_len[(eidx)] + 1)); \
      } \
    prev_aa = 1; \
 }
@@ -116,14 +118,13 @@ _aa_coverage_apply(Line *line, int ww, int w, DATA32 val)
    //Left Edge Anti Anliasing
    if ((w - line->aa_len[0]) < ww)
      {
-        return INTERP_256((line->aa_cov[0] * (w - ww + 1)), val,
-                          0x00000000);
+        return MUL_256((line->aa_cov[0] * (w - ww + 1)), val);
      }
    //Right Edge Anti Aliasing
    if (line->aa_len[1] >= ww)
      {
-        return INTERP_256(256 - (line->aa_cov[1] * (line->aa_len[1] - ww + 1)),
-                          val, 0x00000000);
+        return MUL_256(256 - (line->aa_cov[1] * (line->aa_len[1] - ww + 1)),
+                       val);
      }
    return val;
 }
@@ -162,7 +163,7 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
      }
 
    //Calculates AA Edges
-   for (y; y <= yend; y++)
+   for (y++; y <= yend; y++)
      {
        if (spans[y].span[0].x[0] == -1) break;
 
@@ -174,18 +175,18 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
             //Horizontal Edge
             if ((y - edge2.y) == 1)
               {
-                  HORIZ_OUTSIDE(eidx, y, tx[0], tx[1])
+                  HORIZ_OUTSIDE(y, tx[0], tx[1])
               }
             //Vertical Edge
             else if (tx[0] > tx[1])
               {
-                 VERT_OUTSIDE(eidx, (y - edge2.y), 0, (y - edge2.y))
+                 VERT_OUTSIDE((y - edge2.y), 0, (y - edge2.y))
 
                  //Just in case: 1 pixel alias next to vertical edge?
                  if (abs(spans[(y + 1)].span[0].x[eidx] -
                          spans[y].span[0].x[eidx]) >= 1)
                    {
-                      HORIZ_OUTSIDE(eidx, y, tx[0], tx[1])
+                      HORIZ_OUTSIDE(y, tx[0], tx[1])
                    }
               }
             PUSH_EDGES(spans[y].span[0].x[eidx])
@@ -196,27 +197,37 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
             //Just in case: direction is reversed at the outside vertical edge?
             if (prev_aa == 2)
               {
-                 VERT_OUTSIDE(eidx, (y - edge2.y), 0, (y - edge2.y))
-
-                 if (spans[y].span[0].x[0] != -1)
-                   {
-                      edge1.x = spans[y - 1].span[0].x[eidx];
-                      edge1.y = y - 1;
-                      edge2.x = spans[y].span[0].x[eidx];
-                      edge2.y = y;
-                   }
+                 VERT_OUTSIDE((y - edge2.y), 0, (y - edge2.y))
+                 edge1.x = spans[y - 1].span[0].x[eidx];
+                 edge1.y = y - 1;
+                 edge2.x = spans[y].span[0].x[eidx];
+                 edge2.y = y;
               }
-            else PUSH_EDGES(spans[y].span[0].x[eidx])
+            else
+              PUSH_EDGES(spans[y].span[0].x[eidx])
+
+            prev_aa = 3;
+            if (reset_tx2)
+              {
+               if (eidx == 0)
+                 {
+                    tx2[0] = tx[1];
+                    tx2[1] = tx[0];
+                 }
+               else
+                {
+                   tx2[0] = tx[0];
+                   tx2[1] = tx[1];
+                }
+              }
 
             //Find next edge
             for (y++; y <= yend; y++)
               {
                  if (spans[y].span[0].x[0] == -1) break;
                  READY_TX()
-                 if (reset_tx2)
-                   {
-                      READY_TX2()
-                   }
+
+                 if (reset_tx2) READY_TX2()
 
                  //Case 1. Inside Direction
                  if (tx[1] > tx[0])
@@ -224,23 +235,21 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                       //Horizontal Edge
                       if ((edge2.y - edge1.y) == 1)
                         {
-                           HORIZ_INSIDE(eidx, edge1.y, tx2[0], tx2[1]);
+                           HORIZ_INSIDE(edge1.y, tx2[0], tx2[1]);
                         }
                       //Vertical Edge
                       else if ((tx2[0] - tx2[1]) == 1)
                         {
-                           VERT_INSIDE(eidx, (edge2.y - edge1.y),
-                                       -(y - edge2.y))
+                           VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
                         }
                       //Just in case: Right Side Square Edge...?
                       else if (prev_aa == 4)
                         {
-                           VERT_INSIDE(eidx, (edge2.y - edge1.y),
-                                       -(y - edge2.y))
+                           VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
                            if ((y - edge2.y) == 1)
                              {
-                                HORIZ_INSIDE(eidx, edge2.y - 1,
-                                             edge2.x, spans[y].span[0].x[eidx]);
+                                HORIZ_INSIDE((edge2.y - 1), edge2.x,
+                                             spans[y].span[0].x[eidx]);
                              }
                         }
                       PUSH_EDGES(spans[y].span[0].x[eidx])
@@ -250,10 +259,10 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                    {
                       //Horizontal Edge
                       if ((edge2.y - edge1.y) == 1)
-                        HORIZ_INSIDE(eidx, edge1.y, tx2[0], tx2[1])
+                        HORIZ_INSIDE(edge1.y, tx2[0], tx2[1])
                       //Vertical Edge
                       else
-                        VERT_INSIDE(eidx, (edge2.y - edge1.y), -(y - edge2.y))
+                        VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
 
                       PUSH_EDGES(spans[y].span[0].x[eidx])
                       break;
@@ -265,27 +274,29 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
    //Leftovers
    y = yend;
 
+   if (eidx == 0)
+   printf("prev:%d, (%d %d)\n", prev_aa, tx2[0], tx2[1]);
+
    switch(prev_aa)
      {
         case 1:
-          HORIZ_OUTSIDE(eidx, (y - 1), tx[0], tx[1]);
+          HORIZ_OUTSIDE((y - 1), tx[0], tx[1]);
           break;
         case 2:
            if (((eidx == 0) && (edge1.x > edge2.x)) ||
                ((eidx == 1) && (edge1.x < edge2.x)))
-          VERT_OUTSIDE(eidx, (y - edge2.y + 1), 1, (edge2.y - edge1.y));
+          VERT_OUTSIDE((y - edge2.y + 1), 1, (edge2.y - edge1.y));
           break;
         case 3:
-         // HORIZ_INSIDE(eidx, edge1.y, tx2[0], tx2[1])
-          HORIZ_INSIDE(eidx, (y - 1), tx2[0], tx2[1]);
-          HORIZ_INSIDE(eidx, (y), tx2[0], tx2[1]);
+          HORIZ_INSIDE((y - 1), tx2[0], tx2[1]);
+          HORIZ_INSIDE((y), tx2[0], tx2[1]);
           break;
         case 4:
            if (((eidx == 0) && (edge1.x < edge2.x)) ||
                ((eidx == 1) && (edge1.x > edge2.x)))
            {
-              VERT_INSIDE(eidx, (edge2.y - edge1.y), -(y - edge2.y))
-              VERT_INSIDE(eidx, (y - edge2.y) + 1, 1);
+              VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
+              VERT_INSIDE((y - edge2.y) + 1, 1);
            }
           break;
         default:
