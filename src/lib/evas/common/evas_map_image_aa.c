@@ -34,14 +34,21 @@
 }
 
 #define PUSH_EDGES(xx) \
-   if (spans[y].span[0].x[0] != -1) \
+{ \
+   if (!leftover) \
      { \
         edge1.x = edge2.x; \
         edge1.y = edge2.y; \
         edge2.x = (xx); \
         edge2.y = y; \
-        reset_tx2 = EINA_TRUE; \
-     }
+     } \
+   else \
+     { \
+        edge1.y = edge2.y; \
+        edge2.y = y; \
+     } \
+   reset_tx2 = EINA_TRUE; \
+}
 
 //Vertical Inside Direction
 #define VERT_INSIDE(rewind, y_advance) \
@@ -165,9 +172,11 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
    //Calculates AA Edges
    for (y++; y <= yend; y++)
      {
-       if (spans[y].span[0].x[0] == -1) break;
+       Eina_Bool leftover = EINA_FALSE;
 
-       READY_TX()
+       if (spans[y].span[0].x[0] == -1) leftover = EINA_TRUE;
+
+       if (!leftover) READY_TX()
 
        //Case1. Outside Incremental
        if (tx[0] > tx[1])
@@ -206,27 +215,16 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
             else
               PUSH_EDGES(spans[y].span[0].x[eidx])
 
-            prev_aa = 3;
-            if (reset_tx2)
+            /* Find next edge. We go forward 2 more index since this logic
+                predicts the edge by checking .. */
+            for (y++; y <= (yend + 2); y++)
               {
-               if (eidx == 0)
-                 {
-                    tx2[0] = tx[1];
-                    tx2[1] = tx[0];
-                 }
-               else
-                {
-                   tx2[0] = tx[0];
-                   tx2[1] = tx[1];
-                }
-              }
+                 leftover = EINA_FALSE;
 
-            //Find next edge
-            for (y++; y <= yend; y++)
-              {
-                 if (spans[y].span[0].x[0] == -1) break;
-                 READY_TX()
+                 if ((spans[y].span[0].x[0] == -1) || (y > yend))
+                   leftover = EINA_TRUE;
 
+                 if (!leftover) READY_TX()
                  if (reset_tx2) READY_TX2()
 
                  //Case 1. Inside Direction
@@ -269,38 +267,6 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
                    }
               }
          }
-     }
-
-   //Leftovers
-   y = yend;
-
-   if (eidx == 0)
-   printf("prev:%d, (%d %d)\n", prev_aa, tx2[0], tx2[1]);
-
-   switch(prev_aa)
-     {
-        case 1:
-          HORIZ_OUTSIDE((y - 1), tx[0], tx[1]);
-          break;
-        case 2:
-           if (((eidx == 0) && (edge1.x > edge2.x)) ||
-               ((eidx == 1) && (edge1.x < edge2.x)))
-          VERT_OUTSIDE((y - edge2.y + 1), 1, (edge2.y - edge1.y));
-          break;
-        case 3:
-          HORIZ_INSIDE((y - 1), tx2[0], tx2[1]);
-          HORIZ_INSIDE((y), tx2[0], tx2[1]);
-          break;
-        case 4:
-           if (((eidx == 0) && (edge1.x < edge2.x)) ||
-               ((eidx == 1) && (edge1.x > edge2.x)))
-           {
-              VERT_INSIDE((edge2.y - edge1.y), -(y - edge2.y))
-              VERT_INSIDE((y - edge2.y) + 1, 1);
-           }
-          break;
-        default:
-          break;
      }
 }
 
