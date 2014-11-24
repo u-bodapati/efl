@@ -291,6 +291,8 @@ _calc_aa_edges_internal(Line *spans, int eidx, int ystart, int yend)
 static void
 _calc_aa_edges(Line *spans, int ystart, int yend)
 {
+   //FIXME: support 2 span case.
+
    //left side
    _calc_aa_edges_internal(spans, 0, ystart, yend);
    //right side
