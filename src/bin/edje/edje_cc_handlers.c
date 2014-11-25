@@ -214,7 +214,7 @@ static void st_collections_group_inherit(void);
 static void st_collections_group_program_source(void);
 static void st_collections_group_part_remove(void);
 static void st_collections_group_program_remove(void);
-static void st_collections_group_script_only(void);
+static void st_collections_group_lua_script_only(void);
 static void st_collections_group_script_recursion(void);
 static void st_collections_group_alias(void);
 static void st_collections_group_min(void);
@@ -540,9 +540,8 @@ New_Statement_Handler statement_handlers[] =
      {"collections.group.target_group", st_collections_group_target_group}, /* dup */
      {"collections.group.part_remove", st_collections_group_part_remove},
      {"collections.group.program_remove", st_collections_group_program_remove},
-     {"collections.group.script_only", st_collections_group_script_only},
+     {"collections.group.lua_script_only", st_collections_group_lua_script_only},
      {"collections.group.script_recursion", st_collections_group_script_recursion},
-     {"collections.group.lua_script_only", st_collections_group_script_only},
      {"collections.group.alias", st_collections_group_alias},
      {"collections.group.min", st_collections_group_min},
      {"collections.group.max", st_collections_group_max},
@@ -2995,9 +2994,10 @@ double_named_group:
         [group name]
     @effect
         The name that will be used by the application to load the resulting
-        Edje object and to identify the group to swallow in a GROUP part. If a
-        group with the same name exists already it will be completely overriden
-        by the new group.
+        Edje object and to identify the group to swallow in a GROUP part. If
+        group with the same name exists already, it won't be compiled.
+        Only a single name statement is valid for group, use alias instead if
+        you want to give additional names.
     @endproperty
 */
 static void
@@ -3475,7 +3475,7 @@ st_collections_group_inherit(void)
 /**
     @page edcref
     @property
-        script_only
+        lua_script_only
     @parameters
         [on/off]
     @effect
@@ -3484,7 +3484,7 @@ st_collections_group_inherit(void)
     @endproperty
 */
 static void
-st_collections_group_script_only(void)
+st_collections_group_lua_script_only(void)
 {
    Edje_Part_Collection *pc;
 
