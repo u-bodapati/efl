@@ -101,6 +101,7 @@ source_client_complex_method_call_generate(const DBus_Method *method, Eina_Strbu
         eina_strbuf_append_printf(c_code, "   if (!eldbus_message_from_eina_value(\"%s\", msg, args))\n", eina_strbuf_string_get(full_signature));
         eina_strbuf_append_printf(c_code, "     {\n");
         eina_strbuf_append_printf(c_code, "        ERR(\"Error: Filling message from eina value.\");\n");
+        eina_strbuf_append_printf(c_code, "        eldbus_message_unref(msg);\n");
         eina_strbuf_append_printf(c_code, "        return;\n");
         eina_strbuf_append_printf(c_code, "     }\n");
         eina_strbuf_append_printf(c_code, "   eldbus_proxy_send(proxy, msg, %s, NULL, -1);\n", method->cb_name);
@@ -120,6 +121,7 @@ source_client_complex_method_call_generate(const DBus_Method *method, Eina_Strbu
    eina_strbuf_append_printf(c_code, "   if (!eldbus_message_from_eina_value(\"%s\", msg, args))\n", eina_strbuf_string_get(full_signature));
    eina_strbuf_append_printf(c_code, "     {\n");
    eina_strbuf_append_printf(c_code, "        ERR(\"Error: Filling message from eina value.\");\n");
+   eina_strbuf_append_printf(c_code, "        eldbus_message_unref(msg);\n");
    eina_strbuf_append_printf(c_code, "        return NULL;\n");
    eina_strbuf_append_printf(c_code, "     }\n");
    eina_strbuf_append_printf(c_code, "   p = eldbus_proxy_send(proxy, msg, %s, cb, -1);\n", method->cb_name);
@@ -161,6 +163,7 @@ source_client_simple_method_call_no_reply_generate(const DBus_Method *method, Ei
    eina_strbuf_append_printf(c_code, "   if (!eldbus_message_arguments_append(msg, \"%s\"%s))\n", eina_strbuf_string_get(full_signature), eina_strbuf_string_get(args_call));
    eina_strbuf_append_printf(c_code, "     {\n");
    eina_strbuf_append_printf(c_code, "        ERR(\"Error: Filling message.\");\n");
+   eina_strbuf_append_printf(c_code, "        eldbus_message_unref(msg);\n");
    eina_strbuf_append_printf(c_code, "        return;\n");
    eina_strbuf_append_printf(c_code, "     }\n");
    eina_strbuf_append_printf(c_code, "   eldbus_proxy_send(proxy, msg, NULL, NULL, -1);\n");
@@ -201,6 +204,7 @@ source_client_simple_method_call_generate(const DBus_Method *method, Eina_Strbuf
    eina_strbuf_append_printf(c_code, "   if (!eldbus_message_arguments_append(msg, \"%s\"%s))\n", eina_strbuf_string_get(full_signature), eina_strbuf_string_get(args_call));
    eina_strbuf_append_printf(c_code, "     {\n");
    eina_strbuf_append_printf(c_code, "        ERR(\"Error: Filling message.\");\n");
+   eina_strbuf_append_printf(c_code, "        eldbus_message_unref(msg);\n");
    eina_strbuf_append_printf(c_code, "        return NULL;\n");
    eina_strbuf_append_printf(c_code, "     }\n");
    eina_strbuf_append_printf(c_code, "   p = eldbus_proxy_send(proxy, msg, %s, cb, -1);\n", method->cb_name);

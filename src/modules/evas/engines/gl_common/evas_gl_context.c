@@ -565,49 +565,49 @@ evas_gl_common_context_new(void)
 
    if (!shared)
      {
-        const GLubyte *ext;
+        const char *ext;
 
         shared = calloc(1, sizeof(Evas_GL_Shared));
-        ext = glGetString(GL_EXTENSIONS);
+        ext = (const char *) glGetString(GL_EXTENSIONS);
         if (ext)
           {
              if (getenv("EVAS_GL_INFO"))
                 fprintf(stderr, "EXT:\n%s\n", ext);
-             if ((strstr((char *)ext, "GL_ARB_texture_non_power_of_two")) ||
-                 (strstr((char *)ext, "OES_texture_npot")) ||
-                 (strstr((char *)ext, "GL_IMG_texture_npot")))
+             if ((strstr(ext, "GL_ARB_texture_non_power_of_two")) ||
+                 (strstr(ext, "OES_texture_npot")) ||
+                 (strstr(ext, "GL_IMG_texture_npot")))
                shared->info.tex_npo2 = 1;
-             if ((strstr((char *)ext, "GL_NV_texture_rectangle")) ||
-                 (strstr((char *)ext, "GL_EXT_texture_rectangle")) ||
-                 (strstr((char *)ext, "GL_ARB_texture_rectangle")))
+             if ((strstr(ext, "GL_NV_texture_rectangle")) ||
+                 (strstr(ext, "GL_EXT_texture_rectangle")) ||
+                 (strstr(ext, "GL_ARB_texture_rectangle")))
                shared->info.tex_rect = 1;
-             if ((strstr((char *)ext, "GL_ARB_get_program_binary")) ||
-                 (strstr((char *)ext, "GL_OES_get_program_binary")))
+             if ((strstr(ext, "GL_ARB_get_program_binary")) ||
+                 (strstr(ext, "GL_OES_get_program_binary")))
                shared->info.bin_program = 1;
              else
                glsym_glGetProgramBinary = NULL;
 #ifdef GL_UNPACK_ROW_LENGTH
              shared->info.unpack_row_length = 1;
 # ifdef GL_GLES
-             if (!strstr((char *)ext, "_unpack_subimage"))
+             if (!strstr(ext, "_unpack_subimage"))
                shared->info.unpack_row_length = 0;
 # endif
 #endif
 
 #ifdef GL_TEXTURE_MAX_ANISOTROPY_EXT
-             if ((strstr((char *)ext, "GL_EXT_texture_filter_anisotropic")))
+             if ((strstr(ext, "GL_EXT_texture_filter_anisotropic")))
                glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
                            &(shared->info.anisotropic));
 #endif
 #ifdef GL_BGRA
-             if ((strstr((char *)ext, "GL_EXT_bgra")) ||
-                 (strstr((char *)ext, "GL_EXT_texture_format_BGRA8888")))
+             if ((strstr(ext, "GL_EXT_bgra")) ||
+                 (strstr(ext, "GL_EXT_texture_format_BGRA8888")))
                shared->info.bgra = 1;
 #endif
-             if (strstr((char *)ext, "OES_compressed_ETC1_RGB8_texture"))
+             if (strstr(ext, "OES_compressed_ETC1_RGB8_texture"))
                shared->info.etc1 = 1;
-             if (strstr((char *)ext, "GL_EXT_texture_compression_s3tc") ||
-                 strstr((char *)ext, "GL_S3_s3tc"))
+             if (strstr(ext, "GL_EXT_texture_compression_s3tc") ||
+                 strstr(ext, "GL_S3_s3tc"))
                shared->info.s3tc = 1;
 #ifdef GL_GLES
              // FIXME: there should be an extension name/string to check for
@@ -628,7 +628,7 @@ evas_gl_common_context_new(void)
                      shared->info.sec_image_map = 1;
                }
 #endif
-             if (!strstr((char *)ext, "GL_QCOM_tiled_rendering"))
+             if (!strstr(ext, "GL_QCOM_tiled_rendering"))
                {
                   glsym_glStartTiling = NULL;
                   glsym_glEndTiling = NULL;
@@ -724,7 +724,11 @@ evas_gl_common_context_new(void)
 
                        // Note: If we support ETC2 we'll try to always use ETC2 even when the
                        // image has colorspace ETC1 (backwards compatibility).
-                       shared->info.etc1_subimage = shared->info.etc2;
+
+                       if (ext && strstr(ext, "GL_EXT_compressed_ETC1_RGB8_sub_texture"))
+                         shared->info.etc1_subimage = 1;
+                       else
+                         shared->info.etc1_subimage = shared->info.etc2;
 
                        // FIXME: My NVIDIA driver advertises ETC2 texture formats
                        // but does not support them. Driver bug? Logic bug?
@@ -843,9 +847,9 @@ evas_gl_common_context_new(void)
         SHADER_TEXTURE_ADD(shared, NV12_NOMUL, texuv);
 
         SHADER_TEXTURE_ADD(shared, RGB_A_PAIR, tex);
-        SHADER_TEXTURE_ADD(shared, RGB_A_PAIR, texm);
+        SHADER_TEXTURE_ADD(shared, RGB_A_PAIR, texa);
         SHADER_TEXTURE_ADD(shared, RGB_A_PAIR_NOMUL, tex);
-        SHADER_TEXTURE_ADD(shared, RGB_A_PAIR_NOMUL, texm);
+        SHADER_TEXTURE_ADD(shared, RGB_A_PAIR_NOMUL, texa);
 
         if (gc->state.current.cur_prog == PRG_INVALID)
            glUseProgram(shared->shader[0].prog);
@@ -1403,7 +1407,7 @@ _evas_gl_common_context_push(int rtype,
 #else
    if (!((gc->pipe[pn].region.type == rtype)
          && (!tex || gc->pipe[pn].shader.cur_tex == current_tex)
-         && (!texm || gc->pipe[pn].shader.cur_texm == current_texm)
+         && (!texa || gc->pipe[pn].shader.cur_texa == current_texa)
          && (gc->pipe[pn].shader.cur_prog == prog)
          && (gc->pipe[pn].shader.smooth == smooth)
          && (gc->pipe[pn].shader.blend == blend)
@@ -1606,7 +1610,7 @@ again:
    gc->pipe[pn].array.use_texuv = 0;
    gc->pipe[pn].array.use_texuv2 = 0;
    gc->pipe[pn].array.use_texuv3 = 0;
-   gc->pipe[pn].array.use_texm = 0;
+   gc->pipe[pn].array.use_texa = 0;
    gc->pipe[pn].array.use_texsam = 0;
 #endif
 
@@ -2981,7 +2985,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
         unsigned char *texuv_ptr = NULL;
         unsigned char *texuv2_ptr = NULL;
         unsigned char *texuv3_ptr = NULL;
-        unsigned char *texm_ptr = NULL;
+        unsigned char *texa_ptr = NULL;
         unsigned char *texsam_ptr = NULL;
 
         if (glsym_glMapBuffer && glsym_glUnmapBuffer)
@@ -2996,8 +3000,8 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              texuv_ptr = color_ptr + COLOR_SIZE;
              texuv2_ptr = texuv_ptr + TEX_SIZE;
              texuv3_ptr = texuv2_ptr + TEX_SIZE;
-             texm_ptr = texuv3_ptr + TEX_SIZE;
-             texsam_ptr = texm_ptr + TEX_SIZE;
+             texa_ptr = texuv3_ptr + TEX_SIZE;
+             texsam_ptr = texa_ptr + TEX_SIZE;
 # define END_POINTER (texsam_ptr + TEX_SIZE)
 
              glBindBuffer(GL_ARRAY_BUFFER, gc->pipe[i].array.buffer);
@@ -3024,7 +3028,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                   if (gc->pipe[i].array.use_texuv3)
                     memcpy(x + (unsigned long)texuv3_ptr, gc->pipe[i].array.texuv3, TEX_SIZE);
                   if (gc->pipe[i].array.use_texa)
-                    memcpy(x + (unsigned long)texm_ptr, gc->pipe[i].array.texa, TEX_SIZE);
+                    memcpy(x + (unsigned long)texa_ptr, gc->pipe[i].array.texa, TEX_SIZE);
                   if (gc->pipe[i].array.use_texsam)
                     memcpy(x + (unsigned long)texsam_ptr, gc->pipe[i].array.texsam, TEX_SIZE);
 /*                  
@@ -3038,7 +3042,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                           gc->pipe[i].array.use_texuv,
                           gc->pipe[i].array.use_texuv2,
                           gc->pipe[i].array.use_texuv3,
-                          gc->pipe[i].array.use_texm,
+                          gc->pipe[i].array.use_texa,
                           gc->pipe[i].array.use_texsam);
  */
                   glsym_glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -3051,7 +3055,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              texuv_ptr = (unsigned char *)gc->pipe[i].array.texuv;
              texuv2_ptr = (unsigned char *)gc->pipe[i].array.texuv2;
              texuv3_ptr = (unsigned char *)gc->pipe[i].array.texuv3;
-             texm_ptr = (unsigned char *)gc->pipe[i].array.texa;
+             texa_ptr = (unsigned char *)gc->pipe[i].array.texa;
              texsam_ptr = (unsigned char *)gc->pipe[i].array.texsam;
           }
         glVertexAttribPointer(SHAD_VERTEX, 3, GL_SHORT, GL_FALSE, 0, (void *)vertex_ptr);
@@ -3102,7 +3106,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
                 {
                    glEnableVertexAttribArray(SHAD_TEXA);
                    GLERR(__FUNCTION__, __FILE__, __LINE__, "");
-                   glVertexAttribPointer(SHAD_TEXA, 2, GL_FLOAT, GL_FALSE, 0, (void *)texm_ptr);
+                   glVertexAttribPointer(SHAD_TEXA, 2, GL_FLOAT, GL_FALSE, 0, (void *)texa_ptr);
                    GLERR(__FUNCTION__, __FILE__, __LINE__, "");
                    glActiveTexture(GL_TEXTURE1);
                    GLERR(__FUNCTION__, __FILE__, __LINE__, "");
