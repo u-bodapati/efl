@@ -6,7 +6,7 @@
 #endif
 
 #include <Eina.h>
-#include <eina_safety_checks.h>
+#include <Ector.h>
 
 #include "Evas.h"
 
@@ -717,6 +717,7 @@ struct _Evas_Public_Data
    struct {
       Evas_Module *module;
       Evas_Func *func;
+      Ector_Surface *surface;
       struct {
          void *output;
 
@@ -1332,6 +1333,9 @@ struct _Evas_Func
    void  (*texture_filter_set)           (void *data, void *texture, Evas_3D_Texture_Filter min, Evas_3D_Texture_Filter mag);
    void  (*texture_filter_get)           (void *data, void *texture, Evas_3D_Texture_Filter *min, Evas_3D_Texture_Filter *mag);
    void  (*texture_image_set)            (void *data, void *texture, void *image);
+
+   Ector_Surface *(*ector_get)           (void *data);
+   void  (*ector_draw)                   (void *data, void *context, void *surface, Ector_Renderer *r, Eina_Array *clips, int x, int y, Eina_Bool do_async);
 };
 
 struct _Evas_Image_Save_Func
