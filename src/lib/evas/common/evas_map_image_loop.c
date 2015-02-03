@@ -1,8 +1,3 @@
-
-#ifdef SCALE_USING_MMX
-#undef SCALE_USING_MMX
-#endif
-
 #ifdef SMOOTH
 {
 # ifdef SCALE_USING_MMX
@@ -14,7 +9,6 @@
 # endif //SCALE_USING_MMX
 
 # ifdef SCALE_USING_NEON
-<<<<<<< HEAD
 #  ifndef COLBLACK
    uint16x4_t temp_16x4;
    uint16x4_t rv_16x4;
@@ -72,37 +66,16 @@
    uint16x8_t val3_16x8;
 #   endif //COLMUL
 #  endif //COLBLACK
-=======
-   FPU_NEON;
-   VMOV_I2R_NEON(q2, #255);
-#  ifdef COLMUL
-#   ifndef COLBLACK
-   // this part can be done here as c1 and c2 are constants in the cycle
-   FPU_NEON;
-   VMOV_M2R_NEON(d18, c1);
-   VEOR_NEON(q8);
-#    ifndef COLSAME
-   VMOV_M2R_NEON(d19, c2);
-#    endif //COLSAME
-   VZIP_NEON(q9, q8);
-#    ifndef COLSAME
-   VMOV_R2R_NEON(d19, d16);
-#    endif //COLSAME
-   // here we have c1 and c2 spread through q9 register
-#   endif //COLBLACK
-#  endif //COLMUL
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 # endif //SCALE_USING_NEON
 
    while (ww > 0)
      {
-        DATA32 val1 = 0x00000000;
 # ifdef COLBLACK
         *d = 0xff000000; // col
 # else  //COLBLACK
         FPc uu1, vv1, uu2, vv2;
         FPc rv, ru;
-        DATA32 val2, val3, val4;
+        DATA32 val1, val2, val3, val4;
 
         uu1 = u;
         if (uu1 < 0) uu1 = 0;
@@ -167,7 +140,6 @@
 #  elif defined SCALE_USING_NEON
         if (val1 | val2 | val3 | val4)
           {
-<<<<<<< HEAD
              rv_16x4 = vdup_n_u16(rv);
              ru_16x8 = vdupq_n_u16(ru);
 
@@ -243,53 +215,6 @@
              res_32x2 = vreinterpret_u32_u8(val3_8x8);
 #   endif //COLMUL
              vst1_lane_u32(d, res_32x2, 0);
-=======
-            FPU_NEON;
-#   ifdef COLMUL
-            // initialize alpha for interpolation of c1 and c2
-            VDUP_NEON(d15, cv >> 16);
-            // copy c1 and c2 as algorithm will overwrite it
-            VMOV_R2R_NEON(q6, q9);
-            cv += cd; // col
-#   endif //COLMUL
-            VMOV_M2R_NEON(d8, val1);
-            VEOR_NEON(q0);
-            VMOV_M2R_NEON(d9, val3);
-            VMOV_M2R_NEON(d10, val2);
-            VEOR_NEON(q1);
-            VMOV_M2R_NEON(d11, val4);
-            VDUP_NEON(q3, ru);
-            VDUP_NEON(d14, rv);
-            VZIP_NEON(q4, q0);
-            VZIP_NEON(q5, q1);
-            VMOV_R2R_NEON(d9, d0);
-            VMOV_R2R_NEON(d11, d2);
-            // by this point we have all required data in right registers
-            // interpolate val1,val2 and val3,val4
-            INTERP_256_NEON(q3, q5, q4, q2);
-#   ifdef COLMUL
-#    ifdef COLSAME
-            INTERP_256_NEON(d14, d9, d8, d4);
-#    else //COLSAME
-            /* move result of val3,val4 interpolation (and c1 if COLMUL is
-               defined) for next step */
-            VSWP_NEON(d9, d12);
-            /* second stage of interpolation, also here c1 and c2 are
-               interpolated */
-            INTERP_256_NEON(q7, q6, q4, q2);
-#    endif //COLSAME
-#   else //COLMUL
-            INTERP_256_NEON(d14, d9, d8, d4);
-#   endif //COLMUL
-#   ifdef COLMUL
-#    ifdef COLSAME
-            MUL4_SYM_NEON(d8, d12, d4);
-#    else //COLSAME
-            MUL4_SYM_NEON(d8, d9, d4); // do required multiplication
-#    endif //COLSAME
-#   endif //COLMUL
-            VMOV_R2M_NEON(q4, d8, d); // save result to d
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
           }
         else
           *d = val1;
@@ -299,7 +224,6 @@
         val1 = INTERP_256(rv, val3, val1); // col
 #   ifdef COLMUL
 #    ifdef COLSAME
-<<<<<<< HEAD
         *d = MUL4_SYM(c1, val1);
 #    else //COLSAME
         val2 = INTERP_256((cv >> 16), c2, c1); // col
@@ -309,26 +233,11 @@
 #   else
         *d = val1;
 #   endif //COLMUL
-=======
-        val1 = MUL4_SYM(c1, val1);
-#    else //COLSAME
-        val2 = INTERP_256((cv >> 16), c2, c1); // col
-        val1  = MUL4_SYM(val2, val1); // col
-        cv += cd; // col
-#    endif //COLSAME
-#   endif //COLMUL
-
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 #  endif //SCALE_USING_MMX
         u += ud;
         v += vd;
 # endif //COLBLACK
-<<<<<<< HEAD
         if (anti_alias) *d = _aa_coverage_apply(line, ww, w, *d);
-=======
-        if (anti_alias) val1 = _aa_coverage_apply(line, ww, w, val1);
-        *d = val1;
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
         d++;
         ww--;
      }
@@ -351,7 +260,6 @@
 
    x255_16x4 = vdup_n_u16(0xff);
 #    ifdef COLSAME
-<<<<<<< HEAD
    uint16x8_t c1_16x8;
    uint16x8_t val1_16x8;
    uint32x2_t c1_32x2;
@@ -386,30 +294,10 @@
 #    endif //COLSAME
 #   endif //COLMUL
 #  endif //COLBLACK
-=======
-   FPU_NEON;
-   VMOV_I2R_NEON(q2, #255);
-   VMOV_M2R_NEON(d10, c1);
-   VEOR_NEON(d0);
-   VZIP_NEON(d10, d0);
-#    else
-   // c1 and c2 are constants inside the cycle
-   FPU_NEON;
-   VMOV_I2R_NEON(q2, #255);
-   VMOV_M2R_NEON(d10, c1);
-   VEOR_NEON(q0);
-   VMOV_M2R_NEON(d11, c2);
-   VZIP_NEON(q5, q0);
-   VMOV_R2R_NEON(d11, d0);
-#    endif //COLSAME
-#   endif //COLBLACK
-#  endif //COLMUL
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 # endif //SCALE_USING_NEON
 
    while (ww > 0)
      {
-<<<<<<< HEAD
 # ifndef SCALE_USING_NEON
 #  ifdef COLMUL
 #   ifndef COLBLACK
@@ -423,20 +311,6 @@
 
 # ifdef COLBLACK
         *d = 0xff000000; // col
-=======
-        DATA32 val1 = 0x00000000;
-# ifdef COLMUL
-#  ifndef COLBLACK
-#   ifdef COLSAME
-#   else
-        DATA32 cval; // col
-#   endif //COLSAME
-#  endif  //COLBLACK
-# endif //COLMUL
-
-# ifdef COLBLACK
-        val1 = 0xff000000; // col
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 # else //COLBLACK
         s = sp + ((v >> (FP + FPI)) * sw) + (u >> (FP + FPI));
 #  ifdef COLMUL
@@ -471,37 +345,10 @@
         vst1_lane_u32(d, res_32x2, 0);
 #   else //SCALE_USING_NEON
         val1 = *s; // col
-<<<<<<< HEAD
 #    ifdef COLSAME
         *d = MUL4_SYM(c1, val1);
-=======
-#   ifdef COLSAME
-#    ifdef SCALE_USING_NEON
-        VMOV_M2R_NEON(d1, val1);
-        VEOR_NEON(d0);
-        VZIP_NEON(d1, d0);
-        VMOV_R2R_NEON(d0, d10);
-        MUL4_SYM_NEON(d0, d1, d4)
-        VMOV_R2M_NEON(q0, d0, d);
-#    else
-        val1 = MUL4_SYM(c1, val1);
-#    endif  //SCALE_USING_NEON
-#   else //COLSAME
-/* XXX: this neon is broken! :( FIXME
-#    ifdef SCALE_USING_NEON
-        FPU_NEON;
-        VMOV_M2R_NEON(d12, val1);
-        VMOV_R2R_NEON(q4, q5);
-        VEOR_NEON(q1);
-        VDUP_NEON(d15, cv >> 16);
-        VZIP_NEON(q6, q1);
-        INTERP_256_NEON(d15, d9, d8, d4); // interpolate c1 and c2
-        MUL4_SYM_NEON(d8, d12, d4); // multiply
-        VMOV_R2M_NEON(q4, d8, d); // save result
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 #    else
         cval = INTERP_256((cv >> 16), c2, c1); // col
-<<<<<<< HEAD
         *d = MUL4_SYM(cval, val1);
         cv += cd; // col
 #    endif
@@ -509,25 +356,10 @@
 #   endif
 #  else
         *d = *s;
-=======
-        val1 = MUL4_SYM(cval, val1);
-        cv += cd; // col              
-/*
-#    endif
- */
-#   endif //COLSAME
-#  else //COLMUL
-        val1 = *s;
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 #  endif //COLMUL
         u += ud;
         v += vd;
 # endif //COLBLACK
-<<<<<<< HEAD
-=======
-        if (anti_alias) val1 = _aa_coverage_apply(line, ww, w, val1);
-        *d = val1;
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
         d++;
         ww--;
      }

@@ -290,13 +290,7 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              //Outside of the clipper
              if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                  (spans[yp].span[i].x[1] < cx))
-<<<<<<< HEAD
                spans[yp].span[i].x[0] = -1;
-=======
-             {
-               spans[yp].span[i].x[0] = -1;
-             }
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
              else
                {
                   _interpolated_clip_span(&(spans[yp].span[i]), cx, (cx + cw),
@@ -342,13 +336,7 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
              //Outside of the clipper
              if ((spans[yp].span[i].x[0] > (cx + cw)) ||
                  (spans[yp].span[i].x[1] < cx))
-<<<<<<< HEAD
                spans[yp].span[i].x[0] = -1;
-=======
-             {
-               spans[yp].span[i].x[0] = -1;
-             }
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
              else
                {
                   int l = cx;
@@ -360,13 +348,7 @@ _calc_spans(RGBA_Map_Point *p, Line *spans, int ystart, int yend, int cx, int cy
           }
         //The polygon shape seems not be completed definitely.
         else
-<<<<<<< HEAD
           spans[yp].span[0].x[0] = -1;
-=======
-        {
-          spans[yp].span[0].x[0] = -1;
-        }
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
      }
 }
 
@@ -533,7 +515,7 @@ _evas_common_map_rgba_span(RGBA_Map_Spans *span,
    // limit to the clip vertical bounds
    if (ytop < cy) span->ystart = cy;
    else span->ystart = ytop;
-   if (ybottom > (cy + ch)) span->yend = (cy + ch);
+   if (ybottom >= (cy + ch)) span->yend = (cy + ch) - 1;
    else span->yend = ybottom;
 
    // get some source image information
@@ -693,12 +675,8 @@ void evas_common_map_rgba_internal_mmx(RGBA_Image *src, RGBA_Image *dst, RGBA_Dr
    _evas_common_map_rgba_internal_mmx(src, dst,
                                       clip_x, clip_y, clip_w, clip_h,
                                       mul_col, dc->render_op,
-<<<<<<< HEAD
                                       p, smooth, dc->anti_alias, level,
                                       dc->clip.mask, dc->clip.mask_x, dc->clip.mask_y);
-=======
-                                      p, smooth, dc->anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 }
 #endif
 
@@ -726,12 +704,8 @@ void evas_common_map_rgba_internal(RGBA_Image *src, RGBA_Image *dst, RGBA_Draw_C
    _evas_common_map_rgba_internal(src, dst,
                                   clip_x, clip_y, clip_w, clip_h,
                                   mul_col, dc->render_op,
-<<<<<<< HEAD
                                   p, smooth, dc->anti_alias, level,
                                   dc->clip.mask, dc->clip.mask_x, dc->clip.mask_y);
-=======
-                                  p, smooth, dc->anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 }
 
 #ifdef BUILD_NEON
@@ -759,12 +733,8 @@ void evas_common_map_rgba_internal_neon(RGBA_Image *src, RGBA_Image *dst, RGBA_D
    _evas_common_map_rgba_internal_neon(src, dst,
                                   clip_x, clip_y, clip_w, clip_h,
                                   mul_col, dc->render_op,
-<<<<<<< HEAD
                                   p, smooth, dc->anti_alias, level,
                                   dc->clip.mask, dc->clip.mask_x, dc->clip.mask_y);
-=======
-                                  p, smooth, dc->anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 }
 #endif
 
@@ -896,25 +866,18 @@ evas_common_map_rgba(RGBA_Image *src, RGBA_Image *dst,
 }
 
 EAPI void
-<<<<<<< HEAD
 evas_common_map_rgba_draw(RGBA_Image *src, RGBA_Image *dst, int clip_x, int clip_y, int clip_w, int clip_h, DATA32 mul_col, int render_op, int npoints EINA_UNUSED, RGBA_Map_Point *p, int smooth, Eina_Bool anti_alias, int level, RGBA_Image *mask_ie, int mask_x, int mask_y)
-=======
-evas_common_map_rgba_draw(RGBA_Image *src, RGBA_Image *dst, int clip_x, int clip_y, int clip_w, int clip_h, DATA32 mul_col, int render_op, int npoints EINA_UNUSED, RGBA_Map_Point *p, int smooth, Eina_Bool anti_alias, int level)
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 {
 #ifdef BUILD_MMX
    int mmx, sse, sse2;
+
    evas_common_cpu_can_do(&mmx, &sse, &sse2);
    if (mmx)
      _evas_common_map_rgba_internal_mmx(src, dst,
                                         clip_x, clip_y, clip_w, clip_h,
                                         mul_col, render_op,
-<<<<<<< HEAD
                                         p, smooth, anti_alias, level,
                                         mask_ie, mask_x, mask_y);
-=======
-                                        p, smooth, anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
    else
 #endif
 #ifdef BUILD_NEON
@@ -922,23 +885,15 @@ evas_common_map_rgba_draw(RGBA_Image *src, RGBA_Image *dst, int clip_x, int clip
      _evas_common_map_rgba_internal_neon(src, dst,
                                     clip_x, clip_y, clip_w, clip_h,
                                     mul_col, render_op,
-<<<<<<< HEAD
                                     p, smooth, anti_alias, level,
                                     mask_ie, mask_x, mask_y);
-=======
-                                    p, smooth, anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
    else
 #endif
      _evas_common_map_rgba_internal(src, dst,
                                     clip_x, clip_y, clip_w, clip_h,
                                     mul_col, render_op,
-<<<<<<< HEAD
                                     p, smooth, anti_alias, level,
                                     mask_ie, mask_x, mask_y);
-=======
-                                    p, smooth, anti_alias, level);
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 }
 
 EAPI void

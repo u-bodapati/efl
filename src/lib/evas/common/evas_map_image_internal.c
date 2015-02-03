@@ -4,12 +4,8 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
           int clip_x, int clip_y, int clip_w, int clip_h,
           DATA32 mul_col, int render_op,
           RGBA_Map_Point *p,
-<<<<<<< HEAD
           int smooth, int anti_alias, int level EINA_UNUSED, // level unused for now - for future use
           RGBA_Image *mask_ie, int mask_x, int mask_y)
-=======
-          int smooth, int anti_alias, int level EINA_UNUSED) // level unused for now - for future use
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 {
    int i;
    int cx, cy, cw, ch;
@@ -55,7 +51,7 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
    if (ytop < cy) ystart = cy;
    else ystart = ytop;
    if (ybottom >= (cy + ch)) yend = (cy + ch) - 1;
-   else yend = ybottom - 1;
+   else yend = ybottom;
 
    // get some source image information
    sp = src->image.data;
@@ -98,13 +94,8 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
    /* FIXME: even if anti-alias is enabled, only edges may require the
       pixels composition. we can optimize it. */
 
-<<<<<<< HEAD
    if ((!sa) && (!da) &&
        (mul_col == 0xffffffff) && (!havea) && (!anti_alias) && (!mask_ie))
-=======
-   if ((!src->cache_entry.flags.alpha) && (!dst->cache_entry.flags.alpha) &&
-       (mul_col == 0xffffffff) && (!havea) && (!anti_alias))
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
      {
         direct = 1;
      }
@@ -120,19 +111,12 @@ FUNC_NAME(RGBA_Image *src, RGBA_Image *dst,
                func = evas_common_gfx_func_composite_pixel_span_get(sa, ssa, da, cw, render_op);
           }
         else
-<<<<<<< HEAD
           {
              func = evas_common_gfx_func_composite_pixel_mask_span_get(sa, ssa, da, cw, render_op);
              if (mul_col != 0xffffffff)
                func2 = evas_common_gfx_func_composite_pixel_color_span_get(sa, ssa, mul_col, da, cw, render_op);
           }
         if (sa || anti_alias) src->cache_entry.flags.alpha = EINA_TRUE;
-=======
-          func = evas_common_gfx_func_composite_pixel_span_get(src->cache_entry.flags.alpha, src->cache_entry.flags.alpha_sparse, dst->cache_entry.flags.alpha, cw, render_op);
-
-        if (anti_alias) src->cache_entry.flags.alpha = EINA_TRUE;
-        else src->cache_entry.flags.alpha = pa;
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
      }
    if (havecol == 0)
      {
@@ -185,14 +169,11 @@ FUNC_NAME_DO(RGBA_Image *src, RGBA_Image *dst,
    shp = src->cache_entry.h << (FP + FPI);
    havecol = ms->havecol;
    direct = ms->direct;
-<<<<<<< HEAD
 
    sa = src->cache_entry.flags.alpha;
    ssa = src->cache_entry.flags.alpha_sparse;
    da = dst->cache_entry.flags.alpha;
 
-=======
->>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
    // allocate some s to hold out span list
    spans = alloca((yend - ystart + 3) * sizeof(Line));
    memcpy(spans, &ms->spans[ystart - ms->ystart],
