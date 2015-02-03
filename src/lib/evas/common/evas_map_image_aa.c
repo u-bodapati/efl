@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+/*
+ * evas_map_image_aa.c
+ *
+ *  Created on: Nov 21, 2014
+ *      Author: hermet
+ */
+
+>>>>>>> 1c816daeed970349f31eb94763657ae1637dbfda
 #define  READY_TX() \
 { \
   if (eidx == 0) \
