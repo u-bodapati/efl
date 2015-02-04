@@ -220,7 +220,7 @@ _evas_vg_node_eo_base_parent_set(Eo *obj,
 }
 
 void
-_evas_vg_node_raise(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
+_evas_vg_node_efl_gfx_stack_raise(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
 {
    Evas_VG_Container_Data *cd;
    Eina_List *lookup, *next;
@@ -247,9 +247,9 @@ _evas_vg_node_raise(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
 }
 
 void
-_evas_vg_node_stack_above(Eo *obj,
-                          Evas_VG_Node_Data *pd EINA_UNUSED,
-                          Evas_VG_Node *above)
+_evas_vg_node_efl_gfx_stack_stack_above(Eo *obj,
+                                        Evas_VG_Node_Data *pd EINA_UNUSED,
+                                        Efl_Gfx_Stack *above)
 {
    Evas_VG_Container_Data *cd;
    Eina_List *lookup, *ref;
@@ -276,9 +276,9 @@ _evas_vg_node_stack_above(Eo *obj,
 }
 
 void
-_evas_vg_node_stack_below(Eo *obj,
-                          Evas_VG_Node_Data *pd EINA_UNUSED,
-                          Evas_Object *below)
+_evas_vg_node_efl_gfx_stack_stack_below(Eo *obj,
+                                        Evas_VG_Node_Data *pd EINA_UNUSED,
+                                        Efl_Gfx_Stack *below)
 {
    Evas_VG_Container_Data *cd;
    Eina_List *lookup, *ref;
@@ -305,7 +305,7 @@ _evas_vg_node_stack_below(Eo *obj,
 }
 
 void
-_evas_vg_node_lower(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
+_evas_vg_node_efl_gfx_stack_lower(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
 {
    Evas_VG_Container_Data *cd;
    Eina_List *lookup, *prev;
@@ -329,6 +329,20 @@ _evas_vg_node_lower(Eo *obj, Evas_VG_Node_Data *pd EINA_UNUSED)
 
  on_error:
    eo_error_set(obj);
+}
+
+Efl_Gfx_Stack *
+_evas_vg_node_efl_gfx_stack_below_get(Eo *obj, Evas_VG_Node_Data *pd)
+{
+   // FIXME: need to implement bound_get
+   return NULL;
+}
+
+Efl_Gfx_Stack *
+_evas_vg_node_efl_gfx_stack_above_get(Eo *obj, Evas_VG_Node_Data *pd)
+{
+   // FIXME: need to implement bound_get
+   return NULL;
 }
 
 Eina_Bool
