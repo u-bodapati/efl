@@ -190,6 +190,9 @@ static void _outline_transform(Outline *outline, Eina_Matrix3 *m)
 static Eina_Bool
 _ector_renderer_software_shape_ector_renderer_generic_base_prepare(Eo *obj, Ector_Renderer_Software_Shape_Data *pd)
 {
+   const Efl_Gfx_Path_Command *cmds = NULL;
+   const double *pts = NULL;
+
    // FIXME: shouldn't that be part of the shape generic implementation ?
    if (pd->shape->fill)
      eo_do(pd->shape->fill, ector_renderer_prepare());
@@ -208,17 +211,15 @@ _ector_renderer_software_shape_ector_renderer_generic_base_prepare(Eo *obj, Ecto
         if (!pd->surface) return EINA_FALSE;
      }
 
-   if (!pd->shape_data && pd->shape->path.cmd)
+   eo_do(obj, efl_gfx_shape_path_get(&cmds, &pts));
+   if (!pd->shape_data && cmds)
      {
-        double *pts;
-        unsigned int i;
         Eina_Bool close_path = EINA_FALSE;
         Outline * outline = _outline_create();
 
-        pts = pd->shape->path.pts;
-        for (i = 0; pd->shape->path.cmd[i] != EFL_GFX_PATH_COMMAND_TYPE_END; i++)
+        for (; *cmds != EFL_GFX_PATH_COMMAND_TYPE_END; cmds++)
           {
-             switch (pd->shape->path.cmd[i])
+             switch (*cmds)
                {
                 case EFL_GFX_PATH_COMMAND_TYPE_MOVE_TO:
 
