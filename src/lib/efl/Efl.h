@@ -152,6 +152,10 @@ typedef enum _Efl_Gfx_Fill_Spread
 
 #ifdef EFL_BETA_API_SUPPORT
 
+EAPI extern const Eo_Event_Description _EFL_GFX_CHANGED;
+
+#define EFL_GFX_CHANGED (&(_EFL_GFX_CHANGED))
+
 /* Interfaces */
 #include "interfaces/efl_control.eo.h"
 #include "interfaces/efl_file.eo.h"
@@ -159,8 +163,6 @@ typedef enum _Efl_Gfx_Fill_Spread
 #include "interfaces/efl_player.eo.h"
 #include "interfaces/efl_text.eo.h"
 #include "interfaces/efl_text_properties.eo.h"
-
-#include "interfaces/efl_gfx_utils.h"
 
 #include "interfaces/efl_gfx_base.eo.h"
 #include "interfaces/efl_gfx_stack.eo.h"
