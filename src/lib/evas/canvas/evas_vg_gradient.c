@@ -8,10 +8,10 @@
 #define MY_CLASS EVAS_VG_GRADIENT_CLASS
 
 static void
-_evas_vg_gradient_efl_gfx_gradient_stop_set(Eo *obj,
-                                            Evas_VG_Gradient_Data *pd,
-                                            const Efl_Gfx_Gradient_Stop *colors,
-                                            unsigned int length)
+_evas_vg_gradient_efl_gfx_gradient_base_stop_set(Eo *obj EINA_UNUSED,
+                                                 Evas_VG_Gradient_Data *pd,
+                                                 const Efl_Gfx_Gradient_Stop *colors,
+                                                 unsigned int length)
 {
    pd->colors = realloc(pd->colors, length * sizeof(Efl_Gfx_Gradient_Stop));
    if (!pd->colors)
@@ -27,27 +27,27 @@ _evas_vg_gradient_efl_gfx_gradient_stop_set(Eo *obj,
 }
 
 static void
-_evas_vg_gradient_efl_gfx_gradient_stop_get(Eo *obj EINA_UNUSED,
-                                            Evas_VG_Gradient_Data *pd,
-                                            const Efl_Gfx_Gradient_Stop **colors,
-                                            unsigned int *length)
+_evas_vg_gradient_efl_gfx_gradient_base_stop_get(Eo *obj EINA_UNUSED,
+                                                 Evas_VG_Gradient_Data *pd,
+                                                 const Efl_Gfx_Gradient_Stop **colors,
+                                                 unsigned int *length)
 {
    if (colors) *colors = pd->colors;
    if (length) *length = pd->colors_count;
 }
 
 static void
-_evas_vg_gradient_efl_gfx_gradient_spread_set(Eo *obj,
-                                              Evas_VG_Gradient_Data *pd,
-                                              Efl_Gfx_Gradient_Spread s)
+_evas_vg_gradient_efl_gfx_gradient_base_spread_set(Eo *obj,
+                                                   Evas_VG_Gradient_Data *pd,
+                                                   Efl_Gfx_Gradient_Spread s)
 {
    pd->s = s;
    eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
 }
 
 static Efl_Gfx_Gradient_Spread
-_evas_vg_gradient_efl_gfx_gradient_spread_get(Eo *obj EINA_UNUSED,
-                                              Evas_VG_Gradient_Data *pd)
+_evas_vg_gradient_efl_gfx_gradient_base_spread_get(Eo *obj EINA_UNUSED,
+                                                   Evas_VG_Gradient_Data *pd)
 {
    return pd->s;
 }
