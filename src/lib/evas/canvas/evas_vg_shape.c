@@ -84,6 +84,23 @@ _evas_vg_shape_efl_gfx_shape_stroke_color_set(Eo *obj,
    eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
 }
 
+static Eina_Bool
+_evas_vg_shape_efl_gfx_base_color_part_set(Eo *obj, Evas_VG_Shape_Data *pd,
+                                           const char * part,
+                                           int r, int g, int b, int a)
+{
+   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   if (part && !strcmp(part, "stroke"))
+     {
+        _evas_vg_shape_efl_gfx_shape_stroke_color_set(obj, pd, r, g, b, a);
+        return EINA_TRUE;
+     }
+
+   return eo_do_super(obj, EVAS_VG_SHAPE_CLASS,
+                      efl_gfx_color_part_set(part, r, g, b, a));
+}
+
 static void
 _evas_vg_shape_efl_gfx_shape_stroke_color_get(Eo *obj EINA_UNUSED,
                                               Evas_VG_Shape_Data *pd,
@@ -93,6 +110,21 @@ _evas_vg_shape_efl_gfx_shape_stroke_color_get(Eo *obj EINA_UNUSED,
    if (g) *g = pd->stroke.g;
    if (b) *b = pd->stroke.b;
    if (a) *a = pd->stroke.a;
+}
+
+static Eina_Bool
+_evas_vg_shape_efl_gfx_base_color_part_get(Eo *obj, Evas_VG_Shape_Data *pd,
+                                           const char * part,
+                                           int *r, int *g, int *b, int *a)
+{
+   if (part && !strcmp(part, "stroke"))
+     {
+        _evas_vg_shape_efl_gfx_shape_stroke_color_get(obj, pd, r, g, b, a);
+        return EINA_TRUE;
+     }
+
+   return eo_do_super(obj, EVAS_VG_SHAPE_CLASS,
+                      efl_gfx_color_part_get(part, r, g, b, a));
 }
 
 static void
@@ -228,15 +260,6 @@ _evas_vg_shape_efl_gfx_shape_stroke_join_get(Eo *obj EINA_UNUSED,
                                              Evas_VG_Shape_Data *pd)
 {
    return pd->stroke.join;
-}
-
-static void
-_evas_vg_shape_efl_gfx_base_color_set(Eo *obj,
-                                      Evas_VG_Shape_Data *pd,
-                                      int r, int g, int b, int a)
-{
-   eo_do_super(obj, MY_CLASS, efl_gfx_color_set(r, g, b, a));
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
 }
 
 static Eina_Bool
