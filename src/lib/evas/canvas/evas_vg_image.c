@@ -3,6 +3,8 @@
 
 #include <strings.h>
 
+#include "evas_vg_private.h"
+
 typedef struct _Evas_VG_Image_Data Evas_VG_Image_Data;
 struct _Evas_VG_Image_Data
 {
@@ -20,6 +22,8 @@ _evas_vg_image_position_set(Eo *obj EINA_UNUSED, Evas_VG_Image_Data *pd,
 {
    pd->x = x;
    pd->y = y;
+
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -36,6 +40,8 @@ _evas_vg_image_size_set(Eo *obj EINA_UNUSED, Evas_VG_Image_Data *pd,
 {
    pd->w = w;
    pd->h = h;
+
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -55,6 +61,8 @@ _evas_vg_image_efl_file_mmap_set(Eo *obj EINA_UNUSED, Evas_VG_Image_Data *pd,
    pd->f = eina_file_dup(f);
    eina_file_close(tmp);
    eina_stringshare_replace(&pd->key, key);
+
+   _evas_vg_node_changed(obj);
 
    return EINA_TRUE;
 }

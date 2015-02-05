@@ -46,7 +46,7 @@ _evas_vg_shape_fill_set(Eo *obj,
    pd->fill = eo_ref(f);
    eo_unref(tmp);
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static Evas_VG_Node *
@@ -62,7 +62,7 @@ _evas_vg_shape_efl_gfx_shape_stroke_scale_set(Eo *obj,
 {
    pd->stroke.scale = s;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static double
@@ -81,7 +81,8 @@ _evas_vg_shape_efl_gfx_shape_stroke_color_set(Eo *obj,
    pd->stroke.g = g;
    pd->stroke.b = b;
    pd->stroke.a = a;
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   _evas_vg_node_changed(obj);
 }
 
 static Eina_Bool
@@ -137,7 +138,7 @@ _evas_vg_shape_stroke_fill_set(Eo *obj,
    pd->stroke.fill = eo_ref(f);
    eo_unref(tmp);
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static Evas_VG_Node *
@@ -153,7 +154,8 @@ _evas_vg_shape_efl_gfx_shape_stroke_width_set(Eo *obj,
                                               double w)
 {
    pd->stroke.width = w;
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   _evas_vg_node_changed(obj);
 }
 
 static double
@@ -169,7 +171,8 @@ _evas_vg_shape_efl_gfx_shape_stroke_location_set(Eo *obj,
                                                  double centered)
 {
    pd->stroke.centered = centered;
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   _evas_vg_node_changed(obj);
 }
 
 static double
@@ -195,7 +198,7 @@ _evas_vg_shape_efl_gfx_shape_stroke_dash_set(Eo *obj,
    memcpy(pd->stroke.dash, dash, sizeof (Efl_Gfx_Dash) * length);
    pd->stroke.dash_count = length;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -218,7 +221,7 @@ _evas_vg_shape_stroke_marker_set(Eo *obj,
    pd->stroke.marker = eo_ref(m);
    eo_unref(tmp);
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static Evas_VG_Shape *
@@ -235,7 +238,7 @@ _evas_vg_shape_efl_gfx_shape_stroke_cap_set(Eo *obj EINA_UNUSED,
 {
    pd->stroke.cap = c;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static Efl_Gfx_Cap
@@ -252,7 +255,7 @@ _evas_vg_shape_efl_gfx_shape_stroke_join_set(Eo *obj EINA_UNUSED,
 {
    pd->stroke.join = j;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static Efl_Gfx_Join
@@ -270,26 +273,17 @@ _evas_vg_shape_render_pre(Eo *obj EINA_UNUSED,
                           Evas_VG_Node_Data *nd)
 {
    Evas_VG_Shape_Data *pd = data;
-   Ector_Renderer *fill_r = NULL, *stroke_r = NULL;
+   Evas_VG_Node_Data *fill, *stroke_fill, *stroke_marker, *mask;
+
+   if (!nd->changed) return ;
+   nd->changed = EINA_FALSE;
+
    EVAS_VG_COMPUTE_MATRIX(current, parent, nd);
 
-   if(pd->fill)
-     {
-         _evas_vg_render_pre(pd->fill, s, current);
-         Evas_VG_Node_Data *filld = eo_data_scope_get(pd->fill, EVAS_VG_NODE_CLASS);
-         fill_r = filld->renderer;
-     }
-   if(pd->stroke.fill)
-     {
-         _evas_vg_render_pre(pd->stroke.fill, s, current);
-         Evas_VG_Node_Data *filld = eo_data_scope_get(pd->stroke.fill, EVAS_VG_NODE_CLASS);
-         stroke_r = filld->renderer;
-     }
-
-   _evas_vg_render_pre(pd->stroke.marker, s, current);
-   _evas_vg_render_pre(pd->stroke.fill, s, current);
-   _evas_vg_render_pre(pd->stroke.marker, s, current);
-   _evas_vg_render_pre(nd->mask, s, current);
+   fill = _evas_vg_render_pre(pd->fill, s, current);
+   stroke_fill = _evas_vg_render_pre(pd->stroke.fill, s, current);
+   stroke_marker = _evas_vg_render_pre(pd->stroke.marker, s, current);
+   mask = _evas_vg_render_pre(nd->mask, s, current);
 
    if (!nd->renderer)
      {
@@ -301,10 +295,10 @@ _evas_vg_shape_render_pre(Eo *obj EINA_UNUSED,
          ector_renderer_origin_set(nd->x, nd->y),
          ector_renderer_color_set(nd->r, nd->g, nd->b, nd->a),
          ector_renderer_visibility_set(nd->visibility),
-         ector_renderer_mask_set(nd->mask),
-         ector_renderer_shape_fill_set(fill_r),
-         ector_renderer_shape_stroke_fill_set(stroke_r),
-         ector_renderer_shape_stroke_marker_set(pd->stroke.marker),
+         ector_renderer_mask_set(mask ? mask->renderer : NULL),
+         ector_renderer_shape_fill_set(fill ? fill->renderer : NULL),
+         ector_renderer_shape_stroke_fill_set(stroke_fill ? stroke_fill->renderer : NULL),
+         ector_renderer_shape_stroke_marker_set(stroke_marker ? stroke_marker->renderer : NULL),
          efl_gfx_shape_dup(obj),
          ector_renderer_prepare());
 

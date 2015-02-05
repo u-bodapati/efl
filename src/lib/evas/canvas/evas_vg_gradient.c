@@ -23,7 +23,7 @@ _evas_vg_gradient_efl_gfx_gradient_base_stop_set(Eo *obj EINA_UNUSED,
    memcpy(pd->colors, colors, length * sizeof(Efl_Gfx_Gradient_Stop));
    pd->colors_count = length;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -42,7 +42,8 @@ _evas_vg_gradient_efl_gfx_gradient_base_spread_set(Eo *obj,
                                                    Efl_Gfx_Gradient_Spread s)
 {
    pd->s = s;
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   _evas_vg_node_changed(obj);
 }
 
 static Efl_Gfx_Gradient_Spread

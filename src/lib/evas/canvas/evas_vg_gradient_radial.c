@@ -22,7 +22,7 @@ _evas_vg_gradient_radial_efl_gfx_gradient_radial_center_set(Eo *obj,
    pd->center.x = x;
    pd->center.y = y;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -40,7 +40,8 @@ _evas_vg_gradient_radial_efl_gfx_gradient_radial_radius_set(Eo *obj,
                                                             double r)
 {
    pd->radius = r;
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+
+   _evas_vg_node_changed(obj);
 }
 
 static double
@@ -58,7 +59,7 @@ _evas_vg_gradient_radial_efl_gfx_gradient_radial_focal_set(Eo *obj,
    pd->focal.x = x;
    pd->focal.y = y;
 
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
+   _evas_vg_node_changed(obj);
 }
 
 static void
@@ -78,7 +79,12 @@ _evas_vg_gradient_radial_render_pre(Eo *obj,
                                     Evas_VG_Node_Data *nd)
 {
    Evas_VG_Gradient_Radial_Data *pd = data;
-   Evas_VG_Gradient_Data *gd = eo_data_scope_get(obj, EVAS_VG_GRADIENT_CLASS);
+   Evas_VG_Gradient_Data *gd;
+
+   if (!nd->changed) return ;
+   nd->changed = EINA_FALSE;
+
+   gd = eo_data_scope_get(obj, EVAS_VG_GRADIENT_CLASS);
    EVAS_VG_COMPUTE_MATRIX(current, parent, nd);
 
    if (!nd->renderer)
