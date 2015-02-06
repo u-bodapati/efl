@@ -3190,15 +3190,14 @@ eng_ector_renderer_draw(void *data EINA_UNUSED, void *context, void *surface, Ec
         clip.w = dst->cache_entry.w;
         clip.h = dst->cache_entry.h;
      }
-   //Hermet: Multiple Clippers???
+
+   c = eina_array_new(8);
    if (clips)
      {
-        //printf("Multiple clips \n");
-        c = eina_array_new(8);
         EINA_ARRAY_ITER_NEXT(clips, i, r, it)
           {
              Eina_Rectangle *rc;
-             //printf("Multiple :%d , %d ,%d , %d\n",r->x, r->y, r->w, r->h);
+
              rc = eina_rectangle_new(r->x, r->y, r->w, r->h);
              if (!rc) continue;
 
@@ -3207,13 +3206,14 @@ eng_ector_renderer_draw(void *data EINA_UNUSED, void *context, void *surface, Ec
              else
                eina_rectangle_free(rc);
           }
+
+        if (eina_array_count(c) == 0 &&
+            eina_array_count(clips) > 0)
+          return ;
      }
-   else
-     {
-        //printf("Single Clip : %d , %d ,%d , %d\n",clip.x, clip.y, clip.w, clip.h);
-        c = eina_array_new(1);
-        eina_array_push(c, eina_rectangle_new(clip.x, clip.y, clip.w, clip.h));
-     }
+
+   if (eina_array_count(c) == 0)
+     eina_array_push(c, eina_rectangle_new(clip.x, clip.y, clip.w, clip.h));
 
    ector.r = eo_ref(renderer);
    ector.clips = c;
