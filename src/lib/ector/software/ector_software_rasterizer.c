@@ -369,6 +369,9 @@ void ector_software_rasterizer_radial_gradient_set(Software_Rasterizer *rasteriz
 void ector_software_rasterizer_draw_rle_data(Software_Rasterizer *rasterizer, 
                                              int x, int y, uint mul_col, Ector_Rop op, Shape_Rle_Data* rle)
 {
+    // check for NULL rle data
+    if (!rle) return;
+
     rasterizer->fillData.offx = x;
     rasterizer->fillData.offy = y;
     rasterizer->fillData.mul_col = mul_col;
