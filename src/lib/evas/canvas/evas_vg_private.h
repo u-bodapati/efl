@@ -14,7 +14,7 @@ struct _Evas_VG_Node_Data
    Ector_Renderer *renderer;
    Evas_VG *eo_vg;
 
-   Eina_Bool (*render_pre)(Eo *obj, Eina_Matrix3 *parent, Ector_Surface *s, void *data, Evas_VG_Node_Data *nd);
+   void (*render_pre)(Eo *obj, Eina_Matrix3 *parent, Ector_Surface *s, void *data, Evas_VG_Node_Data *nd);
    void *data;
 
    double x, y;
@@ -38,17 +38,18 @@ struct _Evas_VG_Gradient_Data
    Efl_Gfx_Gradient_Spread s;
 };
 
-static inline Eina_Bool
+static inline Evas_VG_Node_Data *
 _evas_vg_render_pre(Evas_VG_Node *node, Ector_Surface *s, Eina_Matrix3 *m)
 {
-   Evas_VG_Node_Data *nd;
+   Evas_VG_Node_Data *nd = NULL;
 
    if (!node) return EINA_FALSE;
 
    // FIXME: Prevent infinite loop
    nd = eo_data_scope_get(node, EVAS_VG_NODE_CLASS);
-   if (nd->render_pre) return nd->render_pre(node, m, s, nd->data, nd);
-   else return EINA_FALSE;
+   if (nd->render_pre) nd->render_pre(node, m, s, nd->data, nd);
+
+   return nd;
 }
 
 static inline void
