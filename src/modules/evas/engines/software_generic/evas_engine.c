@@ -3113,6 +3113,12 @@ eng_ector_get(void *data EINA_UNUSED)
    return _software_ector;
 }
 
+static void *
+eng_ector_begin(void *data EINA_UNUSED, void *surface EINA_UNUSED, int width EINA_UNUSED, int height EINA_UNUSED)
+{
+   return NULL;
+}
+
 static Ector_Rop
 _evas_render_op_to_ector_rop(Evas_Render_Op op)
 {
@@ -3180,7 +3186,7 @@ eng_ector_renderer_draw(void *data EINA_UNUSED, void *context, void *surface, Ec
    Eina_Array_Iterator it;
    unsigned int i;
 
-   if (dc->clip.use)
+   if (0 && dc->clip.use)
      {
         clip.x = dc->clip.x;
         clip.y = dc->clip.y;
@@ -3424,6 +3430,7 @@ static Evas_Func func =
      NULL, // eng_texture_filter_set
      NULL, // eng_texture_filter_get
      NULL, // eng_texture_image_set
+     eng_ector_begin,
      eng_ector_get,
      eng_ector_renderer_draw
    /* FUTURE software generic calls go here */
