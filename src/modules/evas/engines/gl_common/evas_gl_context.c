@@ -3277,6 +3277,10 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
              GLERR(__FUNCTION__, __FILE__, __LINE__, "");
              glDisableVertexAttribArray(SHAD_TEXUV3);
              GLERR(__FUNCTION__, __FILE__, __LINE__, "");
+             glDisableVertexAttribArray(SHAD_TEXA);
+             GLERR(__FUNCTION__, __FILE__, __LINE__, "");
+             glDisableVertexAttribArray(SHAD_TEXSAM);
+             GLERR(__FUNCTION__, __FILE__, __LINE__, "");
              glDisableVertexAttribArray(SHAD_TEXM);
              GLERR(__FUNCTION__, __FILE__, __LINE__, "");
              glDrawArrays(GL_LINES, 0, gc->pipe[i].array.num);
@@ -3343,7 +3347,7 @@ shader_array_flush(Evas_Engine_GL_Context *gc)
 
                    MASK_TEXTURE += 1;
                }
-             else if (gc->pipe[i].region.type == RTYPE_MAP)
+             else if (gc->pipe[i].array.use_texa && (gc->pipe[i].region.type == RTYPE_MAP))
                {
                   /* FIXME:
                    * This is a workaround as we hijack some tex ids
