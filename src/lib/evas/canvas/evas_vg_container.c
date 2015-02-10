@@ -23,8 +23,6 @@ _evas_vg_container_render_pre(Eo *obj EINA_UNUSED,
 
    EINA_LIST_FOREACH(pd->children, l, child)
      _evas_vg_render_pre(child, s, current);
-
-   return change;
 }
 
 static void

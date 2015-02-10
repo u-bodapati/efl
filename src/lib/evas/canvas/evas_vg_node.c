@@ -1,3 +1,4 @@
+
 #include "evas_common_private.h"
 #include "evas_private.h"
 
@@ -208,7 +209,6 @@ _evas_vg_node_eo_base_constructor(Eo *obj,
 {
    Evas_VG_Container_Data *cd = NULL;
    Eo *parent;
-   Evas_VG_Node_Data *parent_nd = NULL;
 
    eo_do_super(obj, MY_CLASS, eo_constructor());
 
@@ -404,16 +404,6 @@ _evas_vg_node_original_bound_get(Eo *obj EINA_UNUSED,
                                  Eina_Rectangle *r EINA_UNUSED)
 {
    return EINA_FALSE;
-}
-
-
-void
-_evas_vg_node_changed(Eo *obj EINA_UNUSED, Evas_VG_Node_Data *pd)
-{
-   if (!pd->eo_vg) return;
-   Evas_Object_Protected_Data *obj_vg = eo_data_scope_get(pd->eo_vg,
-                                                          EVAS_OBJECT_CLASS);
-   evas_object_change(pd->eo_vg, obj_vg);
 }
 
 #include "evas_vg_node.eo.c"

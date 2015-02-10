@@ -48,7 +48,6 @@ _evas_vg_root_node_eo_base_constructor(Eo *obj,
                                        Evas_VG_Root_Node_Data *pd)
 {
    Eo *parent;
-   Evas_VG_Node_Data *nd;
 
    // Nice little hack, jump over parent constructor in Evas_VG_Root
    eo_do_super(obj, EVAS_VG_NODE_CLASS, eo_constructor());

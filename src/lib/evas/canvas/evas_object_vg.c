@@ -414,7 +414,7 @@ _evas_vg_efl_file_mmap_set(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
      return EINA_FALSE;
 
    tmp = f ? eina_file_dup(f) : NULL;
-
+/*
    if (tmp)
      {
         if (!evas_vg_loader_svg(obj, tmp, NULL))
@@ -423,7 +423,7 @@ _evas_vg_efl_file_mmap_set(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
              return EINA_FALSE;
           }
      }
-
+*/
    // it succeeded.
    if (pd->f) eina_file_close(pd->f);
    pd->f = tmp;

@@ -55,7 +55,7 @@ _evas_vg_gradient_linear_efl_gfx_gradient_linear_end_get(Eo *obj EINA_UNUSED,
    if (y) *y = pd->end.y;
 }
 
-static Eina_Bool
+static void
 _evas_vg_gradient_linear_render_pre(Eo *obj,
                                     Eina_Matrix3 *parent,
                                     Ector_Surface *s,
@@ -86,8 +86,6 @@ _evas_vg_gradient_linear_render_pre(Eo *obj,
          efl_gfx_gradient_linear_start_set(pd->start.x, pd->start.y),
          efl_gfx_gradient_linear_end_set(pd->end.x, pd->end.y),
          ector_renderer_prepare());
-
-   return EINA_TRUE;
 }
 
 static void

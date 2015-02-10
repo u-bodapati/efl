@@ -90,8 +90,6 @@ _evas_vg_shape_efl_gfx_base_color_part_set(Eo *obj, Evas_VG_Shape_Data *pd,
                                            const char * part,
                                            int r, int g, int b, int a)
 {
-   eo_do_super(obj, MY_CLASS, evas_vg_node_changed());
-
    if (part && !strcmp(part, "stroke"))
      {
         _evas_vg_shape_efl_gfx_shape_stroke_color_set(obj, pd, r, g, b, a);
@@ -265,7 +263,7 @@ _evas_vg_shape_efl_gfx_shape_stroke_join_get(Eo *obj EINA_UNUSED,
    return pd->stroke.join;
 }
 
-static Eina_Bool
+static void
 _evas_vg_shape_render_pre(Eo *obj EINA_UNUSED,
                           Eina_Matrix3 *parent,
                           Ector_Surface *s,
@@ -301,8 +299,6 @@ _evas_vg_shape_render_pre(Eo *obj EINA_UNUSED,
          ector_renderer_shape_stroke_marker_set(stroke_marker ? stroke_marker->renderer : NULL),
          efl_gfx_shape_dup(obj),
          ector_renderer_prepare());
-
-   return EINA_TRUE;
 }
 
 static void
