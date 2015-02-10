@@ -134,7 +134,7 @@ _evas_vg_render(Evas_Object_Protected_Data *obj,
                 void *output, void *context, void *surface, Evas_VG_Node *node,
                 Eina_Array *clips, int x, int y, Eina_Bool do_async)
 {
-   Evas_VG_Container_Data *vd = eo_data_scope_get(n, EVAS_VG_CONTAINER_CLASS);
+   Evas_VG_Container_Data *vd = eo_data_scope_get(node, EVAS_VG_CONTAINER_CLASS);
 
    if (eo_isa(node, EVAS_VG_CONTAINER_CLASS))
      {
