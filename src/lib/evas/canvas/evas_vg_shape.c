@@ -288,7 +288,7 @@ _efl_vg_shape_render_pre(Eo *obj EINA_UNUSED,
 
    if (!nd->renderer)
      {
-        nd->renderer = eo_do(s, ector_surface_renderer_factory_new(ECTOR_RENDERER_GENERIC_SHAPE_CLASS));
+        nd->renderer = eo_do(s, ector_surface_renderer_factory_new(ECTOR_RENDERER_GENERIC_SHAPE_MIXIN));
      }
 
    eo_do(nd->renderer,
