@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <software/Ector_Software.h>
 #include "ector_private.h"
 #include "ector_software_private.h"
