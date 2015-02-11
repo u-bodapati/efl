@@ -23,8 +23,6 @@
 
 #include "ector_cairo_software_surface.eo.h"
 
-#include "software/Ector_Software.h"
-
 #ifdef EVAS_GL
 //----------------------------------//
 // OSMesa...
@@ -636,7 +634,7 @@ _draw_thread_rectangle_draw(void *data)
                                     rect->color, rect->render_op,
                                     rect->x, rect->y, rect->w, rect->h,
                                     rect->mask, rect->mask_x, rect->mask_y);
-    evas_common_cpu_end_opt();
+
     eina_mempool_free(_mp_command_rect, rect);
 }
 
@@ -3175,8 +3173,6 @@ _draw_thread_ector_draw(void *data)
                              ector->y,
                              ector->mul_col));
 
-   evas_common_cpu_end_opt();
-
    _draw_thread_ector_cleanup(ector);
 }
 
@@ -4678,7 +4674,7 @@ struct _Ector_Cairo_Software_Surface_Data
 };
 
 void
-_ector_cairo_software_surface_ector_generic_surface_surface_set(Eo *obj, Ector_Cairo_Software_Surface_Data *pd, void *pixels, unsigned int width, unsigned int height)
+_ector_cairo_software_surface_surface_set(Eo *obj, Ector_Cairo_Software_Surface_Data *pd, void *pixels, unsigned int width, unsigned int height)
 {
    USE(obj, cairo_image_surface_create_for_data, );
    USE(obj, cairo_surface_destroy, );
@@ -4712,7 +4708,7 @@ _ector_cairo_software_surface_ector_generic_surface_surface_set(Eo *obj, Ector_C
 }
 
 void
-_ector_cairo_software_surface_ector_generic_surface_surface_get(Eo *obj EINA_UNUSED, Ector_Cairo_Software_Surface_Data *pd, void **pixels, unsigned int *width, unsigned int *height)
+_ector_cairo_software_surface_surface_get(Eo *obj EINA_UNUSED, Ector_Cairo_Software_Surface_Data *pd, void **pixels, unsigned int *width, unsigned int *height)
 {
    if (pixels) *pixels = pd->pixels;
    if (width) *width = pd->width;

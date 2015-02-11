@@ -16,7 +16,7 @@ struct _Efl_VG_Gradient_Linear_Data
 };
 
 static void
-_efl_vg_gradient_linear_efl_gfx_gradient_linear_start_set(Eo *obj,
+_efl_vg_gradient_linear_efl_gfx_gradient_linear_start_set(Eo *obj EINA_UNUSED,
                                                           Efl_VG_Gradient_Linear_Data *pd,
                                                           double x, double y)
 {
@@ -36,7 +36,7 @@ _efl_vg_gradient_linear_efl_gfx_gradient_linear_start_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_gradient_linear_efl_gfx_gradient_linear_end_set(Eo *obj,
+_efl_vg_gradient_linear_efl_gfx_gradient_linear_end_set(Eo *obj EINA_UNUSED,
                                                         Efl_VG_Gradient_Linear_Data *pd,
                                                         double x, double y)
 {
@@ -97,7 +97,7 @@ _efl_vg_gradient_linear_eo_base_constructor(Eo *obj,
    eo_do_super(obj, MY_CLASS, eo_constructor());
 
    nd = eo_data_scope_get(obj, EFL_VG_BASE_CLASS);
-   nd->render_pre = &_efl_vg_gradient_linear_render_pre;
+   nd->render_pre = _efl_vg_gradient_linear_render_pre;
    nd->data = pd;
 }
 

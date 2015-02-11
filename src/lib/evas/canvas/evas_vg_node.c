@@ -1,4 +1,3 @@
-
 #include "evas_common_private.h"
 #include "evas_private.h"
 
@@ -216,9 +215,16 @@ _efl_vg_base_parent_checked_get(Eo *obj,
              goto on_error;
           }
      }
+   else if (*parent != NULL)
+     {
+        ERR("Parent of unauthorized class.");
+        goto on_error;
+     }
+
    return EINA_TRUE;
 
  on_error:
+   *parent = NULL;
    *cd = NULL;
    return EINA_FALSE;
 }
@@ -416,9 +422,9 @@ _efl_vg_base_efl_gfx_stack_above_get(Eo *obj, Efl_VG_Base_Data *pd)
 }
 
 Eina_Bool
-_efl_vg_node_original_bound_get(Eo *obj EINA_UNUSED,
-                                Efl_VG_Base_Data *pd EINA_UNUSED,
-                                Eina_Rectangle *r EINA_UNUSED)
+_efl_vg_base_original_bound_get(Eo *obj,
+                                Efl_VG_Base_Data *pd,
+                                Eina_Rectangle *r)
 {
    return EINA_FALSE;
 }

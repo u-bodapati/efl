@@ -544,6 +544,7 @@ _efl_gfx_shape_append_arc_to(Eo *obj, Efl_Gfx_Shape_Data *pd,
    /* Start and end of path segment */
    x2 = x;
    y2 = y;
+
    if (x1 == x2 && y1 == y2)
      return;
 

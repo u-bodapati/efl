@@ -12,7 +12,6 @@ struct _Efl_VG_Base_Data
    Eina_Matrix3 *m;
    Efl_VG *mask;
    Ector_Renderer *renderer;
-   Evas_VG *eo_vg;
 
    void (*render_pre)(Eo *obj, Eina_Matrix3 *parent, Ector_Surface *s, void *data, Efl_VG_Base_Data *nd);
    void *data;
@@ -78,5 +77,6 @@ _efl_vg_base_changed(Eo *obj)
             Current = &_matrix_tmp;                                     \
          }                                                              \
     }
+
 
 #endif

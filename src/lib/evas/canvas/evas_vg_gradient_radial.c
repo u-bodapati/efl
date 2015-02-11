@@ -15,9 +15,9 @@ struct _Efl_VG_Gradient_Radial_Data
 };
 
 static void
-_efl_vg_gradient_radial_efl_gfx_gradient_radial_center_set(Eo *obj,
-                                                            Efl_VG_Gradient_Radial_Data *pd,
-                                                            double x, double y)
+_efl_vg_gradient_radial_efl_gfx_gradient_radial_center_set(Eo *obj EINA_UNUSED,
+                                                           Efl_VG_Gradient_Radial_Data *pd,
+                                                           double x, double y)
 {
    pd->center.x = x;
    pd->center.y = y;
@@ -35,7 +35,7 @@ _efl_vg_gradient_radial_efl_gfx_gradient_radial_center_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_gradient_radial_efl_gfx_gradient_radial_radius_set(Eo *obj,
+_efl_vg_gradient_radial_efl_gfx_gradient_radial_radius_set(Eo *obj EINA_UNUSED,
                                                            Efl_VG_Gradient_Radial_Data *pd,
                                                            double r)
 {
@@ -52,7 +52,7 @@ _efl_vg_gradient_radial_efl_gfx_gradient_radial_radius_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_gradient_radial_efl_gfx_gradient_radial_focal_set(Eo *obj,
+_efl_vg_gradient_radial_efl_gfx_gradient_radial_focal_set(Eo *obj EINA_UNUSED,
                                                           Efl_VG_Gradient_Radial_Data *pd,
                                                           double x, double y)
 {
@@ -113,7 +113,7 @@ _efl_vg_gradient_radial_eo_base_constructor(Eo *obj, Efl_VG_Gradient_Radial_Data
    eo_do_super(obj, MY_CLASS, eo_constructor());
 
    nd = eo_data_scope_get(obj, EFL_VG_BASE_CLASS);
-   nd->render_pre = &_efl_vg_gradient_radial_render_pre;
+   nd->render_pre = _efl_vg_gradient_radial_render_pre;
    nd->data = pd;
 }
 

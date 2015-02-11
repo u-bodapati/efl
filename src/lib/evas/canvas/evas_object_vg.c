@@ -25,8 +25,7 @@ struct _Evas_VG_Data
 
    Eina_Rectangle fill;
 
-   int width, height;
-   void          *backing_store;
+   unsigned int width, height;
 };
 
 static void evas_object_vg_render(Evas_Object *eo_obj,
@@ -99,11 +98,6 @@ _evas_vg_root_node_get(Eo *obj EINA_UNUSED, Evas_VG_Data *pd)
 void
 _evas_vg_eo_base_destructor(Eo *eo_obj, Evas_VG_Data *pd)
 {
-   if (pd->backing_store) {
-      Evas_Object_Protected_Data *obj = eo_data_scope_get(eo_obj, EVAS_OBJECT_CLASS);
-      obj->layer->evas->engine.func->image_free(obj->layer->evas->engine.data.output,
-                                                  pd->backing_store);
-   }
    eo_unref(pd->root);
    eo_do_super(eo_obj, MY_CLASS, eo_destructor());
 }
@@ -142,8 +136,9 @@ _evas_vg_render(Evas_Object_Protected_Data *obj,
         Eina_List *l;
 
         EINA_LIST_FOREACH(vd->children, l, child)
-           _evas_vg_render(obj, output, context, surface, child, clips, x, y,
-                           do_async);
+          _evas_vg_render(obj,
+                          output, context, surface, child,
+                          clips, x, y, do_async);
      }
    else
      {
@@ -163,12 +158,6 @@ evas_object_vg_render(Evas_Object *eo_obj EINA_UNUSED,
                       int x, int y, Eina_Bool do_async)
 {
    Evas_VG_Data *vd = type_private_data;
-/*
-   vd->backing_store = obj->layer->evas->engine.func->ector_begin(obj->layer->evas->engine.data.output,
-                                                                  vd->backing_store, 
-                                                                  obj->cur->geometry.w,
-                                                                  obj->cur->geometry.h);
-*/
 
    // FIXME: Set context (that should affect Ector_Surface) and
    // then call Ector_Renderer render from bottom to top. Get the
@@ -190,27 +179,11 @@ evas_object_vg_render(Evas_Object *eo_obj EINA_UNUSED,
                                                            context);
    obj->layer->evas->engine.func->context_render_op_set(output, context,
                                                         obj->cur->render_op);
-   if (!vd->backing_store) {
-        obj->layer->evas->engine.func->ector_begin(output, context, surface, do_async);
-        _evas_vg_render(obj, output, context, surface, vd->root, NULL,
-                        obj->cur->geometry.x + x, obj->cur->geometry.y + y,
-                        do_async);
-        obj->layer->evas->engine.func->ector_end(output, context, surface, do_async);
-   } else {
-        obj->layer->evas->engine.func->ector_begin(output, context, surface, do_async);
-        _evas_vg_render(obj, output, context, vd->backing_store, vd->root, NULL,
-                        0 , 0,
-                        do_async);
-        obj->layer->evas->engine.func->ector_end(output, context, surface, do_async);
-
-        obj->layer->evas->engine.func->image_dirty_region(obj->layer->evas->engine.data.output, vd->backing_store,
-                                                          0, 0, 0, 0);
-        obj->layer->evas->engine.func->image_draw(output, context, surface,
-                                                  vd->backing_store, 0, 0,
-                                                  obj->cur->geometry.w, obj->cur->geometry.h, obj->cur->geometry.x + x,
-                                                  obj->cur->geometry.y + y, obj->cur->geometry.w, obj->cur->geometry.h,
-                                                  EINA_TRUE, do_async);
-   }
+   obj->layer->evas->engine.func->ector_begin(output, context, surface, do_async);
+   _evas_vg_render(obj, output, context, surface, vd->root, NULL,
+                   obj->cur->geometry.x + x, obj->cur->geometry.y + y,
+                   do_async);
+   obj->layer->evas->engine.func->ector_end(output, context, surface, do_async);
 }
 
 static void
@@ -221,8 +194,12 @@ evas_object_vg_render_pre(Evas_Object *eo_obj,
    Evas_VG_Data *vd = type_private_data;
    Evas_Public_Data *e = obj->layer->evas;
    int is_v, was_v;
-   Ector_Surface *surface;
-   Eina_Bool change = EINA_FALSE;
+   Ector_Surface *s;
+
+   // FIXME: handle damage only on changed renderer.
+   s = e->engine.func->ector_get(e->engine.data.output);
+   if (vd->root && s)
+     _evas_vg_render_pre(vd->root, s, NULL);
 
    /* dont pre-render the obj twice! */
    if (obj->pre_render_done) return;
@@ -246,49 +223,30 @@ evas_object_vg_render_pre(Evas_Object *eo_obj,
    is_v = evas_object_is_visible(eo_obj, obj);
    was_v = evas_object_was_visible(eo_obj,obj);
    if (!(is_v | was_v)) goto done;
-
-   // FIXME: handle damage only on changed renderer.
-   surface = e->engine.func->ector_get(e->engine.data.output);
-   if (surface)
-     change = _evas_vg_render_pre(vd->root, surface, NULL);
-
-   if (change)
-     {
-        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes,
-                                            eo_obj, obj);
-        goto done;
-     }
-
    if (is_v != was_v)
      {
-        evas_object_render_pre_visible_change(&obj->layer->evas->clip_changes,
-                                              eo_obj, is_v, was_v);
+        evas_object_render_pre_visible_change(&obj->layer->evas->clip_changes, eo_obj, is_v, was_v);
         goto done;
      }
-
    if (obj->changed_map || obj->changed_src_visible)
      {
-        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes,
-                                            eo_obj, obj);
+        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes, eo_obj, obj);
         goto done;
      }
    /* it's not visible - we accounted for it appearing or not so just abort */
    if (!is_v) goto done;
    /* clipper changed this is in addition to anything else for obj */
-   evas_object_render_pre_clipper_change(&obj->layer->evas->clip_changes,
-                                         eo_obj);
+   evas_object_render_pre_clipper_change(&obj->layer->evas->clip_changes, eo_obj);
    /* if we restacked (layer or just within a layer) and don't clip anyone */
    if ((obj->restack) && (!obj->clip.clipees))
      {
-        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes,
-                                            eo_obj, obj);
+        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes, eo_obj, obj);
         goto done;
      }
    /* if it changed render op */
    if (obj->cur->render_op != obj->prev->render_op)
      {
-        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes,
-                                            eo_obj, obj);
+        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes, eo_obj, obj);
         goto done;
      }
    /* if it changed color */
@@ -297,8 +255,7 @@ evas_object_vg_render_pre(Evas_Object *eo_obj,
        (obj->cur->color.b != obj->prev->color.b) ||
        (obj->cur->color.a != obj->prev->color.a))
      {
-        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes,
-                                            eo_obj, obj);
+        evas_object_render_pre_prev_cur_add(&obj->layer->evas->clip_changes, eo_obj, obj);
         goto done;
      }
    /* if it changed geometry - and obviously not visibility or color */
@@ -347,9 +304,8 @@ evas_object_vg_render_pre(Evas_Object *eo_obj,
          y + obj->layer->evas->framespace.y,
          w, h);
      }
-done:
-   evas_object_render_pre_effect_updates(&obj->layer->evas->clip_changes,
-                                         eo_obj, is_v, was_v);
+   done:
+   evas_object_render_pre_effect_updates(&obj->layer->evas->clip_changes, eo_obj, is_v, was_v);
 }
 
 static void
@@ -418,7 +374,7 @@ _evas_vg_efl_file_mmap_set(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
      return EINA_FALSE;
 
    tmp = f ? eina_file_dup(f) : NULL;
-/*
+
    if (tmp)
      {
         if (!evas_vg_loader_svg(obj, tmp, NULL))
@@ -427,7 +383,7 @@ _evas_vg_efl_file_mmap_set(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
              return EINA_FALSE;
           }
      }
-*/
+
    // it succeeded.
    if (pd->f) eina_file_close(pd->f);
    pd->f = tmp;

@@ -17,8 +17,7 @@ struct _Efl_VG_Image_Data
 };
 
 static void
-_efl_vg_image_position_set(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
-                           int x, int y)
+_efl_vg_image_position_set(Eo *obj, Efl_VG_Image_Data *pd, int x, int y)
 {
    pd->x = x;
    pd->y = y;
@@ -27,16 +26,15 @@ _efl_vg_image_position_set(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
 }
 
 static void
-_efl_vg_image_position_get(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
-                           int *x, int *y)
+_efl_vg_image_position_get(Eo *obj, Efl_VG_Image_Data *pd, int *x, int *y)
 {
    if (x) *x = pd->x;
    if (y) *y = pd->y;
 }
 
 static void
-_efl_vg_image_size_set(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
-                       unsigned int w, unsigned int h)
+_efl_vg_image_size_set(Eo *obj, Efl_VG_Image_Data *pd,
+                        unsigned int w, unsigned int h)
 {
    pd->w = w;
    pd->h = h;
@@ -45,8 +43,8 @@ _efl_vg_image_size_set(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
 }
 
 static void
-_efl_vg_image_size_get(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
-                       unsigned int *w, unsigned int *h)
+_efl_vg_image_size_get(Eo *obj, Efl_VG_Image_Data *pd,
+                        unsigned int *w, unsigned int *h)
 {
    if (w) *w = pd->w;
    if (h) *h = pd->h;
@@ -98,13 +96,13 @@ _efl_vg_image_efl_file_file_get(Eo *obj EINA_UNUSED, Efl_VG_Image_Data *pd,
 }
 
 static void
-_efl_vg_image_eo_base_constructor(Eo *obj, Efl_VG_Image_Data *pd EINA_UNUSED)
+_efl_vg_image_eo_base_constructor(Eo *obj, Efl_VG_Image_Data *pd)
 {
    eo_error_set(obj);
 }
 
 static void
-_efl_vg_image_eo_base_destructor(Eo *obj, Efl_VG_Image_Data *pd EINA_UNUSED)
+_efl_vg_image_eo_base_destructor(Eo *obj, Efl_VG_Image_Data *pd)
 {
    eo_error_set(obj);
 }

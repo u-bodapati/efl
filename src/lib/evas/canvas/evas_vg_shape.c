@@ -29,15 +29,15 @@ struct _Efl_VG_Shape_Data
 };
 
 static Eina_Bool
-_efl_vg_shape_evas_vg_node_bound_get(Eo *obj EINA_UNUSED,
-                                     Efl_VG_Shape_Data *pd EINA_UNUSED,
-                                     Eina_Rectangle *r EINA_UNUSED)
+_efl_vg_shape_efl_vg_base_bound_get(Eo *obj,
+                                    Efl_VG_Shape_Data *pd,
+                                    Eina_Rectangle *r)
 {
    return EINA_FALSE;
 }
 
 static void
-_efl_vg_shape_fill_set(Eo *obj,
+_efl_vg_shape_fill_set(Eo *obj EINA_UNUSED,
                        Efl_VG_Shape_Data *pd,
                        Efl_VG *f)
 {
@@ -56,7 +56,7 @@ _efl_vg_shape_fill_get(Eo *obj EINA_UNUSED, Efl_VG_Shape_Data *pd)
 }
 
 static void
-_efl_vg_shape_efl_gfx_shape_stroke_scale_set(Eo *obj,
+_efl_vg_shape_efl_gfx_shape_stroke_scale_set(Eo *obj EINA_UNUSED,
                                              Efl_VG_Shape_Data *pd,
                                              double s)
 {
@@ -73,7 +73,7 @@ _efl_vg_shape_efl_gfx_shape_stroke_scale_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_shape_efl_gfx_shape_stroke_color_set(Eo *obj,
+_efl_vg_shape_efl_gfx_shape_stroke_color_set(Eo *obj EINA_UNUSED,
                                              Efl_VG_Shape_Data *pd,
                                              int r, int g, int b, int a)
 {
@@ -127,7 +127,7 @@ _efl_vg_shape_efl_gfx_base_color_part_get(Eo *obj, Efl_VG_Shape_Data *pd,
 }
 
 static void
-_efl_vg_shape_stroke_fill_set(Eo *obj,
+_efl_vg_shape_stroke_fill_set(Eo *obj EINA_UNUSED,
                               Efl_VG_Shape_Data *pd,
                               Efl_VG *f)
 {
@@ -147,7 +147,7 @@ _efl_vg_shape_stroke_fill_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_shape_efl_gfx_shape_stroke_width_set(Eo *obj,
+_efl_vg_shape_efl_gfx_shape_stroke_width_set(Eo *obj EINA_UNUSED,
                                              Efl_VG_Shape_Data *pd,
                                              double w)
 {
@@ -164,7 +164,7 @@ _efl_vg_shape_efl_gfx_shape_stroke_width_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_shape_efl_gfx_shape_stroke_location_set(Eo *obj,
+_efl_vg_shape_efl_gfx_shape_stroke_location_set(Eo *obj EINA_UNUSED,
                                                 Efl_VG_Shape_Data *pd,
                                                 double centered)
 {
@@ -181,7 +181,7 @@ _efl_vg_shape_efl_gfx_shape_stroke_location_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_shape_efl_gfx_shape_stroke_dash_set(Eo *obj,
+_efl_vg_shape_efl_gfx_shape_stroke_dash_set(Eo *obj EINA_UNUSED,
                                             Efl_VG_Shape_Data *pd,
                                             const Efl_Gfx_Dash *dash,
                                             unsigned int length)
@@ -210,7 +210,7 @@ _efl_vg_shape_efl_gfx_shape_stroke_dash_get(Eo *obj EINA_UNUSED,
 }
 
 static void
-_efl_vg_shape_stroke_marker_set(Eo *obj,
+_efl_vg_shape_stroke_marker_set(Eo *obj EINA_UNUSED,
                                 Efl_VG_Shape_Data *pd,
                                 Efl_VG_Shape *m)
 {
@@ -317,7 +317,7 @@ _efl_vg_shape_eo_base_constructor(Eo *obj, Efl_VG_Shape_Data *pd)
    pd->stroke.centered = 0.5;
 
    nd = eo_data_scope_get(obj, EFL_VG_BASE_CLASS);
-   nd->render_pre = &_efl_vg_shape_render_pre;
+   nd->render_pre = _efl_vg_shape_render_pre;
    nd->data = pd;
 }
 

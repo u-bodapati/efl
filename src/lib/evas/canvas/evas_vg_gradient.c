@@ -5,8 +5,6 @@
 
 #include <strings.h>
 
-#define MY_CLASS EVAS_VG_GRADIENT_CLASS
-
 static void
 _efl_vg_gradient_efl_gfx_gradient_base_stop_set(Eo *obj EINA_UNUSED,
                                                 Efl_VG_Gradient_Data *pd,
