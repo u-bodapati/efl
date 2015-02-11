@@ -525,4 +525,16 @@ evas_vg_shape_shape_equal_commands(Eo *obj, const Eo *with)
    return eo_do(obj, efl_gfx_shape_equal_commands(with));
 }
 
+EAPI void
+evas_vg_shape_shape_append_rounded_rect(Eo *obj, double x, double y, double w, double h, double xr, double yr)
+{
+   eo_do(obj, efl_gfx_shape_append_rounded_rect(x, y, w, h, xr, yr));
+}
+
+EAPI void
+evas_vg_shape_shape_append_arc(Eo *obj, double x, double y, double w, double h, double start_angle, double sweep_length)
+{
+   eo_do(obj, efl_gfx_shape_append_rounded_rect(x, y, w, h, start_angle, sweep_length));
+}
+
 #include "efl_vg_shape.eo.c"
