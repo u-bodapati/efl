@@ -835,6 +835,15 @@ struct _RGBA_Image
       pixman_image_t *im;
    } pixman;
 #endif
+   struct {
+      void   *data; //Evas_Native_Surface ns;
+      struct {
+        void (*bind) (void *data, void *image, int x, int y, int w, int h);
+        void (*unbind) (void *data, void *image);
+        void (*free) (void *data, void *image);
+        void *data;
+      } func;
+   } native;
 };
 
 struct _RGBA_Polygon_Point

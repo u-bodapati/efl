@@ -2711,13 +2711,13 @@ static const char const map_mask_frag_glsl[] =
    "#endif\n"
    "#endif\n"
    "uniform sampler2D tex, texm;\n"
+   "uniform vec4 mask_Absolute;\n"
    "varying vec2 tex_c;\n"
-   "varying vec4 mask_Position, col, mask_Absolute;\n"
+   "varying vec4 mask_Position, col;\n"
    "void main()\n"
    "{\n"
    "   // FIXME: Use mask coordinates within its texture\n"
    "   // FIXME: Fix Mach band effect using proper 4-point color interpolation\n"
-   "   // FIXME: We're abusing varying where we should have uniforms\n"
    "   vec2 mpos = vec2(mask_Position.xy - mask_Absolute.xy) * mask_Absolute.zw;\n"
    "   gl_FragColor = texture2D(tex, tex_c.xy).bgra * texture2D(texm, mpos).a *  col;\n"
    "}\n";
@@ -2733,20 +2733,17 @@ static const char const map_mask_vert_glsl[] =
    "precision highp float;\n"
    "#endif\n"
    "attribute vec4 vertex, color;\n"
-   "attribute vec2 tex_coord, tex_coordm, tex_sample, tex_coorda;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform float yinvert;\n"
    "uniform mat4 mvp;\n"
    "varying vec2 tex_c;\n"
-   "varying vec4 mask_Position, col, mask_Absolute;\n"
+   "varying vec4 mask_Position, col;\n"
    "void main()\n"
    "{\n"
    "   gl_Position = mvp * vertex;\n"
    "   tex_c = tex_coord;\n"
    "   col = color;\n"
-   "   // tex_coorda contains the Y-invert flag\n"
-   "   // tex_coordm contains the X,Y position of the mask\n"
-   "   // tex_sample contains the W,H size of the mask (inverted)\n"
-   "   mask_Position = mvp * vertex * vec4(tex_coorda.x * 0.5, tex_coorda.y * 0.5, 0.5, 0.5) + vec4(0.5, 0.5, 0, 0);\n"
-   "   mask_Absolute = vec4(tex_coordm, tex_sample); // x, y, 1/w, 1/h on canvas in GL coords\n"
+   "   mask_Position = mvp * vertex * vec4(0.5, yinvert * 0.5, 0.5, 0.5) + vec4(0.5, 0.5, 0, 0);\n"
    "}\n";
 Evas_GL_Program_Source shader_map_mask_vert_src =
 {
@@ -2813,13 +2810,13 @@ static const char const map_mask_bgra_frag_glsl[] =
    "#endif\n"
    "#endif\n"
    "uniform sampler2D tex, texm;\n"
+   "uniform vec4 mask_Absolute;\n"
    "varying vec2 tex_c;\n"
-   "varying vec4 mask_Position, col, mask_Absolute;\n"
+   "varying vec4 mask_Position, col;\n"
    "void main()\n"
    "{\n"
    "   // FIXME: Use mask coordinates within its texture\n"
    "   // FIXME: Fix Mach band effect using proper 4-point color interpolation\n"
-   "   // FIXME: We're abusing varying where we should have uniforms\n"
    "   vec2 mpos = vec2(mask_Position.xy - mask_Absolute.xy) * mask_Absolute.zw;\n"
    "   gl_FragColor = texture2D(tex, tex_c.xy) * texture2D(texm, mpos).a *  col;\n"
    "}\n";
@@ -2835,20 +2832,17 @@ static const char const map_mask_bgra_vert_glsl[] =
    "precision highp float;\n"
    "#endif\n"
    "attribute vec4 vertex, color;\n"
-   "attribute vec2 tex_coord, tex_coordm, tex_sample, tex_coorda;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform float yinvert;\n"
    "uniform mat4 mvp;\n"
    "varying vec2 tex_c;\n"
-   "varying vec4 mask_Position, col, mask_Absolute;\n"
+   "varying vec4 mask_Position, col;\n"
    "void main()\n"
    "{\n"
    "   gl_Position = mvp * vertex;\n"
    "   tex_c = tex_coord;\n"
    "   col = color;\n"
-   "   // tex_coorda contains the Y-invert flag\n"
-   "   // tex_coordm contains the X,Y position of the mask\n"
-   "   // tex_sample contains the W,H size of the mask (inverted)\n"
-   "   mask_Position = mvp * vertex * vec4(tex_coorda.x * 0.5, tex_coorda.y * 0.5, 0.5, 0.5) + vec4(0.5, 0.5, 0, 0);\n"
-   "   mask_Absolute = vec4(tex_coordm, tex_sample); // x, y, 1/w, 1/h on canvas in GL coords\n"
+   "   mask_Position = mvp * vertex * vec4(0.5, yinvert * 0.5, 0.5, 0.5) + vec4(0.5, 0.5, 0, 0);\n"
    "}\n";
 Evas_GL_Program_Source shader_map_mask_bgra_vert_src =
 {
@@ -2902,6 +2896,192 @@ static const char const map_mask_bgra_nomul_vert_glsl[] =
 Evas_GL_Program_Source shader_map_mask_bgra_nomul_vert_src =
 {
    map_mask_bgra_nomul_vert_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_frag.shd */
+static const char const tex_external_frag_glsl[] =
+   "#ifdef GL_ES\n"
+   "#extension GL_OES_EGL_image_external : require\n"
+   "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+   "precision highp float;\n"
+   "#else\n"
+   "precision mediump float;\n"
+   "#endif\n"
+   "uniform samplerExternalOES tex;\n"
+   "#else\n"
+   "uniform sampler2D tex;\n"
+   "#endif\n"
+   "varying vec4 col;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_FragColor = texture2D(tex, tex_c.xy) * col;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_frag_src =
+{
+   tex_external_frag_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_vert.shd */
+static const char const tex_external_vert_glsl[] =
+   "#ifdef GL_ES\n"
+   "precision highp float;\n"
+   "#endif\n"
+   "attribute vec4 vertex;\n"
+   "attribute vec4 color;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform mat4 mvp;\n"
+   "varying vec4 col;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_Position = mvp * vertex;\n"
+   "   col = color;\n"
+   "   tex_c = tex_coord;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_vert_src =
+{
+   tex_external_vert_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_nomul_frag.shd */
+static const char const tex_external_nomul_frag_glsl[] =
+   "#ifdef GL_ES\n"
+   "#extension GL_OES_EGL_image_external : require\n"
+   "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+   "precision highp float;\n"
+   "#else\n"
+   "precision mediump float;\n"
+   "#endif\n"
+   "uniform samplerExternalOES tex;\n"
+   "#else\n"
+   "uniform sampler2D tex;\n"
+   "#endif\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_FragColor = texture2D(tex, tex_c.xy);\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_nomul_frag_src =
+{
+   tex_external_nomul_frag_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_nomul_vert.shd */
+static const char const tex_external_nomul_vert_glsl[] =
+   "#ifdef GL_ES\n"
+   "precision highp float;\n"
+   "#endif\n"
+   "attribute vec4 vertex;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform mat4 mvp;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_Position = mvp * vertex;\n"
+   "   tex_c = tex_coord;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_nomul_vert_src =
+{
+   tex_external_nomul_vert_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_afill_frag.shd */
+static const char const tex_external_afill_frag_glsl[] =
+   "#ifdef GL_ES\n"
+   "#extension GL_OES_EGL_image_external : require\n"
+   "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+   "precision highp float;\n"
+   "#else\n"
+   "precision mediump float;\n"
+   "#endif\n"
+   "uniform samplerExternalOES tex;\n"
+   "#else\n"
+   "uniform sampler2D tex;\n"
+   "#endif\n"
+   "varying vec4 col;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   vec4 c = texture2D(tex, tex_c.xy);\n"
+   "   gl_FragColor = vec4(c.r, c.g, c.b, 1) * col;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_afill_frag_src =
+{
+   tex_external_afill_frag_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_afill_vert.shd */
+static const char const tex_external_afill_vert_glsl[] =
+   "#ifdef GL_ES\n"
+   "precision highp float;\n"
+   "#endif\n"
+   "attribute vec4 vertex;\n"
+   "attribute vec4 color;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform mat4 mvp;\n"
+   "varying vec4 col;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_Position = mvp * vertex;\n"
+   "   col = color;\n"
+   "   tex_c = tex_coord;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_afill_vert_src =
+{
+   tex_external_afill_vert_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_nomul_afill_frag.shd */
+static const char const tex_external_nomul_afill_frag_glsl[] =
+   "#ifdef GL_ES\n"
+   "#extension GL_OES_EGL_image_external : require\n"
+   "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+   "precision highp float;\n"
+   "#else\n"
+   "precision mediump float;\n"
+   "#endif\n"
+   "uniform samplerExternalOES tex;\n"
+   "#else\n"
+   "uniform sampler2D tex;\n"
+   "#endif\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   vec4 c = texture2D(tex, tex_c.xy);\n"
+   "   gl_FragColor = vec4(c.r, c.g, c.b, 1);\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_nomul_afill_frag_src =
+{
+   tex_external_nomul_afill_frag_glsl,
+   NULL, 0
+};
+
+/* Source: modules/evas/engines/gl_common/shader/tex_external_nomul_afill_vert.shd */
+static const char const tex_external_nomul_afill_vert_glsl[] =
+   "#ifdef GL_ES\n"
+   "precision highp float;\n"
+   "#endif\n"
+   "attribute vec4 vertex;\n"
+   "attribute vec2 tex_coord;\n"
+   "uniform mat4 mvp;\n"
+   "varying vec2 tex_c;\n"
+   "void main()\n"
+   "{\n"
+   "   gl_Position = mvp * vertex;\n"
+   "   tex_c = tex_coord;\n"
+   "}\n";
+Evas_GL_Program_Source shader_tex_external_nomul_afill_vert_src =
+{
+   tex_external_nomul_afill_vert_glsl,
    NULL, 0
 };
 
@@ -2967,5 +3147,9 @@ static const struct {
    { SHADER_MAP_MASK_NOMUL, &(shader_map_mask_nomul_vert_src), &(shader_map_mask_nomul_frag_src), "map_mask_nomul" },
    { SHADER_MAP_MASK_BGRA, &(shader_map_mask_bgra_vert_src), &(shader_map_mask_bgra_frag_src), "map_mask_bgra" },
    { SHADER_MAP_MASK_BGRA_NOMUL, &(shader_map_mask_bgra_nomul_vert_src), &(shader_map_mask_bgra_nomul_frag_src), "map_mask_bgra_nomul" },
+   { SHADER_TEX_EXTERNAL, &(shader_tex_external_vert_src), &(shader_tex_external_frag_src), "tex_external" },
+   { SHADER_TEX_EXTERNAL_NOMUL, &(shader_tex_external_nomul_vert_src), &(shader_tex_external_nomul_frag_src), "tex_external_nomul" },
+   { SHADER_TEX_EXTERNAL_AFILL, &(shader_tex_external_afill_vert_src), &(shader_tex_external_afill_frag_src), "tex_external_afill" },
+   { SHADER_TEX_EXTERNAL_NOMUL_AFILL, &(shader_tex_external_nomul_afill_vert_src), &(shader_tex_external_nomul_afill_frag_src), "tex_external_nomul_afill" },
 };
 

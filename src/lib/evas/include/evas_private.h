@@ -20,7 +20,7 @@
 
 #define RENDER_METHOD_INVALID            0x00000000
 
-/* #define REND_DBG 1 */
+//#define REND_DBG 1
 
 typedef struct _Evas_Layer                  Evas_Layer;
 typedef struct _Evas_Size                   Evas_Size;
@@ -340,6 +340,9 @@ struct _Evas_3D_Mesh
 
    Evas_Color              fog_color;
    Eina_Bool               fog_enabled :1;
+
+   double                  color_pick_key;
+   Eina_Bool               color_pick_enabled :1;
 };
 
 struct _Evas_3D_Texture
@@ -376,6 +379,9 @@ struct _Evas_3D_Scene_Public_Data
    Eina_List        *light_nodes;
    Eina_List        *mesh_nodes;
    Eina_Bool        shadows_enabled :1;
+   Eina_Bool        color_pick_enabled :1;
+   Eina_Hash        *node_mesh_colors;
+   Eina_Hash        *colors_node_mesh;
 };
 
 struct _Evas_3D_Pick_Data
@@ -1321,6 +1327,10 @@ struct _Evas_Func
    void *(*image_drawable_set)           (void *data, void *image, void *drawable);
 
    void  (*drawable_scene_render)        (void *data, void *drawable, void *scene_data);
+   Eina_Bool (*drawable_scene_render_to_texture) (void *data, void *drawable, void *scene_data);
+
+   int (*drawable_texture_color_pick_id_get) (void *drawable);
+   double (*drawable_texture_pixel_color_get) (unsigned int tex EINA_UNUSED, int x, int y, void *drawable);
 
    void *(*texture_new)                  (void *data);
    void  (*texture_free)                 (void *data, void *texture);
@@ -1734,7 +1744,7 @@ void evas_render_invalidate(Evas *e);
 void evas_render_object_recalc(Evas_Object *obj);
 void evas_render_proxy_subrender(Evas *eo_e, Evas_Object *eo_source, Evas_Object *eo_proxy,
                                  Evas_Object_Protected_Data *proxy_obj, Eina_Bool do_async);
-void evas_render_mask_subrender(Evas_Public_Data *e, Evas_Object_Protected_Data *mask, Evas_Object_Protected_Data *prev_mask);
+void evas_render_mask_subrender(Evas_Public_Data *e, Evas_Object_Protected_Data *mask, Evas_Object_Protected_Data *prev_mask, int level);
 
 Eina_Bool evas_map_inside_get(const Evas_Map *m, Evas_Coord x, Evas_Coord y);
 Eina_Bool evas_map_coords_get(const Evas_Map *m, Evas_Coord x, Evas_Coord y, Evas_Coord *mx, Evas_Coord *my, int grab);

@@ -1,5 +1,8 @@
 #include "evas_common_private.h"
 #include "evas_private.h"
+#ifdef EVAS_CSERVE2
+#include "evas_cs2_private.h"
+#endif
 
 #include "Evas_Engine_Software_X11.h"
 #include "evas_engine.h"
@@ -8,6 +11,7 @@
 # include "evas_xlib_outbuf.h"
 # include "evas_xlib_swapbuf.h"
 # include "evas_xlib_color.h"
+# include "evas_xlib_image.h"
 #endif
 
 #ifdef BUILD_ENGINE_SOFTWARE_XCB
@@ -616,6 +620,96 @@ eng_canvas_alpha_get(void *data, void *context EINA_UNUSED)
      (re->outbuf_alpha_get(re->generic.ob));
 }
 
+static void *
+eng_image_native_set(void *data EINA_UNUSED, void *image, void *native)
+{
+   Render_Engine *re = (Render_Engine *)data;
+   Evas_Native_Surface *ns = native;
+   Image_Entry *ie = image, *ie2 = NULL;
+   RGBA_Image *im = image;
+
+   if (!im || !ns) return im;
+
+   if (ns->type == EVAS_NATIVE_SURFACE_X11)
+     {
+        if (im->native.data)
+          {
+             //image have native surface already
+             Evas_Native_Surface *ens = im->native.data;
+
+             if ((ens->type == ns->type) &&
+                 (ens->data.x11.visual == ns->data.x11.visual) &&
+                 (ens->data.x11.pixmap == ns->data.x11.pixmap))
+               return im;
+          }
+     }
+   else if (ns->type == EVAS_NATIVE_SURFACE_TBM)
+     {
+        if (im->native.data)
+          {
+             //image have native surface already
+             Evas_Native_Surface *ens = im->native.data;
+
+             if ((ens->type == ns->type) &&
+                 (ens->data.tbm.buffer == ns->data.tbm.buffer))
+               return im;
+          }
+     }
+
+   // Code from software_generic
+   if ((ns->type == EVAS_NATIVE_SURFACE_OPENGL) &&
+            (ns->version == EVAS_NATIVE_SURFACE_VERSION))
+     ie2 = evas_cache_image_data(evas_common_image_cache_get(),
+                                 ie->w, ie->h, ns->data.x11.visual, 1,
+                                 EVAS_COLORSPACE_ARGB8888);
+   else
+     ie2 = evas_cache_image_data(evas_common_image_cache_get(),
+                                 ie->w, ie->h, NULL, ie->flags.alpha,
+                                 EVAS_COLORSPACE_ARGB8888);
+
+   if (im->native.data)
+     {
+        if (im->native.func.free)
+          im->native.func.free(im->native.func.data, im);
+     }
+
+#ifdef EVAS_CSERVE2
+   if (evas_cserve2_use_get() && evas_cache2_image_cached(ie))
+     evas_cache2_image_close(ie);
+   else
+#endif
+     evas_cache_image_drop(ie);
+   ie = ie2;
+
+#ifdef BUILD_ENGINE_SOFTWARE_XLIB
+   if (ns->type == EVAS_NATIVE_SURFACE_X11)
+     {
+        return evas_xlib_image_native_set(re->generic.ob, ie, ns);
+     }
+#endif
+   if (ns->type == EVAS_NATIVE_SURFACE_TBM)
+     {
+        return evas_native_tbm_image_set(re->generic.ob, ie, ns);
+     }
+
+   return ie;
+}
+
+static void *
+eng_image_native_get(void *data EINA_UNUSED, void *image)
+{
+#ifdef BUILD_ENGINE_SOFTWARE_XLIB
+   RGBA_Image *im = image;
+   Native *n;
+   if (!im) return NULL;
+   n = im->native.data;
+   if (!n) return NULL;
+   return &(n->ns);
+#else
+   return NULL;
+#endif
+}
+
 
 /* module advertising code */
 static int
@@ -645,6 +739,8 @@ module_open(Evas_Module *em)
    ORD(setup);
    ORD(canvas_alpha_get);
    ORD(output_free);
+   ORD(image_native_set);
+   ORD(image_native_get);
 
    /* now advertise out own api */
    em->functions = (void *)(&func);
