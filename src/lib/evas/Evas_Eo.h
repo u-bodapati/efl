@@ -69,6 +69,16 @@ EAPI extern const Eo_Event_Description _EVAS_CANVAS_EVENT_VIEWPORT_RESIZE;
  *
  * @{
  */
+#include "canvas/evas_textblock_extension.eo.h"
+/**
+ * @}
+ */
+
+/**
+ * @ingroup Evas_Object_Textblock
+ *
+ * @{
+ */
 #include "canvas/evas_textblock.eo.h"
 /**
  * @}
