@@ -4876,7 +4876,6 @@ _layout_par(Ctxt *c)
      }
    c->y = c->par->y;
 
-
 #ifdef BIDI_SUPPORT
    if (c->par->is_bidi)
      {
@@ -5791,7 +5790,6 @@ _layout(const Evas_Object *eo_obj, int w, int h, int *w_ret, int *h_ret)
            int par_index_step = num_paragraphs / TEXTBLOCK_PAR_INDEX_SIZE;
            int par_count = 1; /* Force it to take the first one */
            int par_index_pos = 0;
-           Eina_Bool allow_extend = EINA_TRUE; //TODO: make this a property
 
            c->position = TEXTBLOCK_POSITION_START;
 
@@ -5817,7 +5815,7 @@ _layout(const Evas_Object *eo_obj, int w, int h, int *w_ret, int *h_ret)
                 if ((par_ret = _layout_par(c)))
                   {
                      last_vis_par = c->par;
-                     if (allow_extend && (par_ret == 3))
+                     if (par_ret == 3)
                        {
                           done = EINA_FALSE;
                           break;
