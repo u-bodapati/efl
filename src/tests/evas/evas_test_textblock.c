@@ -3409,6 +3409,7 @@ START_TEST(evas_textblock_obstacle)
     * during freeing of the textblock */
    evas_object_del(rect3);
 }
+END_TEST;
 
 START_TEST(evas_textblock_extension)
 {
