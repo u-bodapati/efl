@@ -5895,20 +5895,17 @@ _layout(const Evas_Object *eo_obj, int w, int h, int *w_ret, int *h_ret)
       c->par = save_par;
    }
 
-      /* Clear the rest of the paragraphs and mark as invisible */
+ /* Clear the rest of the paragraphs and mark as invisible */
  if (c->par)
    {
       c->par = (Evas_Object_Textblock_Paragraph *)
          EINA_INLIST_GET(c->par)->next;
       while (c->par)
-           {
-              c->par->visible = 0;
-              c->par = (Evas_Object_Textblock_Paragraph *)
-                 EINA_INLIST_GET(c->par)->next;
-                _paragraph_clear(c->obj, c->par);
-                c->par = (Evas_Object_Textblock_Paragraph *)
-                   EINA_INLIST_GET(c->par)->next;
-             }
+        {
+           c->par->visible = 0;
+           _paragraph_clear(c->par);
+           c->par = (Evas_Object_Textblock_Paragraph *)
+              EINA_INLIST_GET(c->par)->next;
         }
    }
  /* mark the rest of the extensions (if exists) as changed */
