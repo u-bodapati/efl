@@ -124,10 +124,9 @@ struct _Evas_Object_Textblock_Extension
 };
 #endif
 
-static void evas_object_textblock_extension_init(Evas_Object *eo_obj)
+static void _textblock_extension_init(Evas_Textblock_Extension_Data *o)
 {
-   // Left empty for now
-   printf("Extension init\n");
+   o->paragraphs = NULL;
 }
 
 EOLIAN static void
@@ -411,6 +410,7 @@ EOLIAN static Eo *
 _evas_textblock_extension_eo_base_constructor(Eo *eo_obj, Evas_Textblock_Extension_Data *class_data EINA_UNUSED)
 {
    Evas_Object_Protected_Data *obj = eo_data_scope_get(eo_obj, EVAS_OBJECT_CLASS);
+   Evas_Textblock_Extension_Data *o;
 
    eo_obj = eo_do_super_ret(eo_obj, MY_CLASS, eo_obj, eo_constructor());
 
@@ -419,7 +419,8 @@ _evas_textblock_extension_eo_base_constructor(Eo *eo_obj, Evas_Textblock_Extensi
    obj->private_data = eo_data_ref(eo_obj, MY_CLASS);
    obj->type = o_type;
 
-   evas_object_textblock_extension_init(eo_obj);
+   o = obj->private_data;
+   _textblock_extension_init(o);
 
    return eo_obj;
 }
