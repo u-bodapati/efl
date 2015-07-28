@@ -126,7 +126,7 @@ struct _Evas_Object_Textblock_Extension
 
 static void _textblock_extension_init(Evas_Textblock_Extension_Data *o)
 {
-   o->paragraphs = NULL;
+   /* Nothing to do in the meantime. */
 }
 
 EOLIAN static void

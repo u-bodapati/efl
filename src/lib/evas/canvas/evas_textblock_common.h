@@ -20,9 +20,7 @@ typedef struct _Evas_Object_Textblock_Paragraph Evas_Object_Textblock_Paragraph;
 
 struct _Evas_Object_Textblock_Extension
 {
-   Evas_Object_Textblock_Paragraph    *paragraphs; /* Opaque here but defined in main Textblock */
-   Evas_Object_Textblock_Paragraph    *par_index[TEXTBLOCK_PAR_INDEX_SIZE];
-   int                                 num_paragraphs;
+   Evas_Object                        *parent;
 
    int                                 last_w, last_h;
    struct {
