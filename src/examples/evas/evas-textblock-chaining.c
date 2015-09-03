@@ -209,20 +209,21 @@ main(void)
      d.bg, EVAS_CALLBACK_KEY_DOWN, _on_keydown, NULL);
 
    d.text = eo_add(EVAS_TEXTBLOCK_CLASS, d.evas);
-   d.ext = eo_add(EVAS_TEXTBLOCK_EXTENSION_CLASS, d.evas);
-
    d.style = evas_textblock_style_new();
    evas_textblock_style_set(d.style, stbuf);
    evas_object_textblock_style_set(d.text, d.style);
 
    evas_object_textblock_text_markup_set(d.text, PTRDATA(text));
-
    evas_object_resize(d.text, PTRDATA(size), PTRDATA(size));
    evas_object_resize(d.ext, PTRDATA(size), PTRDATA(size));
    evas_object_move(d.text, 0, 0);
-   evas_object_move(d.ext, PTRDATA(size) + 30, 40);
    evas_object_show(d.text);
+
+#if 0
+   d.ext = eo_add(EVAS_TEXTBLOCK_EXTENSION_CLASS, d.evas);
+   evas_object_move(d.ext, PTRDATA(size) + 30, 40);
    evas_object_show(d.ext);
+#endif
 
    fprintf(stdout, commands);
    ecore_main_loop_begin();
