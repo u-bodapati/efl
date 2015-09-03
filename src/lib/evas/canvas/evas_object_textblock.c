@@ -486,8 +486,8 @@ struct _Evas_Textblock_Cursor
 typedef struct
 {
    EINA_INLIST;
-   Evas_Object *ext_eo;
-   Evas_Object_Textblock_Paragraph *start;
+   Evas_Object *ext_eo; /* The object this ext is assigned to */
+   Evas_Object_Textblock_Paragraph *start; /* The starting paragraph */
 } Extension_Info;
 
 struct _Evas_Object_Textblock
@@ -11701,6 +11701,7 @@ _textblock_extension_add(Extension_Info *infos, Evas_Object *ext_eo)
 static Extension_Info *
 _textblock_extension_remove(Extension_Info *infos, Evas_Object *ext_eo)
 {
+   /* TODO: complete this */
    return infos;
 }
 
@@ -11732,7 +11733,6 @@ _evas_textblock_extension_remove(Eo *eo_obj, Evas_Textblock_Data *o,
    o->extensions = (Extension_Info *) eina_inlist_remove(
          EINA_INLIST_GET(o->extensions),
          EINA_INLIST_GET(info));
-
 
    _paragraphs_clear(info->start);
    _evas_textblock_extension_changed(oext, ext_eo);
