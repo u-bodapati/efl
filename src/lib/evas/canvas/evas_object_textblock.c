@@ -490,6 +490,8 @@ typedef struct
    Evas_Object_Textblock_Paragraph *start; /* The starting paragraph */
 } Extension_Info;
 
+/* Size of the index array */
+#define TEXTBLOCK_PAR_INDEX_SIZE 10
 struct _Evas_Object_Textblock
 {
    Evas_Textblock_Style               *style;
@@ -4307,20 +4309,9 @@ _layout_do_format(const Evas_Object *obj EINA_UNUSED, Ctxt *c,
 static void
 _layout_update_par(Ctxt *c)
 {
-   Evas_Object_Textblock_Paragraph *last_par = NULL;
-
-   /* This is a proper fix for the chaining feature:
-    * When the logic is extened to Textblock_Extension,
-    * there are still some things that are left unsorted,
-    * like the case of starting from a specific paragraph - this is a
-    * problem due to the INLIST, which still points to a previous paragraph
-    * in the previous Textblock container. So the odd check in next
-    * line is to use it properly, and is immitated wherever is needed. */
-   if (c->par != c->paragraphs) /* means it's not the first paragraph */
-     {
-        last_par = (Evas_Object_Textblock_Paragraph *)
-           EINA_INLIST_GET(c->par)->prev;
-     }
+   Evas_Object_Textblock_Paragraph *last_par;
+   last_par = (Evas_Object_Textblock_Paragraph *)
+      EINA_INLIST_GET(c->par)->prev;
    if (last_par)
      {
         c->par->y = last_par->y + last_par->h;
@@ -4894,7 +4885,9 @@ _layout_par(Ctxt *c)
                }
           }
      }
+
    c->y = c->par->y;
+
 
 #ifdef BIDI_SUPPORT
    if (c->par->is_bidi)
@@ -4921,7 +4914,7 @@ _layout_par(Ctxt *c)
 
    Eina_Bool item_preadv = EINA_FALSE;
    Evas_Textblock_Obstacle *obs = NULL;
-   for (i = c->par->logical_items ; i && (ret != 3) ; )
+   for (i = c->par->logical_items ; i ; )
      {
         Evas_Coord prevdescent = 0, prevascent = 0;
         int adv_line = 0;
@@ -4983,29 +4976,19 @@ _layout_par(Ctxt *c)
               * fast path.
               * Other values of 0.0 <= ellipsis < 1.0 are handled in
               * _layout_par_ellipsis_items */
-             if ((c->h >= 0) &&
+             if ((it->format->ellipsis == 1.0) && (c->h >= 0) &&
                    ((2 * it->h + c->y >
                      c->h - c->o->style_pad.t - c->o->style_pad.b) ||
                     (!it->format->wrap_word && !it->format->wrap_char &&
                      !it->format->wrap_mixed)))
                {
-                  if (it->format->ellipsis == 1.0)
-                    {
-                       _layout_handle_ellipsis(c, it, i);
-                       ret = 1;
-                       goto end;
-                    }
-                  else if (c->lext)
-                    {
-                       /* We don't break here because we need to split this
-                        * line and finalize it. (ret == 3) will be checked
-                        * in the appropriate area in the code */
-                       ret = 3;
-                    }
+                  _layout_handle_ellipsis(c, it, i);
+                  ret = 1;
+                  goto end;
                }
              /* If we want to wrap and it's worth checking for wrapping
               * (i.e there's actually text). */
-             if (((wrap > 0) || it->format->wrap_word || it->format->wrap_char ||
+             else if (((wrap > 0) || it->format->wrap_word || it->format->wrap_char ||
                 it->format->wrap_mixed) && it->text_node)
                {
                   size_t line_start;
@@ -5041,7 +5024,7 @@ _layout_par(Ctxt *c)
                      line_start = it->text_pos;
 
                   /* Only when doing non-obstacle handling */
-                  if (!obs && (ret != 3))
+                  if (!obs)
                      adv_line = 1;
                   /* If we don't already have a wrap point from before */
                   if (wrap < 0)
@@ -5178,7 +5161,7 @@ _layout_par(Ctxt *c)
                          }
                        else
                          {
-                            if (ret != 3) _layout_line_advance(c, it->format);
+                            _layout_line_advance(c, it->format);
                             item_preadv = EINA_FALSE;
                          }
                     }
@@ -5840,140 +5823,66 @@ _layout(const Evas_Object *eo_obj, int w, int h, int *w_ret, int *h_ret)
        * and switching to next contexts, if required. */
       c->lext = o->extensions;
       Evas_Object_Textblock_Paragraph *last_vis_par = NULL;
+      int par_index_step = c->o->num_paragraphs / TEXTBLOCK_PAR_INDEX_SIZE;
+      int par_count = 1; /* Force it to take the first one */
+      int par_index_pos = 0;
       Eina_Bool done = EINA_FALSE;
+
       Eina_Bool extended = EINA_FALSE;
-      do
+
+      c->position = TEXTBLOCK_POSITION_START;
+
+      if (par_index_step == 0) par_index_step = 1;
+
+      /* Clear all of the index */
+      memset(c->o->par_index, 0, sizeof(c->o->par_index) * TEXTBLOCK_PAR_INDEX_SIZE);
+
+      c->position = TEXTBLOCK_POSITION_START;
+
+      EINA_INLIST_FOREACH(c->paragraphs, c->par)
         {
-           int par_index_step = c->o->num_paragraphs / TEXTBLOCK_PAR_INDEX_SIZE;
-           int par_count = 1; /* Force it to take the first one */
-           int par_index_pos = 0;
+           _layout_update_par(c);
 
-           c->position = TEXTBLOCK_POSITION_START;
-
-           if (par_index_step == 0) par_index_step = 1;
-
-           /* Clear all of the index */
-           memset(c->o->par_index, 0, sizeof(c->o->par_index) * TEXTBLOCK_PAR_INDEX_SIZE);
-
-           c->position = TEXTBLOCK_POSITION_START;
-
-           EINA_INLIST_FOREACH(c->paragraphs, c->par)
+           /* Break if we should stop here. */
+           if (_layout_par(c))
              {
-                int par_ret;
-                _layout_update_par(c);
-#if 0
-                /* FIXME: overrides what's done above, but just
-                 * needed to confirm if it fixes extensions */
-                if (extended) // implies we're extending
-                  {
-                     extended = EINA_FALSE;
-                     c->par->y = 0;
-                  }
-#endif
-
-                /* Break if we should stop here. */
-                par_ret = _layout_par(c);
-
-                ppar_lines(c->par);
-
-                if (par_ret)
-                  {
-                     if (par_ret != 3)
-                       {
-                          done = EINA_TRUE;
-                       }
-                     last_vis_par = c->par;
-                     break;
-                  }
-
-                if ((par_index_pos < TEXTBLOCK_PAR_INDEX_SIZE) && (--par_count == 0))
-                  {
-                     par_count = par_index_step;
-
-                     c->o->par_index[par_index_pos++] = c->par;
-                  }
+                last_vis_par = c->par;
+                break;
              }
 
-           /* Get the last visible paragraph in the layout */
-           if (!last_vis_par && c->paragraphs)
-              last_vis_par = (Evas_Object_Textblock_Paragraph *)
-                 EINA_INLIST_GET(c->paragraphs)->last;
-
-
-           if (last_vis_par)
+           if ((par_index_pos < TEXTBLOCK_PAR_INDEX_SIZE) && (--par_count == 0))
              {
-                c->hmax = last_vis_par->y + last_vis_par->h +
-                   _layout_last_line_max_descent_adjust_calc(c, last_vis_par);
-             }
+                par_count = par_index_step;
 
-           /* Vertically align the textblock */
-           if ((o->valign > 0.0) && (c->h > c->hmax))
-             {
-                Evas_Coord adjustment = (c->h - c->hmax) * o->valign;
-                Evas_Object_Textblock_Paragraph *par;
-                EINA_INLIST_FOREACH(c->paragraphs, par)
-                  {
-                     par->y += adjustment;
-                  }
+                c->o->par_index[par_index_pos++] = c->par;
              }
-           if (c->oext)
-             {
-                c->oext->formatted.w = c->wmax;
-                c->oext->formatted.h = c->hmax;
-                _evas_textblock_extension_changed(c->oext, c->obj);
-             }
-           else if (!done && c->par)
-             {
-                /* Move to next context, if extensions exist.
-                 * Note: We do not need to allocate space for the
-                 * new context. We only store the first context
-                 * in ctxt_tmp, and then restore it.
-                 * The context. */
-                Evas_Object *next_o = eina_list_data_get(c->lext);
-                c->lext = eina_list_next(c->lext);
-                /* Saving the master object's ctxt */
-                save_ctxt = ctxt;
+        }
 
-                if (_ctxt_new(c, next_o))
-                   extended = EINA_TRUE;
-             }
-        } while (!done && c->par);
-   }
-
- /* Clear the rest of the paragraphs and mark as invisible */
- if (c->par)
-   {
-      c->par = (Evas_Object_Textblock_Paragraph *)
-         EINA_INLIST_GET(c->par)->next;
-      while (c->par)
+      /* Clear the rest of the paragraphs and mark as invisible */
+      if (c->par)
         {
-           c->par->visible = 0;
-           _paragraph_clear(c->par);
            c->par = (Evas_Object_Textblock_Paragraph *)
               EINA_INLIST_GET(c->par)->next;
+           while (c->par)
+             {
+                c->par->visible = 0;
+                _paragraph_clear(c->par);
+                c->par = (Evas_Object_Textblock_Paragraph *)
+                   EINA_INLIST_GET(c->par)->next;
+             }
+        }
+
+      /* Get the last visible paragraph in the layout */
+      if (!last_vis_par && c->paragraphs)
+         last_vis_par = (Evas_Object_Textblock_Paragraph *)
+            EINA_INLIST_GET(c->paragraphs)->last;
+
+      if (last_vis_par)
+        {
+           c->hmax = last_vis_par->y + last_vis_par->h +
+              _layout_last_line_max_descent_adjust_calc(c, last_vis_par);
         }
    }
-
- /* Mark the rest of the extensions as changed.
-  * Also, the paragraphs they store are allocated copies, so need to be freed. */
- while (c->lext)
-   {
-      Evas_Object *ext_eo = eina_list_data_get(c->lext);
-      Evas_Textblock_Extension_Data *ext_obj = eo_data_scope_get(ext_eo, EVAS_TEXTBLOCK_EXTENSION_CLASS);
-      _evas_textblock_extension_changed(ext_obj, ext_eo);
-      c->lext = eina_list_next(c->lext);
-   }
-
- /* Restore ctxt of main textblock */
- if (c->oext) /* implies we had extended */
-   {
-      Evas_Textblock_Extension_Data *tmp = c->oext;
-      ctxt = save_ctxt;
-      c->oext = tmp;
-   }
-
-   if (w_ret) *w_ret = c->wmax;
-   if (h_ret) *h_ret = c->hmax;
 
    /* Clean the rest of the format stack */
    while (c->format_stack)
@@ -5983,21 +5892,30 @@ _layout(const Evas_Object *eo_obj, int w, int h, int *w_ret, int *h_ret)
         _format_unref_free(c->obj, c->fmt);
      }
 
-   /* XXX: leaving it out of the scope of the "extension" logic, as am not
-    * pretty sure of the intention of this */
-   if (!c->oext)
+   if (w_ret) *w_ret = c->wmax;
+   if (h_ret) *h_ret = c->hmax;
+
+   /* Vertically align the textblock */
+   if ((o->valign > 0.0) && (c->h > c->hmax))
      {
-        if ((o->style_pad.l != style_pad_l) || (o->style_pad.r != style_pad_r) ||
-              (o->style_pad.t != style_pad_t) || (o->style_pad.b != style_pad_b))
+        Evas_Coord adjustment = (c->h - c->hmax) * o->valign;
+        Evas_Object_Textblock_Paragraph *par;
+        EINA_INLIST_FOREACH(c->paragraphs, par)
           {
-             o->style_pad.l = style_pad_l;
-             o->style_pad.r = style_pad_r;
-             o->style_pad.t = style_pad_t;
-             o->style_pad.b = style_pad_b;
-             _paragraphs_clear(c->paragraphs);
-             LYDBG("ZZ: ... layout #2\n");
-             _layout(eo_obj, w, h, w_ret, h_ret);
+             par->y += adjustment;
           }
+     }
+
+   if ((o->style_pad.l != style_pad_l) || (o->style_pad.r != style_pad_r) ||
+         (o->style_pad.t != style_pad_t) || (o->style_pad.b != style_pad_b))
+     {
+        o->style_pad.l = style_pad_l;
+        o->style_pad.r = style_pad_r;
+        o->style_pad.t = style_pad_t;
+        o->style_pad.b = style_pad_b;
+        _paragraphs_clear(c->paragraphs);
+        LYDBG("ZZ: ... layout #2\n");
+        _layout(eo_obj, w, h, w_ret, h_ret);
      }
    c->o->obstacle_changed = EINA_FALSE;
 }

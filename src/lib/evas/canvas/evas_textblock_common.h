@@ -9,8 +9,6 @@
 
 typedef struct _Evas_Object_Textblock_Extension Evas_Textblock_Extension_Data;
 
-/* Size of the index array */
-#define TEXTBLOCK_PAR_INDEX_SIZE 10
 /**
  * @internal
  * @typedef Evas_Object_Textblock_Paragraph
