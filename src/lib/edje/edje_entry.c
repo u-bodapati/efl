@@ -1394,6 +1394,7 @@ _compose_seq_reset(Entry *en)
    en->composing = EINA_FALSE;
 }
 
+
 static void
 _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info)
 {
@@ -1401,7 +1402,7 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
    Evas_Event_Key_Down *ev = event_info;
    Edje_Real_Part *rp = ed->focused_part;
    Entry *en;
-   Eina_Bool control, alt, shift;
+   Eina_Bool control, alt, shift, apple_cmd, apple;
    Eina_Bool multiline;
    Eina_Bool cursor_changed;
    int old_cur_pos;
@@ -1436,10 +1437,21 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
    old_cur_pos = evas_textblock_cursor_pos_get(en->cursor);
 
    control = evas_key_modifier_is_set(ev->modifiers, "Control");
+#if HAVE_ECORE_COCOA
+# define ACTION_KEY_PRESSED (apple_cmd == EINA_TRUE)
+   apple_cmd = (evas_key_modifier_is_set(ev->modifiers, "Super") &&
+                evas_key_modifier_is_set(ev->modifiers, "Hyper"));
+   apple = EINA_TRUE;
+#else
+# define ACTION_KEY_PRESSED (control == EINA_TRUE)
+   apple_cmd = EINA_FALSE;
+   apple = EINA_FALSE;
+#endif
    alt = evas_key_modifier_is_set(ev->modifiers, "Alt");
    shift = evas_key_modifier_is_set(ev->modifiers, "Shift");
    multiline = rp->part->multiline;
    cursor_changed = EINA_FALSE;
+
    if (!strcmp(ev->key, "Escape"))
      {
         _compose_seq_reset(en);
@@ -1598,7 +1610,8 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
    else if (!strcmp(ev->key, "BackSpace"))
      {
         _compose_seq_reset(en);
-        if (control && !en->have_selection)
+        if (((!apple && control) || (apple && alt)) &&
+            (!en->have_selection))
           {
              // del to start of previous word
              _sel_start(en->cursor, rp->object, en);
@@ -1637,7 +1650,7 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
             (!strcmp(ev->key, "KP_Delete") && !ev->string))
      {
         _compose_seq_reset(en);
-        if (control)
+        if ((!apple && control) || (apple && alt))
           {
              // del to end of next word
              _sel_start(en->cursor, rp->object, en);
@@ -1713,14 +1726,14 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
         _edje_emit(ed, "cursor,changed,manual", rp->part->name);
         ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
      }
-   else if ((control) && (!shift) && (!strcmp(ev->keyname, "v")))
+   else if (ACTION_KEY_PRESSED && (!shift) && (!strcmp(ev->keyname, "v")))
      {
         _compose_seq_reset(en);
         _edje_emit(ed, "entry,paste,request", rp->part->name);
         _edje_emit(ed, "entry,paste,request,3", rp->part->name);
         ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
      }
-   else if ((control) && (!strcmp(ev->keyname, "a")))
+   else if (ACTION_KEY_PRESSED && (!strcmp(ev->keyname, "a")))
      {
         _compose_seq_reset(en);
         if (shift)
@@ -1734,19 +1747,19 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
              ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
           }
      }
-   else if ((control) && (((!shift) && !strcmp(ev->keyname, "c")) || !strcmp(ev->key, "Insert")))
+   else if (ACTION_KEY_PRESSED && (((!shift) && !strcmp(ev->keyname, "c")) || !strcmp(ev->key, "Insert")))
      {
         _compose_seq_reset(en);
         _edje_emit(ed, "entry,copy,notify", rp->part->name);
         ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
      }
-   else if ((control) && (!shift) && ((!strcmp(ev->keyname, "x") || (!strcmp(ev->keyname, "m")))))
+   else if (ACTION_KEY_PRESSED && (!shift) && ((!strcmp(ev->keyname, "x") || (!strcmp(ev->keyname, "m")))))
      {
         _compose_seq_reset(en);
         _edje_emit(ed, "entry,cut,notify", rp->part->name);
         ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
      }
-   else if ((control) && (!strcmp(ev->keyname, "z")))
+   else if (ACTION_KEY_PRESSED && (!strcmp(ev->keyname, "z")))
      {
         _compose_seq_reset(en);
         if (shift)
@@ -1761,7 +1774,8 @@ _edje_key_down_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
           }
         ev->event_flags |= EVAS_EVENT_FLAG_ON_HOLD;
      }
-   else if ((control) && (!shift) && (!strcmp(ev->keyname, "y")))
+   else if (((!apple) && (control) && (!shift) && (!strcmp(ev->keyname, "y"))) ||
+            ((apple) && ACTION_KEY_PRESSED && (shift) && (!strcmp(ev->keyname, "z"))))
      {
         _compose_seq_reset(en);
         // redo
