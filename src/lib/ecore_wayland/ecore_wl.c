@@ -127,6 +127,64 @@ _ecore_wl_init_wait(void)
      }
 }
 
+
+static void
+_ecore_wl_reconnect(void)
+{
+   int reconnect_count;
+   printf("***MOEP: %s\n", __func__);
+
+#if 0
+// wl_display_flush(_ecore_wl_disp->wl.display);
+   wl_display_disconnect(_ecore_wl_disp->wl.display);
+   free(_ecore_wl_disp);
+   if (!(_ecore_wl_disp = calloc(1, sizeof(Ecore_Wl_Display))))
+     {
+	printf("***MOEP: failed to newly allocate ecore_wl_disp\n");
+     }
+#else
+   ecore_wl_shutdown();
+#endif
+   printf("***MOEP: %s fd: %i\n", __func__, _ecore_wl_disp->fd);
+
+   for (reconnect_count = 0; reconnect_count < 5; reconnect_count++)
+     {
+        printf("***MOEP: %s loop %i\n", __func__, reconnect_count);
+        sleep(3); // Sleep for 3s
+#if 0
+        _ecore_wl_disp->wl.display = wl_display_connect(NULL);
+        if (_ecore_wl_disp->wl.display == NULL)
+          {
+             printf("***MOEP: DISPLAY still NULL after new connect\n");
+             continue;
+	  }
+        _ecore_wl_disp->fd = wl_display_get_fd(_ecore_wl_disp->wl.display);
+        _ecore_wl_disp->init_done = EINA_TRUE;
+#else
+        ecore_wl_init(NULL);
+#endif
+	printf("***MOEP: %s fd: %i\n", __func__, _ecore_wl_disp->fd);
+
+        if (_ecore_wl_init_count >= 1)
+          break;
+     }
+   /* In case reconnect fails exit as before */
+   if (reconnect_count >= 4)
+     {
+        _ecore_wl_signal_exit();
+        return;
+     }
+   else
+     {
+        return;
+        // Provide already assigned uuid
+        //if (pixmap->uuid)
+        //  session_recovery_provide_uuid(_ecore_wl_disp->wl.session_recovery, pixmap->uuid)
+        //printf("***MOEP: %s  before dispatch\n", __func__);
+        //_ecore_wl_init_wait();
+     }
+}
+
 EAPI int
 ecore_wl_init(const char *name)
 {
@@ -614,11 +672,13 @@ _ecore_wl_cb_idle_enterer(void *data)
 err:
    if ((ret < 0) && ((errno != EAGAIN) && (errno != EINVAL)))
      {
-        _ecore_wl_fatal_error = EINA_TRUE;
+        _ecore_wl_fatal_error = EINA_FALSE;
 
         /* raise exit signal */
         ERR("Wayland socket error: %s", strerror(errno));
-        _ecore_wl_signal_exit();
+        printf("***MOEP: calling signal exit in %s\n", __func__);
+        _ecore_wl_reconnect();
+        //_ecore_wl_signal_exit();
 
         return ECORE_CALLBACK_CANCEL;
      }
@@ -642,8 +702,10 @@ _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl)
    if (ecore_main_fd_handler_active_get(hdl, ECORE_FD_ERROR))
      {
         ERR("Received error on wayland display fd");
-        _ecore_wl_fatal_error = EINA_TRUE;
-        _ecore_wl_signal_exit();
+        _ecore_wl_fatal_error = EINA_FALSE;
+        //_ecore_wl_reconnect();
+        printf("***MOEP: calling signal exit in %s 1\n", __func__);
+        //_ecore_wl_signal_exit();
 
         return ECORE_CALLBACK_CANCEL;
      }
@@ -661,10 +723,11 @@ _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl)
 
    if ((ret < 0) && ((errno != EAGAIN) && (errno != EINVAL)))
      {
-        _ecore_wl_fatal_error = EINA_TRUE;
+        _ecore_wl_fatal_error = EINA_FALSE;
 
-        /* raise exit signal */
-        _ecore_wl_signal_exit();
+        printf("***MOEP: calling signal exit in %s 2\n", __func__);
+        _ecore_wl_reconnect();
+        //_ecore_wl_signal_exit();
 
         return ECORE_CALLBACK_CANCEL;
      }
