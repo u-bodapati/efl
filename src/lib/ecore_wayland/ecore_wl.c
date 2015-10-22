@@ -69,6 +69,7 @@ static const struct wl_callback_listener _ecore_wl_anim_listener =
 static void
 xdg_shell_ping(void *data EINA_UNUSED, struct xdg_shell *shell, uint32_t serial)
 {
+   printf("***MOEP: %s\n", __func__);
    xdg_shell_pong(shell, serial);
 }
 
@@ -101,6 +102,7 @@ EAPI int ECORE_WL_EVENT_INTERFACES_BOUND = 0;
 static void
 _ecore_wl_init_callback(void *data, struct wl_callback *callback, uint32_t serial EINA_UNUSED)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd = data;
 
    wl_callback_destroy(callback);
@@ -111,6 +113,7 @@ static void
 _ecore_wl_init_wait(void)
 {
    int ret;
+   printf("***MOEP: %s\n", __func__);
    while (!_ecore_wl_disp->init_done)
      {
         ret = wl_display_dispatch(_ecore_wl_disp->wl.display);
@@ -127,6 +130,8 @@ _ecore_wl_init_wait(void)
 EAPI int
 ecore_wl_init(const char *name)
 {
+   printf("***MOEP: %s\n", __func__);
+   printf("***MOEP: %s wl_init count %i\n", __func__, _ecore_wl_init_count);
    struct wl_callback *callback;
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
@@ -188,6 +193,8 @@ ecore_wl_init(const char *name)
 
    _ecore_wl_disp->fd = wl_display_get_fd(_ecore_wl_disp->wl.display);
 
+   printf("***MOEP: %s fd: %i\n", __func__, _ecore_wl_disp->fd);
+
    _ecore_wl_disp->fd_hdl =
      ecore_main_fd_handler_add(_ecore_wl_disp->fd,
                                ECORE_FD_READ | ECORE_FD_WRITE | ECORE_FD_ERROR,
@@ -243,6 +250,7 @@ exit_eina:
 EAPI int
 ecore_wl_shutdown(void)
 {
+   printf("***MOEP: %s\n", __func__);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    return _ecore_wl_shutdown(EINA_TRUE);
@@ -251,6 +259,7 @@ ecore_wl_shutdown(void)
 EAPI void
 ecore_wl_flush(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display)) return;
    wl_display_flush(_ecore_wl_disp->wl.display);
 }
@@ -259,6 +268,7 @@ EAPI void
 ecore_wl_sync(void)
 {
    int ret;
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display)) return;
    _ecore_wl_sync_wait(_ecore_wl_disp);
    while (_ecore_wl_disp->sync_ref_count > 0)
@@ -277,6 +287,7 @@ ecore_wl_sync(void)
 EAPI struct wl_shm *
 ecore_wl_shm_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if (!_ecore_wl_disp) return NULL;
 
    _ecore_wl_init_wait();
@@ -287,6 +298,7 @@ ecore_wl_shm_get(void)
 EAPI struct wl_display *
 ecore_wl_display_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display))
      return NULL;
    return _ecore_wl_disp->wl.display;
@@ -295,6 +307,7 @@ ecore_wl_display_get(void)
 EAPI Eina_Inlist *
 ecore_wl_globals_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display))
      return NULL;
 
@@ -306,6 +319,7 @@ ecore_wl_globals_get(void)
 EAPI struct wl_registry *
 ecore_wl_registry_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display))
      return NULL;
    return _ecore_wl_disp->wl.registry;
@@ -314,6 +328,7 @@ ecore_wl_registry_get(void)
 struct wl_compositor *
 _ecore_wl_compositor_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display))
      return NULL;
 
@@ -325,6 +340,7 @@ _ecore_wl_compositor_get(void)
 struct wl_subcompositor *
 _ecore_wl_subcompositor_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display))
      return NULL;
 
@@ -336,6 +352,7 @@ _ecore_wl_subcompositor_get(void)
 EAPI void
 ecore_wl_screen_size_get(int *w, int *h)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Output *out;
    Eina_Inlist *tmp;
    int ow = 0, oh = 0;
@@ -383,6 +400,7 @@ ecore_wl_screen_size_get(int *w, int *h)
 EAPI void
 ecore_wl_pointer_xy_get(int *x, int *y)
 {
+   printf("***MOEP: %s\n", __func__);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    _ecore_wl_input_pointer_xy_get(x, y);
@@ -391,6 +409,7 @@ ecore_wl_pointer_xy_get(int *x, int *y)
 EAPI int
 ecore_wl_dpi_get(void)
 {
+   printf("***MOEP: %s\n", __func__);
    int w, mw;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
@@ -414,6 +433,7 @@ EAPI void
 ecore_wl_display_iterate(void)
 {
    int ret;
+   printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->wl.display)) return;
    if (!_ecore_wl_server_mode)
      {
@@ -431,6 +451,7 @@ ecore_wl_display_iterate(void)
 EAPI Eina_Bool
 ecore_wl_animator_source_set(Ecore_Animator_Source source)
 {
+   //printf("***MOEP: %s\n", __func__);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (_ecore_wl_server_mode) return EINA_FALSE;
@@ -463,6 +484,7 @@ ecore_wl_animator_source_set(Ecore_Animator_Source source)
 EAPI struct wl_cursor *
 ecore_wl_cursor_get(const char *cursor_name)
 {
+   //printf("***MOEP: %s\n", __func__);
    if ((!_ecore_wl_disp) || (!_ecore_wl_disp->cursor_theme))
      return NULL;
 
@@ -473,6 +495,7 @@ ecore_wl_cursor_get(const char *cursor_name)
 EAPI void
 ecore_wl_server_mode_set(Eina_Bool on)
 {
+   printf("***MOEP: %s\n", __func__);
    _ecore_wl_server_mode = on;
 }
 
@@ -480,8 +503,10 @@ ecore_wl_server_mode_set(Eina_Bool on)
 static int
 _ecore_wl_shutdown(Eina_Bool close)
 {
+   printf("***MOEP: %s\n", __func__);
+   printf("***MOEP: %s wl_init count %i\n", __func__, _ecore_wl_init_count);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
+#if 1
    if (_ecore_wl_init_count < 1)
      {
         ERR("Ecore_Wayland Shutdown called without Ecore_Wayland Init");
@@ -490,7 +515,7 @@ _ecore_wl_shutdown(Eina_Bool close)
 
    if (--_ecore_wl_init_count != 0) return _ecore_wl_init_count;
    if (!_ecore_wl_disp) return _ecore_wl_init_count;
-
+#endif
    _ecore_wl_events_shutdown();
    _ecore_wl_window_shutdown();
 
@@ -501,6 +526,7 @@ _ecore_wl_shutdown(Eina_Bool close)
 
    if ((close) && (!_ecore_wl_fatal_error))
      {
+   	printf("***MOEP: %s entering wayland connection teardown\n", __func__);
         Ecore_Wl_Output *out;
         Ecore_Wl_Input *in;
         Ecore_Wl_Global *global;
@@ -564,6 +590,7 @@ _ecore_wl_shutdown(Eina_Bool close)
 static Eina_Bool
 _ecore_wl_cb_idle_enterer(void *data)
 {
+   //printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd;
    int ret = 0;
 
@@ -602,6 +629,7 @@ err:
 static Eina_Bool
 _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl)
 {
+   //printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd;
    int ret = 0;
 
@@ -647,6 +675,7 @@ _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl)
 static void
 _ecore_wl_cb_handle_global(void *data, struct wl_registry *registry, unsigned int id, const char *interface, unsigned int version)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd;
    Ecore_Wl_Global *global;
 
@@ -751,6 +780,7 @@ _ecore_wl_cb_handle_global(void *data, struct wl_registry *registry, unsigned in
 static void
 _ecore_wl_cb_handle_global_remove(void *data, struct wl_registry *registry EINA_UNUSED, unsigned int id)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd;
    Ecore_Wl_Global *global;
    Eina_Inlist *tmp;
@@ -772,6 +802,7 @@ _ecore_wl_cb_handle_global_remove(void *data, struct wl_registry *registry EINA_
 static Eina_Bool
 _ecore_wl_xkb_init(Ecore_Wl_Display *ewd)
 {
+   //printf("***MOEP: %s\n", __func__);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (!(ewd->xkb.context = xkb_context_new(0)))
@@ -783,6 +814,7 @@ _ecore_wl_xkb_init(Ecore_Wl_Display *ewd)
 static Eina_Bool
 _ecore_wl_xkb_shutdown(Ecore_Wl_Display *ewd)
 {
+   //printf("***MOEP: %s\n", __func__);
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    xkb_context_unref(ewd->xkb.context);
@@ -793,6 +825,7 @@ _ecore_wl_xkb_shutdown(Ecore_Wl_Display *ewd)
 static void
 _ecore_wl_sync_callback(void *data, struct wl_callback *callback, uint32_t serial EINA_UNUSED)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Display *ewd = data;
 
    ewd->sync_ref_count--;
@@ -802,6 +835,7 @@ _ecore_wl_sync_callback(void *data, struct wl_callback *callback, uint32_t seria
 static void
 _ecore_wl_sync_wait(Ecore_Wl_Display *ewd)
 {
+   printf("***MOEP: %s\n", __func__);
    struct wl_callback *callback;
 
    ewd->sync_ref_count++;
@@ -812,6 +846,7 @@ _ecore_wl_sync_wait(Ecore_Wl_Display *ewd)
 static void
 _ecore_wl_animator_tick_cb_begin(void *data EINA_UNUSED)
 {
+   //printf("***MOEP: %s\n", __func__);
    Eina_Hash *windows;
 
    _ecore_wl_animator_busy = EINA_TRUE;
@@ -823,12 +858,14 @@ _ecore_wl_animator_tick_cb_begin(void *data EINA_UNUSED)
 static void
 _ecore_wl_animator_tick_cb_end(void *data EINA_UNUSED)
 {
+   //printf("***MOEP: %s\n", __func__);
    _ecore_wl_animator_busy = EINA_FALSE;
 }
 
 static void
 _ecore_wl_animator_callback(void *data, struct wl_callback *callback, uint32_t serial EINA_UNUSED)
 {
+   //printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Window *win;
 
    if (!(win = data)) return;
@@ -850,6 +887,7 @@ _ecore_wl_animator_callback(void *data, struct wl_callback *callback, uint32_t s
 static Eina_Bool
 _ecore_wl_animator_window_add(const Eina_Hash *hash EINA_UNUSED, const void *key EINA_UNUSED, void *data, void *fdata EINA_UNUSED)
 {
+   //printf("***MOEP: %s\n", __func__);
    Ecore_Wl_Window *win;
 
    if (!(win = data)) return EINA_TRUE;
@@ -866,6 +904,7 @@ _ecore_wl_animator_window_add(const Eina_Hash *hash EINA_UNUSED, const void *key
 static void
 _ecore_wl_signal_exit(void)
 {
+   printf("***MOEP: %s\n", __func__);
    Ecore_Event_Signal_Exit *ev;
 
    if (!(ev = calloc(1, sizeof(Ecore_Event_Signal_Exit))))
@@ -879,5 +918,6 @@ _ecore_wl_signal_exit(void)
 static void
 _ecore_wl_signal_exit_free(void *data EINA_UNUSED, void *event)
 {
+   printf("***MOEP: %s\n", __func__);
    free(event);
 }
