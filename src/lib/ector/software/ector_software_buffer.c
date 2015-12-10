@@ -134,7 +134,7 @@ _ector_software_buffer_base_ector_generic_buffer_pixels_set(Eo *obj, Ector_Softw
 
 EOLIAN static void *
 _ector_software_buffer_base_ector_generic_buffer_map(Eo *obj EINA_UNUSED, Ector_Software_Buffer_Base_Data *pd,
-                                                     unsigned int *length, Ector_Buffer_Access_Flag mode EINA_UNUSED,
+                                                     unsigned int *length, Ector_Buffer_Access_Flag mode,
                                                      unsigned int x, unsigned int y, unsigned int w, unsigned int h,
                                                      Efl_Gfx_Colorspace cspace EINA_UNUSED, unsigned int *stride)
 {
@@ -147,6 +147,8 @@ _ector_software_buffer_base_ector_generic_buffer_map(Eo *obj EINA_UNUSED, Ector_
    if (!w || !h || ((x + w) > pd->generic->w) || (y + h > pd->generic->h))
      fail("Invalid region requested: wanted %u,%u %ux%u but image is %ux%u",
           x, y, w, h, pd->generic->w, pd->generic->h);
+   if ((mode & ECTOR_BUFFER_ACCESS_FLAG_WRITE) && !pd->writable)
+     fail("can not map a read-only buffer for writing");
 
    pd->map_count++;
    off = _min_stride_calc(x + pd->generic->l, pd->generic->cspace) + (pd->stride * (y + pd->generic->t));
