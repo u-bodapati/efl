@@ -1,0 +1,33 @@
+class Ector.Gl.Buffer.Fbo (Eo.Base, Ector.Generic.Buffer)
+{
+   legacy_prefix: null;
+   methods {
+      generate {
+         [[Create a new FBO from scratch given its size]]
+         params {
+            width:  int;
+            height: int;
+            bgra:   bool; [[Evas should know whether BGRA is supported or not]]
+         }
+         return: bool; [[$true in case of success]]
+      }
+      attach {
+         [[Attach to an existing FBO. Beware of other references.]]
+         params {
+            fbo: uint;
+         }
+         return: bool;
+      }
+   }
+   implements {
+      Eo.Base.constructor;
+      Eo.Base.finalize;
+      Eo.Base.destructor;
+      Ector.Generic.Buffer.map;
+      Ector.Generic.Buffer.unmap;
+      Ector.Generic.Buffer.pixels_set;
+      Ector.Generic.Buffer.span_get;
+      Ector.Generic.Buffer.span_free;
+      Ector.Generic.Buffer.flags.get;
+   }
+}

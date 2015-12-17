@@ -13,8 +13,10 @@ typedef Eo Ector_Cairo_Surface;
 typedef unsigned int GLuint;
 typedef short        GLshort;
 
-#include "gl/ector_gl_buffer.eo.h"
 #include "gl/ector_gl_buffer_base.eo.h"
+#include "gl/ector_gl_buffer_tex.eo.h"
+#include "gl/ector_gl_buffer_fbo.eo.h"
+#include "gl/ector_gl_buffer.eo.h"
 #include "gl/ector_gl_surface.eo.h"
 #include "gl/ector_renderer_gl_base.eo.h"
 #include "gl/ector_renderer_gl_shape.eo.h"

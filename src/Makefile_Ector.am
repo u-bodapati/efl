@@ -38,6 +38,8 @@ ector_eolian_files_gl = \
 	lib/ector/gl/ector_gl_surface.eo \
 	lib/ector/gl/ector_gl_buffer.eo \
 	lib/ector/gl/ector_gl_buffer_base.eo \
+	lib/ector/gl/ector_gl_buffer_fbo.eo \
+	lib/ector/gl/ector_gl_buffer_tex.eo \
 	lib/ector/gl/ector_renderer_gl_base.eo \
 	lib/ector/gl/ector_renderer_gl_shape.eo \
 	lib/ector/gl/ector_renderer_gl_gradient_radial.eo \
@@ -134,6 +136,9 @@ lib/ector/gl/ector_renderer_gl_gradient_radial.c \
 lib/ector/gl/ector_renderer_gl_shape.c \
 lib/ector/gl/ector_renderer_gl_base.c \
 lib/ector/gl/ector_gl_buffer.c \
+lib/ector/gl/ector_gl_buffer_base.c \
+lib/ector/gl/ector_gl_buffer_tex.c \
+lib/ector/gl/ector_gl_buffer_fbo.c \
 lib/ector/gl/ector_gl_surface.c \
 lib/ector/gl/ector_gl_private.h \
 lib/ector/gl/shader/ector_gl_shaders.x \

@@ -1,0 +1,37 @@
+class Ector.Gl.Buffer.Tex (Eo.Base, Ector.Generic.Buffer)
+{
+   legacy_prefix: null;
+   methods {
+      attach {
+         [[Attach to an existing texture. Beware of other references.]]
+         params {
+            tex: uint;
+            width: int;
+            height: int;
+            l: int;
+            r: int;
+            t: int;
+            b: int;
+            tex_x: int; [[Coordinate inside the texture atlas]]
+            tex_y: int; [[Coordinate inside the texture atlas]]
+            tex_w: int; [[Coordinate inside the texture atlas]]
+            tex_h: int; [[Coordinate inside the texture atlas]]
+            atlas_w: int; [[Size of the texture atlas]]
+            atlas_h: int; [[Size of the texture atlas]]
+            cspace: Efl.Gfx.Colorspace;
+         }
+         return: bool;
+      }
+   }
+   implements {
+      Eo.Base.constructor;
+      Eo.Base.finalize;
+      Eo.Base.destructor;
+      Ector.Generic.Buffer.map;
+      Ector.Generic.Buffer.unmap;
+      Ector.Generic.Buffer.pixels_set;
+      Ector.Generic.Buffer.span_get;
+      Ector.Generic.Buffer.span_free;
+      Ector.Generic.Buffer.flags.get;
+   }
+}
