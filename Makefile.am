@@ -240,6 +240,10 @@ if HAVE_ECORE_DRM
 pkgconfig_DATA += pc/ecore-drm.pc
 endif
 
+if HAVE_ECORE_DRM2
+pkgconfig_DATA += pc/ecore-drm2.pc
+endif
+
 if HAVE_PS3
 pkgconfig_DATA += pc/ecore-psl1ght.pc
 endif

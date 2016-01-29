@@ -5177,6 +5177,7 @@ pc/ecore-input.pc
 pc/ecore-input-evas.pc
 pc/ecore-cocoa.pc
 pc/ecore-drm.pc
+pc/ecore-drm2.pc
 pc/ecore-fb.pc
 pc/ecore-psl1ght.pc
 pc/ecore-sdl.pc
