@@ -26,7 +26,20 @@
 #  endif // ifdef __GNUC__
 # endif // ifdef _MSC_VER
 
+/**
+ * @file
+ * @brief Ecore functions for dealing with drm, virtual terminals
+ *
+ * @defgroup Ecore_Drm2_Group Ecore_Drm2 - Drm Integration
+ * @ingroup Ecore
+ *
+ * Ecore_Drm2 provides a wrapper and functions for using libdrm
+ *
+ * @li @ref Ecore_Drm2_Init_Group
+ *
+ */
 
+EAPI int ecore_drm2_init(void);
 
 # undef EAPI
 # define EAPI

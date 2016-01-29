@@ -7,10 +7,16 @@
 
 # include "Ecore.h"
 # include "ecore_private.h"
-
+# include "Ecore_Input.h"
+# include "Eeze.h"
 # include <Ecore_Drm2.h>
 
 extern int _ecore_drm2_log_dom;
+
+# ifdef ECORE_DRM2_DEFAULT_LOG_COLOR
+#  undef ECORE_DRM2_DEFAULT_LOG_COLOR
+# endif
+# define ECORE_DRM2_DEFAULT_LOG_COLOR EINA_COLOR_BLUE
 
 # ifdef ERR
 #  undef ERR
