@@ -4,20 +4,6 @@ static int _ecore_drm2_init_count = 0;
 
 int _ecore_drm2_log_dom = -1;
 
-/**
- * @defgroup Ecore_Drm2_Init_Group Drm library Init and Shutdown functions
- *
- * Functions that start and shutdown the Ecore_Drm2 library
- */
-
-/**
- * Initialize the Ecore_Drm2 library
- *
- * @return  The number of times the library has been initialized without
- *          being shut down. 0 is returned if an error occurs.
- *
- * @ingroup Ecore_Drm2_Init_Group
- */
 EAPI int
 ecore_drm2_init(void)
 {
@@ -65,14 +51,6 @@ eina_err:
    return --_ecore_drm2_init_count;
 }
 
-/**
- * Shutdown the Ecore_Drm2 library.
- *
- * @return  The number of times the library has been initialized without
- *          being shutdown. 0 is returned if an error occurs.
- *
- * @ingroup Ecore_Drm2_Init_Group
- */
 EAPI int
 ecore_drm2_shutdown(void)
 {
