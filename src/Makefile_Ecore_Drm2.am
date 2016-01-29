@@ -4,7 +4,7 @@ if HAVE_ECORE_DRM2
 
 lib_LTLIBRARIES += lib/ecore_drm2/libecore_drm2.la
 
-installed_ecoredrmmainheadersdir = $(includedir)/ecore-drm2-@VMAJ@
+installed_ecoredrm2mainheadersdir = $(includedir)/ecore-drm2-@VMAJ@
 dist_installed_ecoredrm2mainheaders_DATA = \
   lib/ecore_drm2/Ecore_Drm2.h
 
