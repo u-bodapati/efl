@@ -40,6 +40,7 @@
  */
 
 EAPI int ecore_drm2_init(void);
+EAPI int ecore_drm2_shutdown(void);
 
 # undef EAPI
 # define EAPI

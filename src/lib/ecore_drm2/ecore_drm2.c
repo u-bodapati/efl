@@ -64,3 +64,33 @@ ecore_err:
 eina_err:
    return --_ecore_drm2_init_count;
 }
+
+/**
+ * Shutdown the Ecore_Drm2 library.
+ *
+ * @return  The number of times the library has been initialized without
+ *          being shutdown. 0 is returned if an error occurs.
+ *
+ * @ingroup Ecore_Drm2_Init_Group
+ */
+EAPI int
+ecore_drm2_shutdown(void)
+{
+   if (_ecore_drm2_init_count < 1)
+     {
+        ERR("Ecore_Drm2 shutdown called without init");
+        return 0;
+     }
+
+   if (--_ecore_drm2_init_count != 0) return _ecore_drm2_init_count;
+
+   eina_log_domain_unregister(_ecore_drm2_log_dom);
+   _ecore_drm2_log_dom = -1;
+
+   eeze_shutdown();
+   ecore_event_shutdown();
+   ecore_shutdown();
+   eina_shutdown();
+
+   return _ecore_drm2_init_count;
+}
