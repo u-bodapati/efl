@@ -26,6 +26,8 @@
 #  endif // ifdef __GNUC__
 # endif // ifdef _MSC_VER
 
+# ifdef EFL_BETA_API_SUPPORT
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals
@@ -42,7 +44,8 @@
 EAPI int ecore_drm2_init(void);
 EAPI int ecore_drm2_shutdown(void);
 
-# undef EAPI
-# define EAPI
+#  undef EAPI
+#  define EAPI
 
+# endif
 #endif
