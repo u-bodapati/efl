@@ -9,16 +9,16 @@ dist_installed_ecoredrm2mainheaders_DATA = \
   lib/ecore_drm2/Ecore_Drm2.h
 
 lib_ecore_drm2_libecore_drm2_la_SOURCES = \
+lib/ecore_drm2/ecore_drm2_launcher.c \
 lib/ecore_drm2/ecore_drm2_logind.c \
+lib/ecore_drm2/ecore_drm2_dbus.c \
 lib/ecore_drm2/ecore_drm2.c \
 lib/ecore_drm2/ecore_drm2_private.h
 
 
 lib_ecore_drm2_libecore_drm2_la_CPPFLAGS = \
   -I$(top_builddir)/src/lib/efl \
-  @ECORE_DRM2_CFLAGS@ @EFL_CFLAGS@ \
-  -DPACKAGE_LIB_DIR=\"$(libdir)\" \
-  -DMODULE_ARCH=\"$(MODULE_ARCH)\"
+  @ECORE_DRM2_CFLAGS@
 
 lib_ecore_drm2_libecore_drm2_la_LIBADD = @ECORE_DRM2_LIBS@
 if HAVE_SYSTEMD
