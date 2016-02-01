@@ -9,6 +9,7 @@
 # include "ecore_private.h"
 # include "Ecore_Input.h"
 # include "Eeze.h"
+# include "Eldbus.h"
 # include <Ecore_Drm2.h>
 
 extern int _ecore_drm2_log_dom;
@@ -62,8 +63,18 @@ struct _Ecore_Drm2_Launcher
    char *sid;
    unsigned int vt_num;
 
+   struct
+     {
+        char *path;
+        Eldbus_Object *obj;
+        Eldbus_Connection *conn;
+     } dbus;
+
    Eina_Bool sync;
 };
+
+Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);
+void _ecore_drm2_dbus_close(Eldbus_Connection *conn);
 
 extern Ecore_Drm2_Interface _logind_iface;
 
