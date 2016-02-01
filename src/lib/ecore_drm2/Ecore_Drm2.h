@@ -28,6 +28,9 @@
 
 # ifdef EFL_BETA_API_SUPPORT
 
+/* opaque strucure to represent a launcher */
+typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals
@@ -38,6 +41,7 @@
  * Ecore_Drm2 provides a wrapper and functions for using libdrm
  *
  * @li @ref Ecore_Drm2_Init_Group
+ * @li @ref Ecore_Drm2_Launcher_Group
  *
  */
 
@@ -66,6 +70,23 @@ EAPI int ecore_drm2_init(void);
  * @ingroup Ecore_Drm2_Init_Group
  */
 EAPI int ecore_drm2_shutdown(void);
+
+/**
+ * @defgroup Ecore_Drm2_Launcher_Group Drm launcher functions
+ *
+ * Functions that deal with setup of launcher
+ */
+
+/**
+ * Create a launcher on the specified seat
+ *
+ * @param seat
+ * @param tty
+ * @param sync
+ *
+ * @return A Ecore_Drm2_Launcher on success, NULL on failure
+ */
+EAPI Ecore_Drm2_Launcher *ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync);
 
 #  undef EAPI
 #  define EAPI
