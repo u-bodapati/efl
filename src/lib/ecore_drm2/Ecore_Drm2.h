@@ -58,6 +58,7 @@ typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
  *          being shut down. 0 is returned if an error occurs.
  *
  * @ingroup Ecore_Drm2_Init_Group
+ * @since 1.18
  */
 EAPI int ecore_drm2_init(void);
 
@@ -68,6 +69,7 @@ EAPI int ecore_drm2_init(void);
  *          being shutdown. 0 is returned if an error occurs.
  *
  * @ingroup Ecore_Drm2_Init_Group
+ * @since 1.18
  */
 EAPI int ecore_drm2_shutdown(void);
 
@@ -85,6 +87,7 @@ EAPI int ecore_drm2_shutdown(void);
  * @param sync
  *
  * @return A Ecore_Drm2_Launcher on success, NULL on failure
+ * @since 1.18
  */
 EAPI Ecore_Drm2_Launcher *ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync);
 
