@@ -37,3 +37,15 @@ ecore_drm2_launcher_disconnect(Ecore_Drm2_Launcher *launcher)
    if (launcher->iface->disconnect)
      launcher->iface->disconnect(launcher);
 }
+
+EAPI int
+ecore_drm2_launcher_open(Ecore_Drm2_Launcher *launcher, const char *path, int flags)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, -1);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher->iface, -1);
+
+   if (launcher->iface->open)
+     return launcher->iface->open(launcher, path, flags);
+
+   return -1;
+}

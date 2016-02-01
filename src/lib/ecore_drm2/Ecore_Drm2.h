@@ -103,6 +103,20 @@ EAPI Ecore_Drm2_Launcher *ecore_drm2_launcher_connect(const char *seat, unsigned
  */
 EAPI void ecore_drm2_launcher_disconnect(Ecore_Drm2_Launcher *launcher);
 
+/**
+ * Request launcher to open a file
+ *
+ * @param launcher
+ * @param path
+ * @param flags
+ *
+ * @return
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI int ecore_drm2_launcher_open(Ecore_Drm2_Launcher *launcher, const char *path, int flags);
+
 # endif
 
 # undef EAPI
