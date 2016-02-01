@@ -93,6 +93,16 @@ EAPI int ecore_drm2_shutdown(void);
  */
 EAPI Ecore_Drm2_Launcher *ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync);
 
+/**
+ * Disconnect a launcher
+ *
+ * @param launcher
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_launcher_disconnect(Ecore_Drm2_Launcher *launcher);
+
 # endif
 
 # undef EAPI

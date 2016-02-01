@@ -27,3 +27,13 @@ ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync)
 
    return NULL;
 }
+
+EAPI void
+ecore_drm2_launcher_disconnect(Ecore_Drm2_Launcher *launcher)
+{
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+   EINA_SAFETY_ON_NULL_RETURN(launcher->iface);
+
+   if (launcher->iface->disconnect)
+     launcher->iface->disconnect(launcher);
+}
