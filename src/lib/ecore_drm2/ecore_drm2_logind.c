@@ -6,6 +6,7 @@
 
 #ifdef HAVE_SYSTEMD
 # include <unistd.h>
+# include <fcntl.h>
 # include <systemd/sd-login.h>
 
 static void
@@ -161,6 +162,78 @@ _logind_control_release(Ecore_Drm2_Launcher *launcher)
         ERR("Could not create method call for proxy");
         goto end;
      }
+
+   eldbus_proxy_send(proxy, msg, NULL, NULL, -1);
+
+end:
+   eldbus_proxy_unref(proxy);
+}
+
+static int
+_logind_device_take(Ecore_Drm2_Launcher *launcher, uint32_t major, uint32_t minor)
+{
+   Eldbus_Proxy *proxy;
+   Eldbus_Message *msg, *reply;
+   Eina_Bool p = EINA_FALSE;
+   const char *errname, *errmsg;
+   int fd = -1;
+
+   proxy =
+     eldbus_proxy_get(launcher->dbus.obj, "org.freedesktop.login1.Session");
+   if (!proxy)
+     {
+        ERR("Could not get dbus proxy");
+        return -1;
+     }
+
+   msg = eldbus_proxy_method_call_new(proxy, "TakeDevice");
+   if (!msg)
+     {
+        ERR("Could not create method call for proxy");
+        goto err;
+     }
+
+   eldbus_message_arguments_append(msg, "uu", major, minor);
+
+   reply = eldbus_proxy_send_and_block(proxy, msg, -1);
+   if (eldbus_message_error_get(reply, &errname, &errmsg))
+     {
+        ERR("Eldbus Message Error: %s %s", errname, errmsg);
+        goto err;
+     }
+
+   if (!eldbus_message_arguments_get(reply, "hb", &fd, &p))
+     ERR("Could not get UNIX_FD from dbus message");
+
+   eldbus_message_unref(reply);
+
+err:
+   eldbus_proxy_unref(proxy);
+   return fd;
+}
+
+static void
+_logind_device_release(Ecore_Drm2_Launcher *launcher, uint32_t major, uint32_t minor)
+{
+   Eldbus_Proxy *proxy;
+   Eldbus_Message *msg;
+
+   proxy =
+     eldbus_proxy_get(launcher->dbus.obj, "org.freedesktop.login1.Session");
+   if (!proxy)
+     {
+        ERR("Could not get proxy for session");
+        return;
+     }
+
+   msg = eldbus_proxy_method_call_new(proxy, "ReleaseDevice");
+   if (!msg)
+     {
+        ERR("Could not create method call for proxy");
+        goto end;
+     }
+
+   eldbus_message_arguments_append(msg, "uu", major, minor);
 
    eldbus_proxy_send(proxy, msg, NULL, NULL, -1);
 
@@ -394,10 +467,98 @@ _logind_disconnect(Ecore_Drm2_Launcher *launcher)
    free(launcher);
 }
 
+static int
+_logind_open(Ecore_Drm2_Launcher *launcher, const char *path, int flags)
+{
+   struct stat st;
+   int ret, fd;
+   int fl;
+
+   ret = stat(path, &st);
+   if (ret < 0) return -1;
+
+   if (!S_ISCHR(st.st_mode)) return -1;
+
+   fd = _logind_device_take(launcher, major(st.st_rdev), minor(st.st_rdev));
+   if (fd < 0) return fd;
+
+   fl = fcntl(fd, F_GETFL);
+   if (fl < 0) goto err;
+
+   if (flags & O_NONBLOCK)
+     fl |= O_NONBLOCK;
+
+   ret = fcntl(fd, F_SETFL, fl);
+   if (ret < 0) goto err;
+
+   return fd;
+
+err:
+   close(fd);
+   _logind_device_release(launcher, major(st.st_rdev), minor(st.st_rdev));
+   return -1;
+}
+
+static void
+_logind_close(Ecore_Drm2_Launcher *launcher, int fd)
+{
+   struct stat st;
+   int ret;
+
+   ret = fstat(fd, &st);
+   if (ret < 0) return;
+
+   if (!S_ISCHR(st.st_mode)) return;
+
+   _logind_device_release(launcher, major(st.st_rdev), minor(st.st_rdev));
+}
+
+static int
+_logind_activate_vt(Ecore_Drm2_Launcher *launcher, int vt)
+{
+   Eldbus_Proxy *proxy;
+   Eldbus_Message *msg;
+   int ret = 0;
+
+   proxy =
+     eldbus_proxy_get(launcher->dbus.obj, "org.freedesktop.login1.Seat");
+   if (!proxy)
+     {
+        ERR("Could not get proxy for session");
+        return -1;
+     }
+
+   msg = eldbus_proxy_method_call_new(proxy, "SwitchTo");
+   if (!msg)
+     {
+        ERR("Could not create method call for proxy");
+        ret = -1;
+        goto end;
+     }
+
+   eldbus_message_arguments_append(msg, "u", vt);
+
+   eldbus_proxy_send(proxy, msg, NULL, NULL, -1);
+
+end:
+   eldbus_proxy_unref(proxy);
+   return ret;
+}
+
+static void
+_logind_restore(Ecore_Drm2_Launcher *launcher EINA_UNUSED)
+{
+
+}
+
 Ecore_Drm2_Interface _logind_iface =
 {
    _logind_connect,
-   _logind_disconnect
+   _logind_disconnect,
+   _logind_open,
+   _logind_close,
+   _logind_activate_vt,
+   _logind_restore,
 };
 
 #endif
