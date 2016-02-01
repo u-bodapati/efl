@@ -87,12 +87,15 @@ EAPI int ecore_drm2_shutdown(void);
  * @param sync
  *
  * @return A Ecore_Drm2_Launcher on success, NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
  * @since 1.18
  */
 EAPI Ecore_Drm2_Launcher *ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync);
 
-#  undef EAPI
-#  define EAPI
-
 # endif
+
+# undef EAPI
+# define EAPI
+
 #endif
