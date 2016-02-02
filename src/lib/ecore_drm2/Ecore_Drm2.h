@@ -216,6 +216,18 @@ EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
  */
 EAPI Ecore_Drm2_Input *ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat);
 
+/**
+ * Enable a given input
+ *
+ * @param input
+ *
+ * @return
+ *
+ * @ingroup Ecore_Drm2_Input_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_input_enable(Ecore_Drm2_Input *input);
+
 # endif
 
 # undef EAPI

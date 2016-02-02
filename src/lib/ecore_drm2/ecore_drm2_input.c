@@ -63,6 +63,21 @@ _process_events(Ecore_Drm2_Input *input)
      }
 }
 
+static Eina_Bool
+_cb_input_dispatch(void *data, Ecore_Fd_Handler *hdlr EINA_UNUSED)
+{
+   Ecore_Drm2_Input *input;
+
+   input = data;
+
+   if (libinput_dispatch(input->libinput) != 0)
+     WRN("libinput failed to dispatch events");
+
+   _process_events(input);
+
+   return EINA_TRUE;
+}
+
 EAPI Ecore_Drm2_Input *
 ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat)
 {
@@ -91,7 +106,7 @@ ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat)
 
    _process_events(input);
 
-   /* TODO: input enable */
+   ecore_drm2_input_enable(input);
 
    return input;
 
@@ -100,4 +115,39 @@ seat_err:
 udev_err:
    free(input);
    return NULL;
+}
+
+EAPI Eina_Bool
+ecore_drm2_input_enable(Ecore_Drm2_Input *input)
+{
+   int fd;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(input, EINA_FALSE);
+
+   fd = libinput_get_fd(input->libinput);
+
+   input->hdlr =
+     ecore_main_fd_handler_add(fd, ECORE_FD_READ, _cb_input_dispatch, input,
+                               NULL, NULL);
+   if (!input->hdlr)
+     {
+        ERR("Could not create input fd handler");
+        return EINA_FALSE;
+     }
+
+   if (input->suspended)
+     {
+        if (libinput_resume(input->libinput) != 0)
+          goto err;
+
+        input->suspended = EINA_FALSE;
+        _process_events(input);
+     }
+
+   return EINA_TRUE;
+
+err:
+   if (input->hdlr) ecore_main_fd_handler_del(input->hdlr);
+   input->hdlr = NULL;
+   return EINA_FALSE;
 }
