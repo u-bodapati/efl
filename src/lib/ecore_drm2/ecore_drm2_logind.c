@@ -10,6 +10,36 @@
 # include <systemd/sd-login.h>
 
 static void
+_logind_device_pause_complete(Ecore_Drm2_Launcher *launcher, uint32_t major, uint32_t minor)
+{
+   Eldbus_Proxy *proxy;
+   Eldbus_Message *msg;
+
+   proxy =
+     eldbus_proxy_get(launcher->dbus.obj, "org.freedesktop.login1.Session");
+   if (!proxy)
+     {
+        ERR("Could not get proxy for session");
+        return;
+     }
+
+   msg = eldbus_proxy_method_call_new(proxy, "PauseDeviceComplete");
+   if (!msg)
+     {
+        ERR("Could not create method call for proxy");
+        goto end;
+     }
+
+   eldbus_message_arguments_append(msg, "uu", major, minor);
+
+   eldbus_proxy_send(proxy, msg, NULL, NULL, -1);
+
+end:
+   eldbus_message_unref(msg);
+   eldbus_proxy_unref(proxy);
+}
+
+static void
 _cb_session_removed(void *data, const Eldbus_Message *msg)
 {
    Ecore_Drm2_Launcher *l;
@@ -53,9 +83,7 @@ _cb_device_paused(void *data, const Eldbus_Message *msg)
    if (eldbus_message_arguments_get(msg, "uus", &maj, &min, &type))
      {
         if (!strcmp(type, "pause"))
-          {
-             /* TODO: pause device complete */
-          }
+          _logind_device_pause_complete(l, maj, min);
 
         if ((l->sync) && (maj == DRM_MAJOR))
           {
