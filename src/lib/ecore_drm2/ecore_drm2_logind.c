@@ -29,7 +29,7 @@ _cb_session_removed(void *data, const Eldbus_Message *msg)
         if (!strcmp(sid, l->sid))
           {
              WRN("Logind session removed");
-             /* TODO: call restore */
+             ecore_drm2_launcher_restore(l);
           }
      }
 }
@@ -435,7 +435,7 @@ _logind_connect(Ecore_Drm2_Launcher **launcher, const char *seat, unsigned int t
    return EINA_TRUE;
 
 actv_err:
-   /* TODO: control release */
+   _logind_control_release(l);
 ctrl_err:
    eldbus_object_unref(l->dbus.obj);
    free(l->dbus.path);
