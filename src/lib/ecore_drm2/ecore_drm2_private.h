@@ -44,7 +44,7 @@ extern int _ecore_drm2_log_dom;
 # endif
 # define CRIT(...) EINA_LOG_DOM_CRIT(_ecore_drm2_log_dom, __VA_ARGS__)
 
-typedef struct _Ecore_Drm2_Interface
+typedef struct _Ecore_Drm2_Launcher_Interface
 {
    Eina_Bool (*connect)(Ecore_Drm2_Launcher **launcher, const char *seat, unsigned int tty, Eina_Bool sync);
    void (*disconnect)(Ecore_Drm2_Launcher *launcher);
@@ -52,11 +52,11 @@ typedef struct _Ecore_Drm2_Interface
    void (*close)(Ecore_Drm2_Launcher *launcher, int fd);
    int (*activate)(Ecore_Drm2_Launcher *launcher, int vt);
    void (*restore)(Ecore_Drm2_Launcher *launcher);
-} Ecore_Drm2_Interface;
+} Ecore_Drm2_Launcher_Interface;
 
 struct _Ecore_Drm2_Launcher
 {
-   Ecore_Drm2_Interface *iface;
+   Ecore_Drm2_Launcher_Interface *iface;
 
    const char *seat;
 
@@ -76,6 +76,6 @@ struct _Ecore_Drm2_Launcher
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);
 void _ecore_drm2_dbus_close(Eldbus_Connection *conn);
 
-extern Ecore_Drm2_Interface _logind_iface;
+extern Ecore_Drm2_Launcher_Interface _logind_iface;
 
 #endif

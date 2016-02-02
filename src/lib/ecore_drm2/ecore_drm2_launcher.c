@@ -1,6 +1,6 @@
 #include "ecore_drm2_private.h"
 
-static Ecore_Drm2_Interface *_ifaces[] =
+static Ecore_Drm2_Launcher_Interface *_ifaces[] =
 {
 #ifdef HAVE_SYSTEMD
    &_logind_iface,
@@ -13,11 +13,11 @@ static Ecore_Drm2_Interface *_ifaces[] =
 EAPI Ecore_Drm2_Launcher *
 ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync)
 {
-   Ecore_Drm2_Interface **it;
+   Ecore_Drm2_Launcher_Interface **it;
 
    for (it = _ifaces; *it != NULL; it++)
      {
-        Ecore_Drm2_Interface *iface;
+        Ecore_Drm2_Launcher_Interface *iface;
         Ecore_Drm2_Launcher *l;
 
         iface = *it;

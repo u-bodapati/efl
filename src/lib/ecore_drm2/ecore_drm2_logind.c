@@ -551,7 +551,7 @@ _logind_restore(Ecore_Drm2_Launcher *launcher EINA_UNUSED)
 
 }
 
-Ecore_Drm2_Interface _logind_iface =
+Ecore_Drm2_Launcher_Interface _logind_iface =
 {
    _logind_connect,
    _logind_disconnect,
