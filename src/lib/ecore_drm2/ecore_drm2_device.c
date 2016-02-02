@@ -70,3 +70,18 @@ out:
 
    return ret;
 }
+
+EAPI int
+ecore_drm2_device_clock_id_get(int fd)
+{
+   uint64_t caps;
+   int ret;
+
+   EINA_SAFETY_ON_TRUE_RETURN_VAL((fd < 0), -1);
+
+   ret = drmGetCap(fd, DRM_CAP_TIMESTAMP_MONOTONIC, &caps);
+   if ((ret == 0) && (caps == 1))
+     return CLOCK_MONOTONIC;
+   else
+     return CLOCK_REALTIME;
+}

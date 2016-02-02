@@ -93,6 +93,18 @@ EAPI int ecore_drm2_shutdown(void);
 EAPI const char *ecore_drm2_device_find(const char *seat);
 
 /**
+ * Get the type of clock used by this drm device
+ *
+ * @param fd
+ *
+ * @return The clockid_t used by this drm card
+ *
+ * @ingroup Ecore_Drm2_Device_Group
+ * @since 1.18
+ */
+EAPI int ecore_drm2_device_clock_id_get(int fd);
+
+/**
  * @defgroup Ecore_Drm2_Launcher_Group Drm launcher functions
  *
  * Functions that deal with setup of launcher
