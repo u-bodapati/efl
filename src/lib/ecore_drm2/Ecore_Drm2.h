@@ -223,6 +223,18 @@ EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
 EAPI Ecore_Drm2_Input *ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat);
 
 /**
+ * Shutdown input
+ *
+ * @param
+ *
+ * @return
+ *
+ * @ingroup Ecore_Drm2_Input_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_input_shutdown(Ecore_Drm2_Input *input);
+
+/**
  * Enable a given input
  *
  * @param input

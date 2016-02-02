@@ -40,6 +40,18 @@ _udev_seat_create(Ecore_Drm2_Input *input, const char *name)
    return seat;
 }
 
+static void
+_udev_seat_destroy(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Input_Device *dev;
+
+   EINA_LIST_FREE(seat->devices, dev)
+     _ecore_drm2_input_device_destroy(dev);
+
+   eina_stringshare_del(seat->name);
+   free(seat);
+}
+
 static Ecore_Drm2_Seat *
 _udev_seat_named_get(Ecore_Drm2_Input *input, const char *name)
 {
@@ -213,6 +225,22 @@ seat_err:
 udev_err:
    free(input);
    return NULL;
+}
+
+EAPI void
+ecore_drm2_input_shutdown(Ecore_Drm2_Input *input)
+{
+   Ecore_Drm2_Seat *seat;
+
+   EINA_SAFETY_ON_NULL_RETURN(input);
+
+   if (input->hdlr) ecore_main_fd_handler_del(input->hdlr);
+
+   EINA_LIST_FREE(input->seats, seat)
+     _udev_seat_destroy(seat);
+
+   libinput_unref(input->libinput);
+   free(input);
 }
 
 EAPI Eina_Bool
