@@ -59,3 +59,15 @@ ecore_drm2_launcher_close(Ecore_Drm2_Launcher *launcher, int fd)
    if (launcher->iface->close)
      launcher->iface->close(launcher, fd);
 }
+
+EAPI int
+ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, -1);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher->iface, -1);
+
+   if (launcher->iface->activate)
+     return launcher->iface->activate(launcher, vt);
+
+   return -1;
+}

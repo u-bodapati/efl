@@ -171,6 +171,19 @@ EAPI int ecore_drm2_launcher_open(Ecore_Drm2_Launcher *launcher, const char *pat
  */
 EAPI void ecore_drm2_launcher_close(Ecore_Drm2_Launcher *launcher, int fd);
 
+/**
+ * Request launcher to activate a given vt
+ *
+ * @param launcher
+ * @param vt
+ *
+ * @return result
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI int ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt);
+
 # endif
 
 # undef EAPI
