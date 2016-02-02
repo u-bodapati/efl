@@ -97,3 +97,26 @@ ecore_drm2_device_clock_id_get(int fd)
    else
      return CLOCK_REALTIME;
 }
+
+EAPI void
+ecore_drm2_device_cursor_size_get(int fd, int *width, int *height)
+{
+   uint64_t caps;
+   int ret;
+
+   EINA_SAFETY_ON_TRUE_RETURN((fd < 0));
+
+   if (width)
+     {
+        *width = 64;
+        ret = drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &caps);
+        if (ret == 0) *width = caps;
+     }
+
+   if (height)
+     {
+        *height = 64;
+        ret = drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &caps);
+        if (ret == 0) *height = caps;
+     }
+}

@@ -105,6 +105,18 @@ EAPI const char *ecore_drm2_device_find(const char *seat);
 EAPI int ecore_drm2_device_clock_id_get(int fd);
 
 /**
+ * Get the size of the cursor supported by drm device
+ *
+ * @param fd
+ * @param width
+ * @param height
+ *
+ * @ingroup Ecore_Drm2_Device_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_device_cursor_size_get(int fd, int *width, int *height);
+
+/**
  * @defgroup Ecore_Drm2_Launcher_Group Drm launcher functions
  *
  * Functions that deal with setup of launcher
