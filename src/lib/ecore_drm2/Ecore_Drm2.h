@@ -34,6 +34,9 @@ typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
 /* opaque structure to represent an input */
 typedef struct _Ecore_Drm2_Input Ecore_Drm2_Input;
 
+/* opaque structure to represent a seat */
+typedef struct _Ecore_Drm2_Seat Ecore_Drm2_Seat;
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals
