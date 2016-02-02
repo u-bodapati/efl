@@ -3,13 +3,20 @@
 static int
 _cb_open_restricted(const char *path, int flags, void *data)
 {
-   return -1;
+   Ecore_Drm2_Input *input;
+
+   input = data;
+
+   return ecore_drm2_launcher_open(input->launcher, path, flags);
 }
 
 static void
 _cb_close_restricted(int fd, void *data)
 {
+   Ecore_Drm2_Input *input;
 
+   input = data;
+   ecore_drm2_launcher_close(input->launcher, fd);
 }
 
 const struct libinput_interface _input_interface =
