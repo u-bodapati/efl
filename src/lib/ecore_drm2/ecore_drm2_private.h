@@ -21,6 +21,9 @@
 # include <xf86drmMode.h>
 # include <drm_fourcc.h>
 
+# include <linux/input.h>
+# include <libinput.h>
+
 extern int _ecore_drm2_log_dom;
 
 # ifdef ECORE_DRM2_DEFAULT_LOG_COLOR
@@ -80,6 +83,17 @@ struct _Ecore_Drm2_Launcher
      } dbus;
 
    Eina_Bool sync;
+};
+
+struct _Ecore_Drm2_Input
+{
+   Ecore_Drm2_Launcher *launcher;
+
+   struct libinput *libinput;
+
+   Ecore_Fd_Handler *hdlr;
+
+   Eina_Bool suspended : 1;
 };
 
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);
