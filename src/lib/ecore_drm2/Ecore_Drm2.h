@@ -42,6 +42,7 @@ typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
  *
  * @li @ref Ecore_Drm2_Init_Group
  * @li @ref Ecore_Drm2_Launcher_Group
+ * @li @ref Ecore_Drm2_Device_Group
  *
  */
 
@@ -72,6 +73,24 @@ EAPI int ecore_drm2_init(void);
  * @since 1.18
  */
 EAPI int ecore_drm2_shutdown(void);
+
+/**
+ * @defgroup Ecore_Drm2_Device_Group Drm library device functions
+ *
+ * Functions that support various device actions
+ */
+
+/**
+ * Try to find a drm card on the given seat
+ *
+ * @param seat
+ *
+ * @return The device name found
+ *
+ * @ingroup Ecore_Drm2_Device_Group
+ * @since 1.18
+ */
+EAPI const char *ecore_drm2_device_find(const char *seat);
 
 /**
  * @defgroup Ecore_Drm2_Launcher_Group Drm launcher functions
