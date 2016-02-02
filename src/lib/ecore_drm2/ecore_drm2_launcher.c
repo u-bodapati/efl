@@ -71,3 +71,13 @@ ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt)
 
    return -1;
 }
+
+EAPI void
+ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher)
+{
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+   EINA_SAFETY_ON_NULL_RETURN(launcher->iface);
+
+   if (launcher->iface->restore)
+     launcher->iface->restore(launcher);
+}

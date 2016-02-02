@@ -184,6 +184,16 @@ EAPI void ecore_drm2_launcher_close(Ecore_Drm2_Launcher *launcher, int fd);
  */
 EAPI int ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt);
 
+/**
+ * Request launcher to restore state
+ *
+ * @param launcher
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
+
 # endif
 
 # undef EAPI
