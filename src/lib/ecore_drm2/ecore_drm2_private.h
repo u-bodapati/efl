@@ -12,6 +12,15 @@
 # include "Eldbus.h"
 # include <Ecore_Drm2.h>
 
+# include <sys/ioctl.h>
+# include <linux/vt.h>
+# include <linux/kd.h>
+# include <linux/major.h>
+
+# include <xf86drm.h>
+# include <xf86drmMode.h>
+# include <drm_fourcc.h>
+
 extern int _ecore_drm2_log_dom;
 
 # ifdef ECORE_DRM2_DEFAULT_LOG_COLOR
