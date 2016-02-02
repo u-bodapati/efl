@@ -422,6 +422,7 @@ _logind_connect(Ecore_Drm2_Launcher **launcher, const char *seat, unsigned int t
         free(s);
         goto seat_err;
      }
+   free(s);
 
    if (!_logind_session_vt_get(l->sid, &l->vt_num))
      {
