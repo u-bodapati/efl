@@ -64,7 +64,7 @@ _process_events(Ecore_Drm2_Input *input)
 }
 
 EAPI Ecore_Drm2_Input *
-ecore_drm2_input_init(const char *seat)
+ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat)
 {
    Ecore_Drm2_Input *input;
 
@@ -72,6 +72,8 @@ ecore_drm2_input_init(const char *seat)
 
    input = calloc(1, sizeof(Ecore_Drm2_Input));
    if (!input) return NULL;
+
+   input->launcher = launcher;
 
    input->libinput =
      libinput_udev_create_context(&_input_interface, input, eeze_udev_get());

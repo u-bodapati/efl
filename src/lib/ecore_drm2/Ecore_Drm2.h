@@ -28,8 +28,11 @@
 
 # ifdef EFL_BETA_API_SUPPORT
 
-/* opaque strucure to represent a launcher */
+/* opaque structure to represent a launcher */
 typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
+
+/* opaque structure to represent an input */
+typedef struct _Ecore_Drm2_Input Ecore_Drm2_Input;
 
 /**
  * @file
@@ -43,6 +46,7 @@ typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
  * @li @ref Ecore_Drm2_Init_Group
  * @li @ref Ecore_Drm2_Launcher_Group
  * @li @ref Ecore_Drm2_Device_Group
+ * @li @ref Ecore_Drm2_Input_Group
  *
  */
 
@@ -193,6 +197,24 @@ EAPI int ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt);
  * @since 1.18
  */
 EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
+
+/**
+ * @defgroup Ecore_Drm2_Input_Group Drm input functions
+ *
+ * Functions that deal with setup of inputs
+ */
+
+/**
+ * Initialize input
+ *
+ * @param seat
+ *
+ * @return
+ *
+ * @ingroup Ecore_Drm2_Input_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Input *ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat);
 
 # endif
 
