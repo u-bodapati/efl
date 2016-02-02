@@ -49,3 +49,13 @@ ecore_drm2_launcher_open(Ecore_Drm2_Launcher *launcher, const char *path, int fl
 
    return -1;
 }
+
+EAPI void
+ecore_drm2_launcher_close(Ecore_Drm2_Launcher *launcher, int fd)
+{
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+   EINA_SAFETY_ON_NULL_RETURN(launcher->iface);
+
+   if (launcher->iface->close)
+     launcher->iface->close(launcher, fd);
+}
