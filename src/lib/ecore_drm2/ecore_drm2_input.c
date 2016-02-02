@@ -25,23 +25,115 @@ const struct libinput_interface _input_interface =
    _cb_close_restricted,
 };
 
+static Ecore_Drm2_Seat *
+_udev_seat_create(Ecore_Drm2_Input *input, const char *name)
+{
+   Ecore_Drm2_Seat *seat;
+
+   seat = calloc(1, sizeof(Ecore_Drm2_Seat));
+   if (!seat) return NULL;
+
+   seat->name = eina_stringshare_add(name);
+
+   input->seats = eina_list_append(input->seats, seat);
+
+   return seat;
+}
+
+static Ecore_Drm2_Seat *
+_udev_seat_named_get(Ecore_Drm2_Input *input, const char *name)
+{
+   Eina_List *l;
+   Ecore_Drm2_Seat *seat;
+
+   EINA_LIST_FOREACH(input->seats, l, seat)
+     {
+        if (!strcmp(seat->name, name))
+          return seat;
+     }
+
+   return _udev_seat_create(input, name);
+}
+
+static Ecore_Drm2_Seat *
+_udev_seat_get(Ecore_Drm2_Input *input, struct libinput_device *device)
+{
+   struct libinput_seat *lseat;
+   const char *name;
+
+   lseat = libinput_device_get_seat(device);
+   name = libinput_seat_get_logical_name(lseat);
+   /* name = libinput_seat_get_physical_name(lseat); */
+
+   return _udev_seat_named_get(input, name);
+}
+
+static void
+_device_added(Ecore_Drm2_Input *input, struct libinput_device *device)
+{
+   Ecore_Drm2_Seat *seat;
+   Ecore_Drm2_Input_Device *dev;
+   const char *oname;
+
+   seat = _udev_seat_get(input, device);
+   DBG("Got Seat: %s", seat->name);
+
+   dev = _ecore_drm2_input_device_create(seat, device);
+
+   /* TODO: get pointer */
+
+   oname = libinput_device_get_output_name(device);
+   if (oname)
+     {
+        DBG("\tOutput Name: %s", oname);
+        dev->output_name = eina_stringshare_add(oname);
+        /* TODO: loop outputs and set on dev */
+     }
+   /* else if (!dev->output) */
+   /*   { */
+   /* TODO */
+   /*   } */
+
+   seat->devices = eina_list_append(seat->devices, dev);
+}
+
+static void
+_device_removed(Ecore_Drm2_Input *input, struct libinput_device *device)
+{
+   Ecore_Drm2_Seat *seat;
+   Ecore_Drm2_Input_Device *dev;
+
+   dev = libinput_device_get_user_data(device);
+   if (!dev) return;
+
+   seat = _udev_seat_get(input, device);
+   if (seat)
+     seat->devices = eina_list_remove(seat->devices, dev);
+
+   _ecore_drm2_input_device_destroy(dev);
+}
+
 static int
 _udev_process_event(struct libinput_event *event)
 {
-   /* struct libinput *libinput; */
+   Ecore_Drm2_Input *input;
+   struct libinput *libinput;
    struct libinput_device *device;
    int ret = 1;
 
-   /* libinput = libinput_event_get_context(event); */
+   libinput = libinput_event_get_context(event);
    device = libinput_event_get_device(event);
+   input = libinput_get_user_data(libinput);
 
    switch (libinput_event_get_type(event))
      {
       case LIBINPUT_EVENT_DEVICE_ADDED:
         DBG("Udev Event: Device Added: %s", libinput_device_get_name(device));
+        _device_added(input, device);
         break;
       case LIBINPUT_EVENT_DEVICE_REMOVED:
         DBG("Udev Event: Device Removed: %s", libinput_device_get_name(device));
+        _device_removed(input, device);
         break;
       default:
         ret = 0;
@@ -53,9 +145,8 @@ _udev_process_event(struct libinput_event *event)
 static void
 _process_event(struct libinput_event *event)
 {
-   DBG("Process Input Event");
    if (_udev_process_event(event)) return;
-   /* if (_evdev_process_event(event)) return; */
+   if (_ecore_drm2_input_device_event_process(event)) return;
 }
 
 static void

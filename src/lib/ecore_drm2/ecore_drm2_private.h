@@ -66,6 +66,13 @@ typedef struct _Ecore_Drm2_Launcher_Interface
    void (*restore)(Ecore_Drm2_Launcher *launcher);
 } Ecore_Drm2_Launcher_Interface;
 
+typedef enum _Ecore_Drm2_Input_Device_Capability
+{
+   EVDEV_SEAT_POINTER = (1 << 0),
+   EVDEV_SEAT_KEYBOARD = (1 << 1),
+   EVDEV_SEAT_TOUCH = (1 << 2)
+} Ecore_Drm2_Input_Device_Capability;
+
 struct _Ecore_Drm2_Launcher
 {
    Ecore_Drm2_Launcher_Interface *iface;
@@ -93,11 +100,41 @@ struct _Ecore_Drm2_Input
 
    Ecore_Fd_Handler *hdlr;
 
+   Eina_List *seats;
+
    Eina_Bool suspended : 1;
+};
+
+struct _Ecore_Drm2_Seat
+{
+   const char *name;
+
+   struct
+     {
+        int kbd, ptr, touch;
+     } count;
+
+   Eina_List *devices;
+};
+
+struct _Ecore_Drm2_Input_Device
+{
+   Ecore_Drm2_Seat *seat;
+
+   int fd;
+   const char *path;
+   const char *output_name;
+
+   struct libinput_device *device;
+   Ecore_Drm2_Input_Device_Capability caps;
 };
 
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);
 void _ecore_drm2_dbus_close(Eldbus_Connection *conn);
+
+Ecore_Drm2_Input_Device *_ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *device);
+void _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device);
+int _ecore_drm2_input_device_event_process(struct libinput_event *event);
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 
