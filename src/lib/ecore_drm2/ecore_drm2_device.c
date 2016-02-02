@@ -1,5 +1,17 @@
 #include "ecore_drm2_private.h"
 
+#ifndef DRM_CAP_TIMESTAMP_MONOTONIC
+# define DRM_CAP_TIMESTAMP_MONOTONIC 0x6
+#endif
+
+#ifndef DRM_CAP_CURSOR_WIDTH
+# define DRM_CAP_CURSOR_WIDTH 0x8
+#endif
+
+#ifndef DRM_CAP_CURSOR_HEIGHT
+# define DRM_CAP_CURSOR_HEIGHT 0x9
+#endif
+
 EAPI const char *
 ecore_drm2_device_find(const char *seat)
 {
