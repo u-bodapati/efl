@@ -73,6 +73,41 @@ typedef enum _Ecore_Drm2_Input_Device_Capability
    EVDEV_SEAT_TOUCH = (1 << 2)
 } Ecore_Drm2_Input_Device_Capability;
 
+struct _Ecore_Drm2_Seat
+{
+   const char *name;
+
+   struct
+     {
+        int kbd, ptr, touch;
+     } count;
+
+   Eina_List *devices;
+};
+
+struct _Ecore_Drm2_Input
+{
+   struct libinput *libinput;
+
+   Ecore_Fd_Handler *hdlr;
+
+   Eina_List *seats;
+
+   Eina_Bool suspended : 1;
+};
+
+struct _Ecore_Drm2_Input_Device
+{
+   Ecore_Drm2_Seat *seat;
+
+   int fd;
+   const char *path;
+   const char *output_name;
+
+   struct libinput_device *device;
+   Ecore_Drm2_Input_Device_Capability caps;
+};
+
 struct _Ecore_Drm2_Launcher
 {
    Ecore_Drm2_Launcher_Interface *iface;
@@ -89,44 +124,9 @@ struct _Ecore_Drm2_Launcher
         Eldbus_Connection *conn;
      } dbus;
 
+   Ecore_Drm2_Input input;
+
    Eina_Bool sync;
-};
-
-struct _Ecore_Drm2_Input
-{
-   Ecore_Drm2_Launcher *launcher;
-
-   struct libinput *libinput;
-
-   Ecore_Fd_Handler *hdlr;
-
-   Eina_List *seats;
-
-   Eina_Bool suspended : 1;
-};
-
-struct _Ecore_Drm2_Seat
-{
-   const char *name;
-
-   struct
-     {
-        int kbd, ptr, touch;
-     } count;
-
-   Eina_List *devices;
-};
-
-struct _Ecore_Drm2_Input_Device
-{
-   Ecore_Drm2_Seat *seat;
-
-   int fd;
-   const char *path;
-   const char *output_name;
-
-   struct libinput_device *device;
-   Ecore_Drm2_Input_Device_Capability caps;
 };
 
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);

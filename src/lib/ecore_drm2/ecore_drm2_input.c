@@ -3,20 +3,19 @@
 static int
 _cb_open_restricted(const char *path, int flags, void *data)
 {
-   Ecore_Drm2_Input *input;
+   Ecore_Drm2_Launcher *launcher;
 
-   input = data;
-
-   return ecore_drm2_launcher_open(input->launcher, path, flags);
+   launcher = data;
+   return ecore_drm2_launcher_open(launcher, path, flags);
 }
 
 static void
 _cb_close_restricted(int fd, void *data)
 {
-   Ecore_Drm2_Input *input;
+   Ecore_Drm2_Launcher *launcher;
 
-   input = data;
-   ecore_drm2_launcher_close(input->launcher, fd);
+   launcher = data;
+   ecore_drm2_launcher_close(launcher, fd);
 }
 
 const struct libinput_interface _input_interface =
@@ -128,24 +127,24 @@ _device_removed(Ecore_Drm2_Input *input, struct libinput_device *device)
 static int
 _udev_process_event(struct libinput_event *event)
 {
-   Ecore_Drm2_Input *input;
+   Ecore_Drm2_Launcher *launch;
    struct libinput *libinput;
    struct libinput_device *device;
    int ret = 1;
 
    libinput = libinput_event_get_context(event);
    device = libinput_event_get_device(event);
-   input = libinput_get_user_data(libinput);
+   launch = libinput_get_user_data(libinput);
 
    switch (libinput_event_get_type(event))
      {
       case LIBINPUT_EVENT_DEVICE_ADDED:
         DBG("Udev Event: Device Added: %s", libinput_device_get_name(device));
-        _device_added(input, device);
+        _device_added(&launch->input, device);
         break;
       case LIBINPUT_EVENT_DEVICE_REMOVED:
         DBG("Udev Event: Device Removed: %s", libinput_device_get_name(device));
-        _device_removed(input, device);
+        _device_removed(&launch->input, device);
         break;
       default:
         ret = 0;
@@ -188,92 +187,87 @@ _cb_input_dispatch(void *data, Ecore_Fd_Handler *hdlr EINA_UNUSED)
    return EINA_TRUE;
 }
 
-EAPI Ecore_Drm2_Input *
-ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat)
+EAPI Eina_Bool
+ecore_drm2_input_init(Ecore_Drm2_Launcher *launch, const char *seat)
 {
-   Ecore_Drm2_Input *input;
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launch, EINA_FALSE);
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(seat, EINA_FALSE);
+   memset(&launch->input, 0, sizeof(Ecore_Drm2_Input));
 
-   input = calloc(1, sizeof(Ecore_Drm2_Input));
-   if (!input) return NULL;
-
-   input->launcher = launcher;
-
-   input->libinput =
-     libinput_udev_create_context(&_input_interface, input, eeze_udev_get());
-   if (!input->libinput)
+   launch->input.libinput =
+     libinput_udev_create_context(&_input_interface, launch, eeze_udev_get());
+   if (!launch->input.libinput)
      {
         ERR("libinput could not create udev context");
         goto udev_err;
      }
 
-   if (libinput_udev_assign_seat(input->libinput, seat) != 0)
+   if (libinput_udev_assign_seat(launch->input.libinput, seat) != 0)
      {
         ERR("libinput could not assign udev seat");
         goto seat_err;
      }
 
-   _process_events(input);
+   _process_events(&launch->input);
 
-   ecore_drm2_input_enable(input);
+   ecore_drm2_input_enable(launch);
 
-   return input;
+   return EINA_TRUE;
 
 seat_err:
-   libinput_unref(input->libinput);
+   libinput_unref(launch->input.libinput);
 udev_err:
-   free(input);
-   return NULL;
+   return EINA_FALSE;
 }
 
 EAPI void
-ecore_drm2_input_shutdown(Ecore_Drm2_Input *input)
+ecore_drm2_input_shutdown(Ecore_Drm2_Launcher *launcher)
 {
    Ecore_Drm2_Seat *seat;
 
-   EINA_SAFETY_ON_NULL_RETURN(input);
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+   EINA_SAFETY_ON_NULL_RETURN(&launcher->input);
 
-   if (input->hdlr) ecore_main_fd_handler_del(input->hdlr);
+   if (launcher->input.hdlr) ecore_main_fd_handler_del(launcher->input.hdlr);
 
-   EINA_LIST_FREE(input->seats, seat)
+   EINA_LIST_FREE(launcher->input.seats, seat)
      _udev_seat_destroy(seat);
 
-   libinput_unref(input->libinput);
-   free(input);
+   libinput_unref(launcher->input.libinput);
 }
 
 EAPI Eina_Bool
-ecore_drm2_input_enable(Ecore_Drm2_Input *input)
+ecore_drm2_input_enable(Ecore_Drm2_Launcher *launcher)
 {
    int fd;
 
-   EINA_SAFETY_ON_NULL_RETURN_VAL(input, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(&launcher->input, EINA_FALSE);
 
-   fd = libinput_get_fd(input->libinput);
+   fd = libinput_get_fd(launcher->input.libinput);
 
-   input->hdlr =
-     ecore_main_fd_handler_add(fd, ECORE_FD_READ, _cb_input_dispatch, input,
-                               NULL, NULL);
-   if (!input->hdlr)
+   launcher->input.hdlr =
+     ecore_main_fd_handler_add(fd, ECORE_FD_READ, _cb_input_dispatch,
+                               &launcher->input, NULL, NULL);
+   if (!launcher->input.hdlr)
      {
         ERR("Could not create input fd handler");
         return EINA_FALSE;
      }
 
-   if (input->suspended)
+   if (launcher->input.suspended)
      {
-        if (libinput_resume(input->libinput) != 0)
+        if (libinput_resume(launcher->input.libinput) != 0)
           goto err;
 
-        input->suspended = EINA_FALSE;
-        _process_events(input);
+        launcher->input.suspended = EINA_FALSE;
+        _process_events(&launcher->input);
      }
 
    return EINA_TRUE;
 
 err:
-   if (input->hdlr) ecore_main_fd_handler_del(input->hdlr);
-   input->hdlr = NULL;
+   if (launcher->input.hdlr) ecore_main_fd_handler_del(launcher->input.hdlr);
+   launcher->input.hdlr = NULL;
    return EINA_FALSE;
 }

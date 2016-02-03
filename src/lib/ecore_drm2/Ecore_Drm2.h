@@ -220,7 +220,7 @@ EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
  * @ingroup Ecore_Drm2_Input_Group
  * @since 1.18
  */
-EAPI Ecore_Drm2_Input *ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat);
+EAPI Eina_Bool ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, const char *seat);
 
 /**
  * Shutdown input
@@ -232,7 +232,7 @@ EAPI Ecore_Drm2_Input *ecore_drm2_input_init(Ecore_Drm2_Launcher *launcher, cons
  * @ingroup Ecore_Drm2_Input_Group
  * @since 1.18
  */
-EAPI void ecore_drm2_input_shutdown(Ecore_Drm2_Input *input);
+EAPI void ecore_drm2_input_shutdown(Ecore_Drm2_Launcher *launcher);
 
 /**
  * Enable a given input
@@ -244,7 +244,7 @@ EAPI void ecore_drm2_input_shutdown(Ecore_Drm2_Input *input);
  * @ingroup Ecore_Drm2_Input_Group
  * @since 1.18
  */
-EAPI Eina_Bool ecore_drm2_input_enable(Ecore_Drm2_Input *input);
+EAPI Eina_Bool ecore_drm2_input_enable(Ecore_Drm2_Launcher *launcher);
 
 # endif
 
