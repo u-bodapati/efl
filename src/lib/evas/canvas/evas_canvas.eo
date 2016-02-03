@@ -714,6 +714,14 @@ class Evas.Canvas (Eo.Base, Evas.Common_Interface, Efl.Core.Animator)
               @since 1.1
             ]]
          }
+         values {
+            x: Evas.Coord; [[The left coordinate in output units, usually pixels.]]
+            y: Evas.Coord; [[The top coordinate in output units, usually pixels.]]
+            w: Evas.Coord; [[The width in output units, usually pixels.]]
+            h: Evas.Coord; [[The height in output units, usually pixels.]]
+         }
+      }
+      @property output_framespace {
          get {
             [[Get the render engine's output framespace coordinates in
               canvas units.
@@ -741,6 +749,14 @@ class Evas.Canvas (Eo.Base, Evas.Common_Interface, Efl.Core.Animator)
               is done for ease of use.
             ]]
          }
+         values {
+            x: Evas.Coord; [[The top-left corner x value of the viewport.]]
+            y: Evas.Coord; [[The top-left corner y value of the viewport.]]
+            w: Evas.Coord; [[The width of the viewport.  Must be greater than 0.]]
+            h: Evas.Coord; [[The height of the viewport.  Must be greater than 0.]]
+         }
+      }
+      @property output_viewport {
          get {
             [[Get the render engine's output viewport coordinates in
               canvas units.
@@ -752,15 +768,6 @@ class Evas.Canvas (Eo.Base, Evas.Common_Interface, Efl.Core.Animator)
               units. Any of $x, $y, $w or $h that are $null will not be
               written to. If $e is invalid, the results are undefined.
             ]]
-            /* FIXME-doc
-            Example:
-            @code
-            extern Evas *evas;
-            Evas_Coord x, y, width, height;
-
-            evas_output_viewport_get(evas, &x, &y, &w, &h);
-            @endcode
-            */
          }
          values {
             x: Evas.Coord; [[The top-left corner x value of the viewport.]]
