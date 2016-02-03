@@ -269,6 +269,16 @@ EAPI Eina_Bool ecore_drm2_input_enable(Ecore_Drm2_Launcher *launcher);
  */
 EAPI Eina_Bool ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd);
 
+/**
+ * Destroy planes
+ *
+ * @param launcher
+ *
+ * @ingroup Ecore_Drm2_Plane_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
+
 # endif
 
 # undef EAPI

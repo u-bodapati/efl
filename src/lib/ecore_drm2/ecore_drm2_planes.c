@@ -48,3 +48,17 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
    return EINA_TRUE;
 }
 
+EAPI void
+ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd)
+{
+   Ecore_Drm2_Plane *plane;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   EINA_LIST_FREE(launcher->planes, plane)
+     {
+        /* TODO: get output crtc_id and call drmModeSetPlane */
+        /* TODO: release FBs */
+        free(plane);
+     }
+}
