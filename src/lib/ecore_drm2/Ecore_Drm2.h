@@ -291,6 +291,18 @@ EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
  *
  * Functions that deal with setup of outputs
  */
+
+/**
+ * Create outputs
+ *
+ * @param launcher
+ * @param fd
+ *
+ * @return EINA_TRUE on success, EINA_FALSE on failure
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
 EAPI Eina_Bool ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd);
 
 # endif
