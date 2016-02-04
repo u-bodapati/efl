@@ -57,8 +57,15 @@ ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd)
 
    EINA_LIST_FREE(launcher->planes, plane)
      {
-        /* TODO: get output crtc_id and call drmModeSetPlane */
+        Ecore_Drm2_Output *output;
+
+        output = (Ecore_Drm2_Output *)plane->output;
+        if (output)
+          drmModeSetPlane(fd, plane->id, output->crtc_id, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0);
+
         /* TODO: release FBs */
+
         free(plane);
      }
 }
