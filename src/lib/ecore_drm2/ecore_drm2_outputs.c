@@ -23,13 +23,13 @@ _output_crtc_find(const drmModeRes *res, const drmModeConnector *conn, int fd, i
    uint32_t pcrtcs;
    int i, j = 0;
 
-   for (; j < conn->count_encoders; j++)
+   for (j = 0; j < conn->count_encoders; j++)
      {
         enc = drmModeGetEncoder(fd, conn->encoders[j]);
         if (!enc)
           {
-             ERR("Failed to get encoder");
-             return -1;
+             WRN("Failed to get encoder");
+             continue;
           }
 
         pcrtcs = enc->possible_crtcs;
@@ -38,7 +38,7 @@ _output_crtc_find(const drmModeRes *res, const drmModeConnector *conn, int fd, i
         for (i = 0; i < res->count_crtcs; i++)
           {
              if ((pcrtcs & (1 << i)) &&
-                 !(alloc & (1 << res->crtcs[i])))
+                 (!(alloc & (1 << res->crtcs[i]))))
                return i;
           }
      }
@@ -102,29 +102,6 @@ _output_property_get(drmModeConnectorPtr conn, const char *name, int fd)
    return NULL;
 }
 
-static int
-_connector_current_mode_get(drmModeConnector *conn, int fd, drmModeModeInfo *mode)
-{
-   drmModeEncoder *enc;
-   drmModeCrtc *crtc;
-
-   memset(mode, 0, sizeof(*mode));
-   enc = drmModeGetEncoder(fd, conn->encoder_id);
-   if (enc)
-     {
-        crtc = drmModeGetCrtc(fd, enc->crtc_id);
-        drmModeFreeEncoder(enc);
-        if (!crtc) return -1;
-        if (crtc->mode_valid)
-          {
-             if (mode) *mode = crtc->mode;
-          }
-        drmModeFreeCrtc(crtc);
-     }
-
-   return 0;
-}
-
 static Ecore_Drm2_Output_Mode *
 _output_mode_add(Ecore_Drm2_Output *output, const drmModeModeInfo *info)
 {
@@ -157,35 +134,6 @@ _output_mode_add(Ecore_Drm2_Output *output, const drmModeModeInfo *info)
    output->modes = eina_list_append(output->modes, mode);
 
    return mode;
-}
-
-static Ecore_Drm2_Output_Mode *
-_output_start_mode_get(Ecore_Drm2_Output *output, const drmModeModeInfo *cmode)
-{
-   Eina_List *l;
-   Ecore_Drm2_Output_Mode *current, *omode, *pmode, *best;
-
-   EINA_LIST_REVERSE_FOREACH(output->modes, l, omode)
-     {
-        if (!memcmp(&cmode, &omode->info, sizeof(cmode)))
-          current = omode;
-
-        if (omode->flags & DRM_MODE_TYPE_PREFERRED)
-          pmode = omode;
-
-        best = omode;
-     }
-
-   if ((!current) && (cmode->clock != 0))
-     {
-        current = _output_mode_add(output, cmode);
-        if (!current) return NULL;
-     }
-
-   if (current) return current;
-   else if (pmode) return pmode;
-   else if (best) return best;
-   return NULL;
 }
 
 static void 
@@ -296,69 +244,94 @@ _output_edid_find(Ecore_Drm2_Output *output, drmModeConnector *conn, int fd)
 static Eina_Bool
 _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConnector *conn, int fd, int x, int y, int *w)
 {
+   Eina_List *l;
    Ecore_Drm2_Output *output;
-   Ecore_Drm2_Output_Mode *omode, *cmode;
-   drmModeModeInfo current_mode;
+   Ecore_Drm2_Output_Mode *omode;
+   Ecore_Drm2_Output_Mode *current = NULL, *preferred = NULL, *best = NULL;
+   drmModeCrtc *crtc;
+   drmModeEncoder *enc;
+   drmModeModeInfo crtc_mode;
    int i = 0;
 
    if (w) *w = 0;
 
    i = _output_crtc_find(res, conn, fd, launcher->crtc_allocator);
-   if (i < 0)
-     {
-        ERR("Could not find usable crtc/encoder pair");
-        return EINA_FALSE;
-     }
+   if (i < 0) return EINA_FALSE;
 
    output = calloc(1, sizeof(Ecore_Drm2_Output));
    if (!output) return EINA_FALSE;
-
-   output->name = eina_stringshare_add(_output_name_get(conn));
-   output->make = eina_stringshare_add("unknown");
-   output->model = eina_stringshare_add("unknown");
-   output->serial = eina_stringshare_add("unknown");
-   output->subpixel = _output_subpixel_get(conn->subpixel);
-
-   /* TODO: fix me */
-   output->format = launcher->format;
-
-   output->crtc_id = res->crtcs[i];
-   output->pipe = i;
-   launcher->crtc_allocator |= (1 << output->crtc_id);
-   output->conn_id = conn->connector_id;
-   launcher->conn_allocator |= (1 << output->conn_id);
-
-   output->ocrtc = drmModeGetCrtc(fd, output->crtc_id);
-   output->dpms_prop = _output_property_get(conn, "DPMS", fd);
-
-   if (_connector_current_mode_get(conn, fd, &current_mode) < 0)
-     goto err;
-
-   for (; i < conn->count_modes; i++)
-     {
-        omode = _output_mode_add(output, &conn->modes[i]);
-        if (!omode) goto err;
-     }
-
-   /* TODO: ?? disable output if config is off ?? */
-
-   cmode = _output_start_mode_get(output, &current_mode);
-   if (!cmode)
-     {
-        ERR("Could not get initial mode for output");
-        goto curr_err;
-     }
-
-   output->current_mode = cmode;
-   output->current_mode->flags |= DRM_MODE_TYPE_DEFAULT;
 
    output->x = x;
    output->y = y;
    output->phys_width = conn->mmWidth;
    output->phys_height = conn->mmHeight;
+   output->subpixel = _output_subpixel_get(conn->subpixel);
 
-   if (conn->connection == DRM_MODE_CONNECTED)
-     output->connected = EINA_TRUE;
+   output->name = eina_stringshare_add(_output_name_get(conn));
+   output->make = eina_stringshare_add("unknown");
+   output->model = eina_stringshare_add("unknown");
+   output->serial = eina_stringshare_add("unknown");
+
+   output->connected = (conn->connection == DRM_MODE_CONNECTED);
+
+   /* TODO: fix me */
+   output->format = launcher->format;
+
+   output->pipe = i;
+   /* output->crtc_index = i; */
+   output->crtc_id = res->crtcs[i];
+   output->conn_id = conn->connector_id;
+   launcher->crtc_allocator |= (1 << output->crtc_id);
+   launcher->conn_allocator |= (1 << output->conn_id);
+
+   output->ocrtc = drmModeGetCrtc(fd, output->crtc_id);
+   output->dpms_prop = _output_property_get(conn, "DPMS", fd);
+
+   memset(&crtc_mode, 0, sizeof(crtc_mode));
+   enc = drmModeGetEncoder(fd, conn->encoder_id);
+   if (enc)
+     {
+        crtc = drmModeGetCrtc(fd, enc->crtc_id);
+        drmModeFreeEncoder(enc);
+        if (!crtc) goto err;
+        if (crtc->mode_valid) crtc_mode = crtc->mode;
+        drmModeFreeCrtc(crtc);
+     }
+
+   for (i = 0; i < conn->count_modes; i++)
+     {
+        omode = _output_mode_add(output, &conn->modes[i]);
+        if (!omode)
+          {
+             ERR("Could not add mode to output %s", output->name);
+             goto err;
+          }
+     }
+
+   EINA_LIST_REVERSE_FOREACH(output->modes, l, omode)
+     {
+        if (!memcmp(&crtc_mode, &omode->info, sizeof(crtc_mode)))
+          current = omode;
+        if (omode->flags & DRM_MODE_TYPE_PREFERRED)
+          preferred = omode;
+        best = omode;
+     }
+
+   if ((!current) && (crtc_mode.clock != 0))
+     {
+        current = _output_mode_add(output, &crtc_mode);
+        if (!current) goto err;
+     }
+
+   if (current) output->current_mode = current;
+   else if (preferred) output->current_mode = preferred;
+   else if (best) output->current_mode = best;
+
+   if (!output->current_mode) goto err;
+
+   output->current_mode->flags |= DRM_MODE_TYPE_DEFAULT;
+
+   /* TODO: ?? disable output if config is off ?? */
 
    /* TODO: backlight */
 
@@ -368,9 +341,24 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    /* TODO: plane init */
 
-   DBG("Created Output: %s", output->name);
-   DBG("\tGeom: %d %d %d %d", output->x, output->y,
-       output->current_mode->width, output->current_mode->height);
+   DBG("Created New Output At %d,%d", output->x, output->y);
+   DBG("\tCrtc Pos: %d %d", output->ocrtc->x, output->ocrtc->y);
+   DBG("\tCrtc: %d", output->crtc_id);
+   DBG("\tConn: %d", output->conn_id);
+   DBG("\tMake: %s", output->make);
+   DBG("\tModel: %s", output->model);
+   DBG("\tName: %s", output->name);
+   /* DBG("\tCloned: %d", output->cloned); */
+   /* DBG("\tPrimary: %d", output->primary); */
+
+   EINA_LIST_FOREACH(output->modes, l, omode)
+     {
+        DBG("\tAdded Mode: %dx%d@%.1f%s%s%s",
+            omode->width, omode->height, (omode->refresh / 1000.0),
+            (omode->flags & DRM_MODE_TYPE_PREFERRED) ? ", preferred" : "",
+            (omode->flags & DRM_MODE_TYPE_DEFAULT) ? ", current" : "",
+            (conn->count_modes == 0) ? ", built-in" : "");
+     }
 
    launcher->outputs = eina_list_append(launcher->outputs, output);
 
@@ -378,10 +366,9 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    return EINA_TRUE;
 
-curr_err:
+err:
    EINA_LIST_FREE(output->modes, omode)
      free(omode);
-err:
    eina_stringshare_del(output->name);
    eina_stringshare_del(output->make);
    eina_stringshare_del(output->model);
@@ -426,26 +413,25 @@ ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd)
    launcher->num_crtcs = res->count_crtcs;
    memcpy(launcher->crtcs, res->crtcs, sizeof(uint32_t) * res->count_crtcs);
 
-   for (; i < res->count_connectors; i++)
+   for (i = 0; i < res->count_connectors; i++)
      {
         conn = drmModeGetConnector(fd, res->connectors[i]);
         if (!conn) continue;
 
-        /* if (conn->connection == DRM_MODE_CONNECTED) */
+        if (conn->connection == DRM_MODE_CONNECTED)
           {
              if (!_output_create(launcher, res, conn, fd, x, y, &w))
-               {
-                  drmModeFreeConnector(conn);
-                  continue;
-               }
+               goto next;
+
              x += w;
           }
-
+next:
         drmModeFreeConnector(conn);
      }
 
-   drmModeFreeResources(res);
+   if (eina_list_count(launcher->outputs) < 1) goto err;
 
+   drmModeFreeResources(res);
    return EINA_TRUE;
 
 err:
