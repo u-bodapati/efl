@@ -348,6 +348,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    DBG("\tMake: %s", output->make);
    DBG("\tModel: %s", output->model);
    DBG("\tName: %s", output->name);
+   DBG("\tSerial: %s", output->serial);
    /* DBG("\tCloned: %d", output->cloned); */
    /* DBG("\tPrimary: %d", output->primary); */
 
@@ -379,6 +380,36 @@ err:
    free(output);
 
    return EINA_FALSE;
+}
+
+static void
+_output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd)
+{
+   drmModeCrtcPtr ocrtc;
+
+   ocrtc = output->ocrtc;
+
+   /* TODO: backlight */
+
+   drmModeFreeProperty(output->dpms_prop);
+
+   drmModeSetCursor(fd, output->crtc_id, 0, 0, 0);
+
+   drmModeSetCrtc(fd, ocrtc->crtc_id, ocrtc->buffer_id,
+                  ocrtc->x, ocrtc->y, &output->conn_id, 1, &ocrtc->mode);
+   drmModeFreeCrtc(ocrtc);
+
+   launcher->crtc_allocator &= ~(1 << output->crtc_id);
+   launcher->conn_allocator &= ~(1 << output->conn_id);
+
+   /* TODO: release planes ? */
+
+   eina_stringshare_del(output->name);
+   eina_stringshare_del(output->make);
+   eina_stringshare_del(output->model);
+   eina_stringshare_del(output->serial);
+
+   free(output);
 }
 
 EAPI Eina_Bool
@@ -437,4 +468,15 @@ next:
 err:
    drmModeFreeResources(res);
    return EINA_FALSE;
+}
+
+EAPI void
+ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd)
+{
+   Ecore_Drm2_Output *output;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   EINA_LIST_FREE(launcher->outputs, output)
+     _output_destroy(launcher, output, fd);
 }
