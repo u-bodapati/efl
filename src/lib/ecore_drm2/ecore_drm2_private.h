@@ -75,18 +75,69 @@ typedef enum _Ecore_Drm2_Input_Device_Capability
 
 struct _Ecore_Drm2_Plane
 {
-   /* TODO: FB, Output */
    uint32_t id;
    uint32_t crtcs;
    uint32_t num_formats;
+   int32_t x, y;
+
+   int32_t sx, sy; // src
+   uint32_t sw, sh;
+   uint32_t dx, dy; // dest
+   uint32_t dw, dh;
+
+   /* TODO: FB */
+   void *output;
+
+   uint32_t formats[];
+};
+
+struct _Ecore_Drm2_Output_Mode
+{
+   uint32_t flags;
+   int32_t width, height;
+   uint32_t refresh;
+   drmModeModeInfo info;
+};
+
+struct _Ecore_Drm2_Output
+{
+   int id, pipe;
+
+   int x, y;
+   int phys_width, phys_height;
+
+   const char *name;
+   const char *make, *model, *serial;
+
+   uint32_t subpixel;
+
+   uint32_t crtc_id;
+   uint32_t conn_id;
+   uint32_t format;
+
+   Ecore_Drm2_Output_Mode *current_mode;
+
+   drmModeCrtcPtr ocrtc;
+   drmModePropertyPtr dpms_prop;
 
    struct
      {
-        int32_t x, y;
-        uint32_t w, h;
-     } src, dest;
+        Ecore_Drm2_Plane cursor;
+        Ecore_Drm2_Plane fb;
+     } planes;
 
-   uint32_t formats[];
+   struct
+     {
+        char eisa[13];
+        char monitor[13];
+        char pnp[5];
+        char serial[13];
+        /* unsigned char *blob; */
+     } edid;
+
+   Eina_List *modes;
+
+   Eina_Bool connected : 1;
 };
 
 struct _Ecore_Drm2_Seat
@@ -133,6 +184,18 @@ struct _Ecore_Drm2_Launcher
    char *sid;
    unsigned int vt_num;
 
+   uint32_t *crtcs;
+   int num_crtcs;
+   uint32_t crtc_allocator;
+   uint32_t conn_allocator;
+
+   uint32_t format;
+
+   struct
+     {
+        uint32_t width, height;
+     } min, max;
+
    struct
      {
         char *path;
@@ -142,6 +205,7 @@ struct _Ecore_Drm2_Launcher
 
    Ecore_Drm2_Input input;
 
+   Eina_List *outputs;
    Eina_List *planes;
 
    Eina_Bool sync;
