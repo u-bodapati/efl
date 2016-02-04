@@ -43,6 +43,12 @@ typedef struct _Ecore_Drm2_Input_Device Ecore_Drm2_Input_Device;
 /* opaque structure to represent a plane */
 typedef struct _Ecore_Drm2_Plane Ecore_Drm2_Plane;
 
+/* opaque structure to represent an output */
+typedef struct _Ecore_Drm2_Output Ecore_Drm2_Output;
+
+/* opaque structure to represent an output mode */
+typedef struct _Ecore_Drm2_Output_Mode Ecore_Drm2_Output_Mode;
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals
@@ -57,6 +63,7 @@ typedef struct _Ecore_Drm2_Plane Ecore_Drm2_Plane;
  * @li @ref Ecore_Drm2_Device_Group
  * @li @ref Ecore_Drm2_Input_Group
  * @li @ref Ecore_Drm2_Plane_Group
+ * @li @ref Ecore_Drm2_Output_Group
  *
  */
 
@@ -278,6 +285,13 @@ EAPI Eina_Bool ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd);
  * @since 1.18
  */
 EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
+
+/**
+ * @defgroup Ecore_Drm2_Output_Group Drm output functions
+ *
+ * Functions that deal with setup of outputs
+ */
+EAPI Eina_Bool ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd);
 
 # endif
 
