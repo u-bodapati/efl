@@ -234,8 +234,8 @@ _output_edid_find(Ecore_Drm2_Output *output, drmModeConnector *conn, int fd)
           eina_stringshare_replace(&output->make, output->edid.pnp);
         if (output->edid.monitor[0] != '\0')
           eina_stringshare_replace(&output->model, output->edid.monitor);
-        /* if (output->edid.serial[0] != '\0') */
-        /*   eina_stringshare_replace(&output->serial, output->edid.serial); */
+        if (output->edid.serial[0] != '\0')
+          eina_stringshare_replace(&output->serial, output->edid.serial);
      }
 
    drmModeFreePropertyBlob(blob);
