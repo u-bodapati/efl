@@ -310,6 +310,20 @@ EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
 EAPI Eina_Bool ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd);
 
 /**
+ * Find an output at the given coordinates
+ *
+ * @param launcher
+ * @param x
+ * @param y
+ *
+ * @return A valid Ecore_Drm2_Output or NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Output *ecore_drm2_output_find(Ecore_Drm2_Launcher *launcher, int x, int y);
+
+/**
  * Destroy outputs
  *
  * @param launcher

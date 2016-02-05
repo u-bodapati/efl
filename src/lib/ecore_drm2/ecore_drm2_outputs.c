@@ -1,6 +1,10 @@
 #include "ecore_drm2_private.h"
 #include <ctype.h>
 
+#define INSIDE(x, y, xx, yy, ww, hh) \
+   (((x) < ((xx) + (ww))) && ((y) < ((yy) + (hh))) && \
+       ((x) >= (xx)) && ((y) >= (yy)))
+
 #define EDID_DESCRIPTOR_ALPHANUMERIC_DATA_STRING 0xfe
 #define EDID_DESCRIPTOR_DISPLAY_PRODUCT_NAME 0xfc
 #define EDID_DESCRIPTOR_DISPLAY_PRODUCT_SERIAL_NUMBER 0xff
@@ -479,4 +483,28 @@ ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd)
 
    EINA_LIST_FREE(launcher->outputs, output)
      _output_destroy(launcher, output, fd);
+}
+
+EAPI Ecore_Drm2_Output *
+ecore_drm2_output_find(Ecore_Drm2_Launcher *launcher, int x, int y)
+{
+   Ecore_Drm2_Output *output;
+   Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, NULL);
+
+   EINA_LIST_FOREACH(launcher->outputs, l, output)
+     {
+        int ox, oy, ow, oh;
+
+        ox = output->x;
+        oy = output->y;
+        ow = output->current_mode->width;
+        oh = output->current_mode->height;
+
+        if (INSIDE(x, y, ox, oy, ow, oh))
+          return output;
+     }
+
+   return NULL;
 }
