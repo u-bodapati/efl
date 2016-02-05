@@ -94,13 +94,13 @@ struct _Ecore_Drm2_Plane
    uint32_t crtcs;
    uint32_t num_formats;
    int32_t x, y;
+   int32_t type;
 
    int32_t sx, sy; // src
    uint32_t sw, sh;
    uint32_t dx, dy; // dest
    uint32_t dw, dh;
 
-   /* TODO: FB */
    void *output;
 
    uint32_t formats[];

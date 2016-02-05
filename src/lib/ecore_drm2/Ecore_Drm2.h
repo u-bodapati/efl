@@ -291,6 +291,20 @@ EAPI Eina_Bool ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd);
 EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
 
 /**
+ * Find a plane of the given type which is supported on the given output
+ *
+ * @param launcher
+ * @param output
+ * @param type
+ *
+ * @return A valid Ecore_Drm2_Plane or NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Plane_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Plane *ecore_drm2_plane_find(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int type);
+
+/**
  * @defgroup Ecore_Drm2_Output_Group Drm output functions
  *
  * Functions that deal with setup of outputs

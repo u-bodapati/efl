@@ -1,5 +1,19 @@
 #include "ecore_drm2_private.h"
 
+static int
+_plane_supported(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, uint32_t supported)
+{
+   int c;
+
+   for (c = 0; c < launcher->num_crtcs; c++)
+     {
+        if (launcher->crtcs[c] != output->crtc_id) continue;
+        if (supported & (1 << c)) return -1;
+     }
+
+   return 0;
+}
+
 EAPI Eina_Bool
 ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
 {
@@ -64,8 +78,29 @@ ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd)
           drmModeSetPlane(fd, plane->id, output->crtc_id, 0, 0,
                           0, 0, 0, 0, 0, 0, 0, 0);
 
-        /* TODO: release FBs */
-
         free(plane);
      }
+}
+
+EAPI Ecore_Drm2_Plane *
+ecore_drm2_plane_find(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int type)
+{
+   Ecore_Drm2_Plane *plane;
+   Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, NULL);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
+
+   EINA_LIST_FOREACH(launcher->planes, l, plane)
+     {
+        if (plane->type != type) continue;
+
+        if (!_plane_supported(launcher, output, plane->crtcs))
+          continue;
+
+        plane->output = output;
+        return plane;
+     }
+
+   return NULL;
 }
