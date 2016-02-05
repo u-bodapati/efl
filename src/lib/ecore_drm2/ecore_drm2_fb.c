@@ -87,3 +87,11 @@ ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb)
    drmIoctl(fb->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &darg);
    free(fb);
 }
+
+EAPI void *
+ecore_drm2_fb_data_get(Ecore_Drm2_Fb *fb)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(fb, NULL);
+
+   return fb->mmap;
+}

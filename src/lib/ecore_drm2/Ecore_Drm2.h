@@ -352,6 +352,18 @@ EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int dept
  */
 EAPI void ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb);
 
+/**
+ * Get a framebuffer's mmap'd data
+ *
+ * @param fb
+ *
+ * @return The mmap'd area of the framebuffer or NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI void *ecore_drm2_fb_data_get(Ecore_Drm2_Fb *fb);
+
 # endif
 
 # undef EAPI
