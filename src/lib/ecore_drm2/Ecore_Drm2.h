@@ -333,13 +333,14 @@ EAPI void ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd);
  * @param height
  * @param depth
  * @param bpp
+ * @param format
  *
  * @return A newly create framebuffer object, or NULL on failure
  *
  * @ingroup Ecore_Drm2_Fb_Group
  * @since 1.18
  */
-EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp);
+EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp, unsigned int format);
 
 /**
  * Destroy a framebuffer object

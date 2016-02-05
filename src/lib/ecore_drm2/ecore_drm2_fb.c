@@ -2,7 +2,7 @@
 #include <sys/mman.h>
 
 EAPI Ecore_Drm2_Fb *
-ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp)
+ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp, unsigned int format)
 {
    Ecore_Drm2_Fb *fb;
    struct drm_mode_create_dumb carg;
@@ -20,6 +20,7 @@ ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp)
    fb->h = height;
    fb->bpp = bpp;
    fb->depth = depth;
+   fb->format = format;
 
    memset(&carg, 0, sizeof(struct drm_mode_create_dumb));
    carg.bpp = bpp;

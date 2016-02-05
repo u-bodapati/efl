@@ -80,6 +80,7 @@ struct _Ecore_Drm2_Fb
    int depth, bpp;
    uint32_t id, hdl;
    uint32_t stride, size;
+   uint32_t format;
 
    void *mmap;
 
