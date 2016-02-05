@@ -69,3 +69,20 @@ err:
    free(fb);
    return NULL;
 }
+
+EAPI void
+ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb)
+{
+   struct drm_mode_destroy_dumb darg;
+
+   EINA_SAFETY_ON_NULL_RETURN(fb);
+   EINA_SAFETY_ON_NULL_RETURN(fb->mmap);
+
+   if (fb->id) drmModeRmFB(fb->fd, fb->id);
+   munmap(fb->mmap, fb->size);
+
+   memset(&darg, 0, sizeof(struct drm_mode_destroy_dumb));
+   darg.handle = fb->hdl;
+   drmIoctl(fb->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &darg);
+   free(fb);
+}

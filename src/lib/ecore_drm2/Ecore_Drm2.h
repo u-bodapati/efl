@@ -341,6 +341,16 @@ EAPI void ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd);
  */
 EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp);
 
+/**
+ * Destroy a framebuffer object
+ *
+ * @param fb
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb);
+
 # endif
 
 # undef EAPI
