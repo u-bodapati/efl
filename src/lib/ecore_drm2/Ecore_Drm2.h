@@ -67,6 +67,7 @@ typedef struct _Ecore_Drm2_Fb Ecore_Drm2_Fb;
  * @li @ref Ecore_Drm2_Input_Group
  * @li @ref Ecore_Drm2_Plane_Group
  * @li @ref Ecore_Drm2_Output_Group
+ * @li @ref Ecore_Drm2_Fb_Group
  *
  */
 
@@ -317,6 +318,28 @@ EAPI Eina_Bool ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd);
  * @since 1.18
  */
 EAPI void ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd);
+
+/**
+ * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
+ *
+ * Functions that deal with setup of framebuffers
+ */
+
+/**
+ * Create a new framebuffer object
+ *
+ * @param fd
+ * @param width
+ * @param height
+ * @param depth
+ * @param bpp
+ *
+ * @return A newly create framebuffer object, or NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp);
 
 # endif
 
