@@ -131,3 +131,27 @@ ecore_drm2_plane_find(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, 
 
    return NULL;
 }
+
+EAPI Eina_Bool
+ecore_drm2_plane_fb_set(Ecore_Drm2_Plane *plane, Ecore_Drm2_Fb *fb)
+{
+   Ecore_Drm2_Output *output;
+   int ret;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(plane, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(plane->output, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(fb, EINA_FALSE);
+
+   output = plane->output;
+
+   ret = drmModeSetPlane(fb->fd, plane->id, output->crtc_id, fb->id, 0,
+                         output->x, output->y, fb->w, fb->h, // dest
+                         0, 0, (fb->w << 16), (fb->h << 16)); // src
+   if (ret)
+     {
+        ERR("Could not set fb on plane: %m");
+        return EINA_FALSE;
+     }
+
+   return EINA_TRUE;
+}

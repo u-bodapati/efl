@@ -305,6 +305,19 @@ EAPI void ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd);
 EAPI Ecore_Drm2_Plane *ecore_drm2_plane_find(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int type);
 
 /**
+ * Set a give framebuffer on a given plane
+ *
+ * @param plane
+ * @param fb
+ *
+ * @return EINA_TRUE on success, EINA_FALSE on failure
+ *
+ * @ingroup Ecore_Drm2_Plane_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_plane_fb_set(Ecore_Drm2_Plane *plane, Ecore_Drm2_Fb *fb);
+
+/**
  * @defgroup Ecore_Drm2_Output_Group Drm output functions
  *
  * Functions that deal with setup of outputs
