@@ -364,6 +364,18 @@ EAPI void ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb);
  */
 EAPI void *ecore_drm2_fb_data_get(Ecore_Drm2_Fb *fb);
 
+/**
+ * Get a framebuffer's size
+ *
+ * @param fb
+ *
+ * @return size of the framebuffers' mmap'd data or 0 on failure
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI unsigned int ecore_drm2_fb_size_get(Ecore_Drm2_Fb *fb);
+
 # endif
 
 # undef EAPI
