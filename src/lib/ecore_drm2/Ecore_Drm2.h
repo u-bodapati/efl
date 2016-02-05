@@ -49,6 +49,9 @@ typedef struct _Ecore_Drm2_Output Ecore_Drm2_Output;
 /* opaque structure to represent an output mode */
 typedef struct _Ecore_Drm2_Output_Mode Ecore_Drm2_Output_Mode;
 
+/* opaque structure to represent a framebuffer */
+typedef struct _Ecore_Drm2_Fb Ecore_Drm2_Fb;
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals

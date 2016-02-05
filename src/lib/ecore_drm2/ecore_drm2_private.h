@@ -73,6 +73,20 @@ typedef enum _Ecore_Drm2_Input_Device_Capability
    EVDEV_SEAT_TOUCH = (1 << 2)
 } Ecore_Drm2_Input_Device_Capability;
 
+struct _Ecore_Drm2_Fb
+{
+   int fd;
+   int w, h;
+   int depth, bpp;
+   uint32_t id, hdl;
+   uint32_t stride, size;
+
+   void *mmap;
+
+   Eina_Bool from_client : 1;
+   Eina_Bool pending_flip : 1;
+};
+
 struct _Ecore_Drm2_Plane
 {
    uint32_t id;
