@@ -19,11 +19,12 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
 {
    Ecore_Drm2_Plane *plane;
    drmModePlaneRes *res;
-   drmModePlane *dplane;
    uint32_t i;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, EINA_FALSE);
    EINA_SAFETY_ON_TRUE_RETURN_VAL((fd < 0), EINA_FALSE);
+
+   drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 
    res = drmModeGetPlaneResources(fd);
    if (!res)
@@ -34,6 +35,9 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
 
    for (i = 0; i < res->count_planes; i++)
      {
+        drmModePlane *dplane;
+        drmModeObjectPropertiesPtr props;
+
         dplane = drmModeGetPlane(fd, res->planes[i]);
         if (!dplane) continue;
 
@@ -51,6 +55,29 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
         plane->num_formats = dplane->count_formats;
         memcpy(plane->formats, dplane->formats,
                plane->num_formats * sizeof(plane->formats[0]));
+
+        props =
+          drmModeObjectGetProperties(fd, plane->id, DRM_MODE_OBJECT_PLANE);
+        if (props)
+          {
+             uint32_t j;
+             int type = -1;
+
+             for (j = 0; type == -1 && j < props->count_props; j++)
+               {
+                  drmModePropertyPtr prop;
+
+                  prop = drmModeGetProperty(fd, props->props[j]);
+                  if (!prop) continue;
+
+                  if (!strcmp(prop->name, "type"))
+                    plane->type = props->prop_values[j];
+
+                  /* TODO: supported rotations */
+
+                  drmModeFreeProperty(prop);
+               }
+          }
 
         drmModeFreePlane(dplane);
 
