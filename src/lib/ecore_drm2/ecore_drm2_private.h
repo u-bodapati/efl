@@ -185,6 +185,7 @@ struct _Ecore_Drm2_Input_Device
    int fd;
    const char *path;
    const char *output_name;
+   Ecore_Drm2_Output *output;
 
    struct libinput_device *device;
    Ecore_Drm2_Input_Device_Capability caps;
