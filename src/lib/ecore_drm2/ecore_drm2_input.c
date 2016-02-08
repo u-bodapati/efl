@@ -80,14 +80,18 @@ _udev_seat_get(Ecore_Drm2_Input *input, struct libinput_device *device)
 }
 
 static void
-_device_added(Ecore_Drm2_Input *input, struct libinput_device *device)
+_device_added(Ecore_Drm2_Launcher *launcher, struct libinput_device *device)
 {
+   Eina_List *l;
+   Ecore_Drm2_Input *input;
+   Ecore_Drm2_Output *output;
    Ecore_Drm2_Seat *seat;
    Ecore_Drm2_Input_Device *dev;
    const char *oname;
 
+   input = &launcher->input;
+
    seat = _udev_seat_get(input, device);
-   DBG("Got Seat: %s", seat->name);
 
    dev = _ecore_drm2_input_device_create(seat, device);
 
@@ -96,14 +100,22 @@ _device_added(Ecore_Drm2_Input *input, struct libinput_device *device)
    oname = libinput_device_get_output_name(device);
    if (oname)
      {
-        DBG("\tOutput Name: %s", oname);
         dev->output_name = eina_stringshare_add(oname);
-        /* TODO: loop outputs and set on dev */
+        EINA_LIST_FOREACH(launcher->outputs, l, output)
+          {
+             if (!output->name) continue;
+             if (!strcmp(output->name, oname))
+               {
+                  _ecore_drm2_input_device_output_set(dev, output);
+                  break;
+               }
+          }
      }
-   /* else if (!dev->output) */
-   /*   { */
-   /* TODO */
-   /*   } */
+   else if ((!dev->output) && (eina_list_count(launcher->outputs) > 0))
+     {
+        output = eina_list_nth(launcher->outputs, 0);
+        if (output) _ecore_drm2_input_device_output_set(dev, output);
+     }
 
    seat->devices = eina_list_append(seat->devices, dev);
 }
@@ -139,11 +151,11 @@ _udev_process_event(struct libinput_event *event)
    switch (libinput_event_get_type(event))
      {
       case LIBINPUT_EVENT_DEVICE_ADDED:
-        DBG("Udev Event: Device Added: %s", libinput_device_get_name(device));
-        _device_added(&launch->input, device);
+        DBG("Input Device Added: %s", libinput_device_get_name(device));
+        _device_added(launch, device);
         break;
       case LIBINPUT_EVENT_DEVICE_REMOVED:
-        DBG("Udev Event: Device Removed: %s", libinput_device_get_name(device));
+        DBG("Input Device Removed: %s", libinput_device_get_name(device));
         _device_removed(&launch->input, device);
         break;
       default:
