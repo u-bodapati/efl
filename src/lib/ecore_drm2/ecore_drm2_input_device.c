@@ -1,9 +1,47 @@
 #include "ecore_drm2_private.h"
 
 static void
-_device_calibration_set(Ecore_Drm2_Input_Device *dev EINA_UNUSED)
+_device_calibration_set(Ecore_Drm2_Input_Device *dev)
 {
-   /* TODO */
+   float cal[6];
+   const char *vals;
+   const char *sysname;
+   const char *devices;
+   Eina_List *devices;
+   int w = 0, h = 0;
+   enum libinput_config_status status;
+
+   if (!dev->output) return;
+
+   w = dev->output->current_mode->width;
+   h = dev->output->current_mode->height;
+
+   if ((!libinput_device_config_calibration_has_matrix(dev->device)) ||
+       (libinput_device_config_calibration_get_default_matrix(dev->device, cal) != 0))
+     return;
+
+   sysname = libinput_device_get_sysname(dev->device);
+
+   devices = eeze_udev_find_by_subsystem_sysname("input", sysname);
+   EINA_LIST_FREE(devices, device)
+     {
+        vals = eeze_udev_syspath_get_property(device, "WL_CALIBRATION");
+        if ((!vals) ||
+            (sscanf(vals, "%f %f %f %f %f %f",
+                    &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]) != 6))
+          goto cont;
+
+        cal[2] /= w;
+        cal[5] /= h;
+
+        status =
+          libinput_device_config_calibration_set_matrix(dev->device, cal);
+        if (status != LIBINPUT_CONFIG_STATUS_SUCCESS)
+          WRN("Failed to apply device calibration");
+
+cont:
+        eina_stringshare_del(device);
+     }
 }
 
 static void
