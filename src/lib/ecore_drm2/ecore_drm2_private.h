@@ -233,6 +233,7 @@ void _ecore_drm2_dbus_close(Eldbus_Connection *conn);
 Ecore_Drm2_Input_Device *_ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *device);
 void _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device);
 int _ecore_drm2_input_device_event_process(struct libinput_event *event);
+void _ecore_drm2_input_device_output_set(Ecore_Drm2_Input_Device *device, Ecore_Drm2_Output *output);
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 

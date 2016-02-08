@@ -6,7 +6,7 @@ _device_calibration_set(Ecore_Drm2_Input_Device *dev)
    float cal[6];
    const char *vals;
    const char *sysname;
-   const char *devices;
+   const char *device;
    Eina_List *devices;
    int w = 0, h = 0;
    enum libinput_config_status status;
@@ -15,6 +15,7 @@ _device_calibration_set(Ecore_Drm2_Input_Device *dev)
 
    w = dev->output->current_mode->width;
    h = dev->output->current_mode->height;
+   if ((w == 0) || (h == 0)) return;
 
    if ((!libinput_device_config_calibration_has_matrix(dev->device)) ||
        (libinput_device_config_calibration_get_default_matrix(dev->device, cal) != 0))
@@ -135,4 +136,11 @@ _ecore_drm2_input_device_event_process(struct libinput_event *event)
      }
 
    return ret;
+}
+
+void
+_ecore_drm2_input_device_output_set(Ecore_Drm2_Input_Device *device, Ecore_Drm2_Output *output)
+{
+   device->output = output;
+   _device_calibration_set(device);
 }
