@@ -1,4 +1,5 @@
 #include "ecore_drm2_private.h"
+#include <fcntl.h>
 
 static Ecore_Drm2_Launcher_Interface *_ifaces[] =
 {
@@ -43,6 +44,8 @@ ecore_drm2_launcher_open(Ecore_Drm2_Launcher *launcher, const char *path, int fl
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, -1);
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher->iface, -1);
+
+   if (flags < 0) flags = O_RDWR;
 
    if (launcher->iface->open)
      return launcher->iface->open(launcher, path, flags);
