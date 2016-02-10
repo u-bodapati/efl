@@ -142,3 +142,29 @@ ecore_drm2_fb_stride_get(Ecore_Drm2_Fb *fb)
 
    return fb->stride;
 }
+
+EAPI void
+ecore_drm2_fb_dirty(Ecore_Drm2_Fb *fb, Eina_Rectangle *rects, unsigned int count)
+{
+   EINA_SAFETY_ON_NULL_RETURN(fb);
+   EINA_SAFETY_ON_NULL_RETURN(rects);
+
+#ifdef DRM_MODE_FEATURE_DIRTYFB
+   drmModeClip *clip;
+   unsigned int i = 0;
+   int ret;
+
+   clip = alloca(count * sizeof(drmModeClip));
+   for (i = 0; i < count; i++)
+     {
+        clip[i].x1 = rects[i].x;
+        clip[i].y1 = rects[i].y;
+        clip[i].x2 = rects[i].w;
+        clip[i].y2 = rects[i].h;
+     }
+
+   ret = drmModeDirtyFB(fb->fd, fb->id, clip, count);
+   if ((ret) && (ret == -EINVAL))
+     WRN("Could not mark framebuffer as dirty: %m");
+#endif
+}

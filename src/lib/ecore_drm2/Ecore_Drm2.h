@@ -429,6 +429,18 @@ EAPI unsigned int ecore_drm2_fb_size_get(Ecore_Drm2_Fb *fb);
  */
 EAPI unsigned int ecore_drm2_fb_stride_get(Ecore_Drm2_Fb *fb);
 
+/**
+ * Mark regions of a framebuffer as dirty
+ *
+ * @param fb
+ * @param rects
+ * @param count
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_fb_dirty(Ecore_Drm2_Fb *fb, Eina_Rectangle *rects, unsigned int count);
+
 # endif
 
 # undef EAPI
