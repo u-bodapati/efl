@@ -134,3 +134,11 @@ ecore_drm2_fb_size_get(Ecore_Drm2_Fb *fb)
 
    return fb->size;
 }
+
+EAPI unsigned int
+ecore_drm2_fb_stride_get(Ecore_Drm2_Fb *fb)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(fb, 0);
+
+   return fb->stride;
+}

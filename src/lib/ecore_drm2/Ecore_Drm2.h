@@ -417,6 +417,18 @@ EAPI void *ecore_drm2_fb_data_get(Ecore_Drm2_Fb *fb);
  */
 EAPI unsigned int ecore_drm2_fb_size_get(Ecore_Drm2_Fb *fb);
 
+/**
+ * Get a framebuffer's stride
+ *
+ * @param fb
+ *
+ * @return stride of the framebuffer or 0 on failure
+ *
+ * @ingroup Ecore_Drm2_Fb_Group
+ * @since 1.18
+ */
+EAPI unsigned int ecore_drm2_fb_stride_get(Ecore_Drm2_Fb *fb);
+
 # endif
 
 # undef EAPI
