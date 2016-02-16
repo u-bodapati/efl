@@ -278,9 +278,6 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    output->connected = (conn->connection == DRM_MODE_CONNECTED);
 
-   /* TODO: fix me */
-   output->format = launcher->format;
-
    output->pipe = i;
    /* output->crtc_index = i; */
    output->crtc_id = res->crtcs[i];
@@ -343,8 +340,6 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    /* TODO: gamma */
 
-   /* TODO: plane init */
-
    DBG("Created New Output At %d,%d", output->x, output->y);
    DBG("\tCrtc Pos: %d %d", output->ocrtc->x, output->ocrtc->y);
    DBG("\tCrtc: %d", output->crtc_id);
@@ -405,8 +400,6 @@ _output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd
 
    launcher->crtc_allocator &= ~(1 << output->crtc_id);
    launcher->conn_allocator &= ~(1 << output->conn_id);
-
-   /* TODO: release planes ? */
 
    eina_stringshare_del(output->name);
    eina_stringshare_del(output->make);
@@ -507,4 +500,20 @@ ecore_drm2_output_find(Ecore_Drm2_Launcher *launcher, int x, int y)
      }
 
    return NULL;
+}
+
+EAPI unsigned int
+ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, 0);
+
+   if (output->pipe > 1)
+     {
+        return (output->pipe << DRM_VBLANK_HIGH_CRTC_SHIFT) &
+          DRM_VBLANK_HIGH_CRTC_MASK;
+     }
+   else if (output->pipe > 0)
+     return DRM_VBLANK_SECONDARY;
+
+   return 0;
 }

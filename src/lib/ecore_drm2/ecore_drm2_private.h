@@ -85,7 +85,6 @@ struct _Ecore_Drm2_Fb
    void *mmap;
 
    Eina_Bool from_client : 1;
-   Eina_Bool pending_flip : 1;
 };
 
 struct _Ecore_Drm2_Plane
@@ -93,7 +92,7 @@ struct _Ecore_Drm2_Plane
    uint32_t id;
    uint32_t crtcs;
    uint32_t num_formats;
-   int32_t x, y;
+   int32_t x, y, cw, ch;
    int32_t type;
 
    int32_t sx, sy; // src
@@ -128,7 +127,6 @@ struct _Ecore_Drm2_Output
 
    uint32_t crtc_id;
    uint32_t conn_id;
-   uint32_t format;
 
    Ecore_Drm2_Output_Mode *current_mode;
 
@@ -137,20 +135,14 @@ struct _Ecore_Drm2_Output
 
    struct
      {
-        Ecore_Drm2_Plane cursor;
-        Ecore_Drm2_Plane fb;
-     } planes;
-
-   struct
-     {
         char eisa[13];
         char monitor[13];
         char pnp[5];
         char serial[13];
-        /* unsigned char *blob; */
      } edid;
 
    Eina_List *modes;
+   Eina_List *planes;
 
    Eina_Bool connected : 1;
 };
@@ -205,8 +197,6 @@ struct _Ecore_Drm2_Launcher
    uint32_t crtc_allocator;
    uint32_t conn_allocator;
 
-   uint32_t format;
-
    struct
      {
         uint32_t width, height;
@@ -222,7 +212,6 @@ struct _Ecore_Drm2_Launcher
    Ecore_Drm2_Input input;
 
    Eina_List *outputs;
-   Eina_List *planes;
 
    Eina_Bool sync;
 };

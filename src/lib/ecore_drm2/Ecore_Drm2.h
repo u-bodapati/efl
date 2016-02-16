@@ -362,6 +362,18 @@ EAPI Ecore_Drm2_Output *ecore_drm2_output_find(Ecore_Drm2_Launcher *launcher, in
 EAPI void ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd);
 
 /**
+ * Determine the type of vblank synchronization for an output
+ *
+ * @param output
+ *
+ * @return The type of vblank request for this output
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
