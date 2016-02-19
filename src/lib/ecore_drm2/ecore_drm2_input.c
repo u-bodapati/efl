@@ -24,6 +24,13 @@ const struct libinput_interface _input_interface =
    _cb_close_restricted,
 };
 
+static void
+_pointer_destroy(Ecore_Drm2_Pointer *ptr)
+{
+   /* TODO: free any other pointer resource */
+   free(ptr);
+}
+
 static Ecore_Drm2_Seat *
 _udev_seat_create(Ecore_Drm2_Input *input, const char *name)
 {
@@ -46,6 +53,8 @@ _udev_seat_destroy(Ecore_Drm2_Seat *seat)
 
    EINA_LIST_FREE(seat->devices, dev)
      _ecore_drm2_input_device_destroy(dev);
+
+   if (seat->ptr) _pointer_destroy(seat->ptr);
 
    eina_stringshare_del(seat->name);
    free(seat);
@@ -95,7 +104,7 @@ _device_added(Ecore_Drm2_Launcher *launcher, struct libinput_device *device)
 
    dev = _ecore_drm2_input_device_create(seat, device);
 
-   /* TODO: get pointer */
+   /* TODO: get pointer and clamp ?? */
 
    oname = libinput_device_get_output_name(device);
    if (oname)
@@ -199,6 +208,106 @@ _cb_input_dispatch(void *data, Ecore_Fd_Handler *hdlr EINA_UNUSED)
    return EINA_TRUE;
 }
 
+static Ecore_Drm2_Pointer *
+_pointer_create(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Pointer *ptr;
+
+   ptr = calloc(1, sizeof(Ecore_Drm2_Pointer));
+   if (!ptr) return NULL;
+
+   ptr->x = 100;
+   ptr->y = 100;
+   /* ptr->sx = -1000000; */
+   /* ptr->sy = -1000000; */
+
+   ptr->seat = seat;
+
+   return ptr;
+}
+
+Eina_Bool
+_ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Pointer *ptr;
+
+   if (seat->ptr)
+     {
+        seat->count.ptr += 1;
+        if (seat->count.ptr == 1)
+          {
+             /* TODO: update seat caps */
+             return EINA_TRUE;
+          }
+     }
+
+   ptr = _pointer_create(seat);
+   if (!ptr) return EINA_FALSE;
+
+   seat->ptr = ptr;
+   seat->count.ptr = 1;
+
+   /* TODO: update seat caps */
+
+   return EINA_TRUE;
+}
+
+void
+_ecore_drm2_input_pointer_release(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Pointer *ptr;
+
+   ptr = seat->ptr;
+
+   seat->count.ptr--;
+   if (seat->count.ptr == 0)
+     {
+        ptr->buttons = 0;
+
+        /* TODO: update seat caps */
+     }
+}
+
+Ecore_Drm2_Pointer *
+_ecore_drm2_input_pointer_get(Ecore_Drm2_Seat *seat)
+{
+   if (!seat) return NULL;
+   if (seat->count.ptr) return seat->ptr;
+   return NULL;
+}
+
+/* Eina_Bool */
+/* _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap) */
+/* { */
+
+/* } */
+
+/* void */
+/* _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat) */
+/* { */
+/*    seat->count.kbd--; */
+/*    if (seat->count.kbd == 0) */
+/*      { */
+
+/*      } */
+/* } */
+
+/* Eina_Bool */
+/* _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat) */
+/* { */
+
+/* } */
+
+/* void */
+/* _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat) */
+/* { */
+/*    seat->count.touch--; */
+/*    if (seat->count.touch == 0) */
+/*      { */
+
+/*      } */
+/* } */
+
 EAPI Eina_Bool
 ecore_drm2_input_init(Ecore_Drm2_Launcher *launch, const char *seat)
 {
@@ -299,8 +408,8 @@ ecore_drm2_input_pointer_warp(Ecore_Drm2_Launcher *launcher, int x, int y)
           {
              if (dev->caps & EVDEV_SEAT_POINTER)
                {
-                  seat->ptr.dx = x;
-                  seat->ptr.dy = y;
+                  seat->ptr->x = x;
+                  seat->ptr->y = y;
                   /* TODO: post pointer motion event */
                }
           }

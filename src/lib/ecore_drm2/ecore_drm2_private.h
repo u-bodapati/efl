@@ -148,6 +148,28 @@ struct _Ecore_Drm2_Output
    Eina_Bool connected : 1;
 };
 
+typedef struct _Ecore_Drm2_Pointer
+{
+   int x, y;
+   int buttons;
+   unsigned int timestamp;
+
+   struct
+     {
+        int x, y;
+     } hot;
+
+   struct
+     {
+        int x, y;
+        unsigned int button;
+        unsigned int serial;
+        unsigned int timestamp;
+     } grab;
+
+   Ecore_Drm2_Seat *seat;
+} Ecore_Drm2_Pointer;
+
 struct _Ecore_Drm2_Seat
 {
    const char *name;
@@ -157,10 +179,7 @@ struct _Ecore_Drm2_Seat
         int kbd, ptr, touch;
      } count;
 
-   struct
-     {
-        double dx, dy;
-     } ptr;
+   Ecore_Drm2_Pointer *ptr;
 
    Eina_List *devices;
 };
@@ -229,6 +248,16 @@ Ecore_Drm2_Input_Device *_ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, 
 void _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device);
 int _ecore_drm2_input_device_event_process(struct libinput_event *event);
 void _ecore_drm2_input_device_output_set(Ecore_Drm2_Input_Device *device, Ecore_Drm2_Output *output);
+
+Eina_Bool _ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat);
+void _ecore_drm2_input_pointer_release(Ecore_Drm2_Seat *seat);
+Ecore_Drm2_Pointer *_ecore_drm2_input_pointer_get(Ecore_Drm2_Seat *seat);
+
+/* Eina_Bool _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap); */
+/* void _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat); */
+
+/* Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat); */
+/* void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat); */
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 
