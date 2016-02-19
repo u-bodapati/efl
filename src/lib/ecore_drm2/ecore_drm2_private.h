@@ -84,6 +84,7 @@ struct _Ecore_Drm2_Fb
 
    void *mmap;
 
+   Eina_Bool gbm : 1;
    Eina_Bool from_client : 1;
 };
 

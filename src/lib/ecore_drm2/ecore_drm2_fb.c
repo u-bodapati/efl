@@ -65,7 +65,8 @@ ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp, unsigned
    if (!_fb2_create(fb))
      {
         ret =
-          drmModeAddFB(fd, width, height, depth, bpp, fb->stride, fb->hdl, &fb->id);
+          drmModeAddFB(fd, width, height, depth, bpp,
+                       fb->stride, fb->hdl, &fb->id);
         if (ret)
           {
              ERR("Could not add framebuffer: %m");
@@ -102,20 +103,67 @@ err:
    return NULL;
 }
 
+EAPI Ecore_Drm2_Fb *
+ecore_drm2_fb_gbm_create(int fd, int width, int height, int depth, int bpp, unsigned int format, unsigned int handle, unsigned int stride)
+{
+   Ecore_Drm2_Fb *fb;
+
+   EINA_SAFETY_ON_TRUE_RETURN_VAL((fd < 0), NULL);
+
+   fb = calloc(1, sizeof(Ecore_Drm2_Fb));
+   if (!fb) return NULL;
+
+   fb->gbm = EINA_TRUE;
+
+   fb->fd = fd;
+   fb->w = width;
+   fb->h = height;
+   fb->bpp = bpp;
+   fb->depth = depth;
+   fb->format = format;
+   fb->stride = stride;
+   fb->size = fb->stride * fb->h;
+   fb->hdl = handle;
+
+   if (!_fb2_create(fb))
+     {
+        int ret;
+
+        ret =
+          drmModeAddFB(fd, width, height, depth, bpp,
+                       fb->stride, fb->hdl, &fb->id);
+        if (ret)
+          {
+             ERR("Could not add framebuffer: %m");
+             goto err;
+          }
+     }
+
+   return fb;
+
+err:
+   free(fb);
+   return NULL;
+}
+
 EAPI void
 ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb)
 {
-   struct drm_mode_destroy_dumb darg;
-
    EINA_SAFETY_ON_NULL_RETURN(fb);
-   EINA_SAFETY_ON_NULL_RETURN(fb->mmap);
 
    if (fb->id) drmModeRmFB(fb->fd, fb->id);
-   munmap(fb->mmap, fb->size);
 
-   memset(&darg, 0, sizeof(struct drm_mode_destroy_dumb));
-   darg.handle = fb->hdl;
-   drmIoctl(fb->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &darg);
+   if (!fb->gbm)
+     {
+        struct drm_mode_destroy_dumb darg;
+
+        if (fb->mmap) munmap(fb->mmap, fb->size);
+
+        memset(&darg, 0, sizeof(struct drm_mode_destroy_dumb));
+        darg.handle = fb->hdl;
+        drmIoctl(fb->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &darg);
+     }
+
    free(fb);
 }
 

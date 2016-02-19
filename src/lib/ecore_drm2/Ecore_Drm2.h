@@ -396,6 +396,8 @@ EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
  */
 EAPI Ecore_Drm2_Fb *ecore_drm2_fb_create(int fd, int width, int height, int depth, int bpp, unsigned int format);
 
+EAPI Ecore_Drm2_Fb *ecore_drm2_fb_gbm_create(int fd, int width, int height, int depth, int bpp, unsigned int format, unsigned int handle, unsigned int stride);
+
 /**
  * Destroy a framebuffer object
  *
