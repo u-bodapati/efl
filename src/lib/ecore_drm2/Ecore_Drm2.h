@@ -262,6 +262,20 @@ EAPI void ecore_drm2_input_shutdown(Ecore_Drm2_Launcher *launcher);
 EAPI Eina_Bool ecore_drm2_input_enable(Ecore_Drm2_Launcher *launcher);
 
 /**
+ * Warp the pointer position
+ *
+ * This function will set the pointer position
+ *
+ * @param launcher
+ * @param x
+ * @param y
+ *
+ * @ingroup Ecore_Drm2_Input_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_input_pointer_warp(Ecore_Drm2_Launcher *launcher, int x, int y);
+
+/**
  * @defgroup Ecore_Drm2_Plane_Group Drm plane functions
  *
  * Functions that deal with setup of planes

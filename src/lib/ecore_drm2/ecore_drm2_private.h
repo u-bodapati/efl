@@ -157,6 +157,11 @@ struct _Ecore_Drm2_Seat
         int kbd, ptr, touch;
      } count;
 
+   struct
+     {
+        double dx, dy;
+     } ptr;
+
    Eina_List *devices;
 };
 

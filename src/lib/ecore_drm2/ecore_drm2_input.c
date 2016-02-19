@@ -283,3 +283,26 @@ err:
    launcher->input.hdlr = NULL;
    return EINA_FALSE;
 }
+
+EAPI void
+ecore_drm2_input_pointer_warp(Ecore_Drm2_Launcher *launcher, int x, int y)
+{
+   Ecore_Drm2_Seat *seat;
+   Ecore_Drm2_Input_Device *dev;
+   Eina_List *l, *ll;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   EINA_LIST_FOREACH(launcher->input.seats, l, seat)
+     {
+        EINA_LIST_FOREACH(seat->devices, ll, dev)
+          {
+             if (dev->caps & EVDEV_SEAT_POINTER)
+               {
+                  seat->ptr.dx = x;
+                  seat->ptr.dy = y;
+                  /* TODO: post pointer motion event */
+               }
+          }
+     }
+}
