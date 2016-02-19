@@ -238,6 +238,16 @@ _drm_render(Ecore_Evas *ee)
    return rend;
 }
 
+static Eina_Bool
+_drm_pointer_warp(const Ecore_Evas *ee, Evas_Coord x, Evas_Coord y)
+{
+   Ecore_Evas_Engine_Drm_Data *edata;
+
+   edata = ee->engine.data;
+   ecore_drm2_input_pointer_warp(edata->launcher, x, y);
+   return EINA_TRUE;
+}
+
 static void
 _drm_show(Ecore_Evas *ee)
 {
@@ -562,7 +572,7 @@ static Ecore_Evas_Engine_Func _ecore_evas_drm_engine_func =
    NULL, //void (*fn_msg_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
 
    NULL, //_ecore_evas_drm_pointer_xy_get,
-   NULL, // pointer_warp
+   _drm_pointer_warp,
 
    NULL, // wm_rot_preferred_rotation_set
    NULL, // wm_rot_available_rotations_set
