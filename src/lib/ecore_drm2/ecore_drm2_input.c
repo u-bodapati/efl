@@ -31,6 +31,192 @@ _pointer_destroy(Ecore_Drm2_Pointer *ptr)
    free(ptr);
 }
 
+static void
+_keyboard_info_destroy(Ecore_Drm2_Keyboard_Info *info)
+{
+   if (--info->refs > 0) return;
+
+   xkb_keymap_unref(info->keymap.map);
+   if (info->keymap.area) munmap(info->keymap.area, info->keymap.size);
+   if (info->keymap.fd) close(info->keymap.fd);
+   free(info);
+}
+
+static void
+_keyboard_destroy(Ecore_Drm2_Keyboard *kbd)
+{
+   free((char *)kbd->names.rules);
+   free((char *)kbd->names.model);
+   free((char *)kbd->names.layout);
+   free((char *)kbd->names.variant);
+   free((char *)kbd->names.options);
+
+   if (kbd->state) xkb_state_unref(kbd->state);
+   if (kbd->info) _keyboard_info_destroy(kbd->info);
+   xkb_context_unref(kbd->context);
+
+   xkb_keymap_unref(kbd->pending_map);
+
+   free(kbd);
+}
+
+static Ecore_Drm2_Keyboard *
+_keyboard_create(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Keyboard *kbd;
+
+   kbd = calloc(1, sizeof(Ecore_Drm2_Keyboard));
+   if (!kbd) return NULL;
+
+   /* TODO: init keyboard keys array ? */
+
+   kbd->seat = seat;
+
+   return kbd;
+}
+
+static int
+_keyboard_fd_get(off_t size)
+{
+   int fd = 0, blen = 0, len = 0;
+   const char *path;
+   char tmp[PATH_MAX];
+   long flags;
+
+   blen = sizeof(tmp) - 1;
+
+   if (!(path = getenv("XDG_RUNTIME_DIR")))
+     return -1;
+
+   len = strlen(path);
+   if (len < blen)
+     {
+        strcpy(tmp, path);
+        strcat(tmp, "/ecore-drm2-keymap-XXXXXX");
+     }
+   else
+     return -1;
+
+   if ((fd = mkstemp(tmp)) < 0) return -1;
+
+   flags = fcntl(fd, F_GETFD);
+   if (flags < 0)
+     {
+        close(fd);
+        return -1;
+     }
+
+   if (fcntl(fd, F_SETFD, (flags | FD_CLOEXEC)) == -1)
+     {
+        close(fd);
+        return -1;
+     }
+
+   if (ftruncate(fd, size) < 0)
+     {
+        close(fd);
+        return -1;
+     }
+
+   unlink(tmp);
+   return fd;
+}
+
+static Ecore_Drm2_Keyboard_Info *
+_keyboard_info_create(struct xkb_keymap *keymap)
+{
+   Ecore_Drm2_Keyboard_Info *info;
+   char *str;
+
+   info = calloc(1, sizeof(Ecore_Drm2_Keyboard_Info));
+   if (!info) return NULL;
+
+   info->keymap.map = xkb_keymap_ref(keymap);
+   info->refs = 1;
+
+   info->mods.shift =
+     xkb_keymap_mod_get_index(info->keymap.map, XKB_MOD_NAME_SHIFT);
+   info->mods.caps =
+     xkb_keymap_mod_get_index(info->keymap.map, XKB_MOD_NAME_CAPS);
+   info->mods.ctrl =
+     xkb_keymap_mod_get_index(info->keymap.map, XKB_MOD_NAME_CTRL);
+   info->mods.alt =
+     xkb_keymap_mod_get_index(info->keymap.map, XKB_MOD_NAME_ALT);
+   info->mods.super =
+     xkb_keymap_mod_get_index(info->keymap.map, XKB_MOD_NAME_LOGO);
+   info->mods.mod2 = xkb_keymap_mod_get_index(info->keymap.map, "Mod2");
+   info->mods.mod3 = xkb_keymap_mod_get_index(info->keymap.map, "Mod3");
+   info->mods.mod5 = xkb_keymap_mod_get_index(info->keymap.map, "Mod5");
+
+   info->leds.num =
+     xkb_keymap_led_get_index(info->keymap.map, XKB_LED_NAME_NUM);
+   info->leds.caps =
+     xkb_keymap_led_get_index(info->keymap.map, XKB_LED_NAME_CAPS);
+   info->leds.scroll =
+     xkb_keymap_led_get_index(info->keymap.map, XKB_LED_NAME_SCROLL);
+
+   str = xkb_keymap_get_as_string(info->keymap.map, XKB_KEYMAP_FORMAT_TEXT_V1);
+   if (!str) goto err;
+
+   info->keymap.size = strlen(str) + 1;
+
+   info->keymap.fd = _keyboard_fd_get(info->keymap.size);
+   if (info->keymap.fd < 0) goto err_fd;
+
+   info->keymap.area =
+     mmap(NULL, info->keymap.size, PROT_READ | PROT_WRITE,
+          MAP_SHARED, info->keymap.fd, 0);
+   if (info->keymap.area == MAP_FAILED) goto err_map;
+
+   strcpy(info->keymap.area, str);
+   free(str);
+
+   return info;
+
+err_map:
+   close(info->keymap.fd);
+err_fd:
+   free(str);
+err:
+   xkb_keymap_unref(info->keymap.map);
+   free(info);
+   return NULL;
+}
+
+static Eina_Bool
+_keyboard_global_build(Ecore_Drm2_Keyboard *kbd)
+{
+   struct xkb_keymap *keymap;
+
+   kbd->context = xkb_context_new(0);
+   if (!kbd->context) return EINA_FALSE;
+
+   if (!kbd->names.rules) kbd->names.rules = strdup("evdev");
+   if (!kbd->names.model) kbd->names.model = strdup("pc105");
+   if (!kbd->names.layout) kbd->names.layout = strdup("us");
+
+   keymap = xkb_keymap_new_from_names(kbd->context, &kbd->names, 0);
+   if (!keymap) return EINA_FALSE;
+
+   kbd->info = _keyboard_info_create(keymap);
+   xkb_keymap_unref(keymap);
+
+   if (!kbd->info) return EINA_FALSE;
+   return EINA_TRUE;
+}
+
+static void
+_keyboard_state_reset(Ecore_Drm2_Keyboard *kbd)
+{
+   struct xkb_state *state;
+
+   state = xkb_state_new(kbd->info->keymap.map);
+   if (!state) return;
+
+   xkb_state_unref(kbd->state);
+   kbd->state = state;
+}
+
 static Ecore_Drm2_Seat *
 _udev_seat_create(Ecore_Drm2_Input *input, const char *name)
 {
@@ -55,6 +241,7 @@ _udev_seat_destroy(Ecore_Drm2_Seat *seat)
      _ecore_drm2_input_device_destroy(dev);
 
    if (seat->ptr) _pointer_destroy(seat->ptr);
+   if (seat->kbd) _keyboard_destroy(seat->kbd);
 
    eina_stringshare_del(seat->name);
    free(seat);
@@ -276,21 +463,73 @@ _ecore_drm2_input_pointer_get(Ecore_Drm2_Seat *seat)
    return NULL;
 }
 
-/* Eina_Bool */
-/* _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap) */
-/* { */
+Eina_Bool
+_ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap)
+{
+   Ecore_Drm2_Keyboard *kbd;
 
-/* } */
+   if (seat->kbd)
+     {
+        seat->count.kbd += 1;
+        if (seat->count.kbd == 1)
+          {
+             /* TODO: update seat caps */
+             return EINA_TRUE;
+          }
+     }
 
-/* void */
-/* _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat) */
-/* { */
-/*    seat->count.kbd--; */
-/*    if (seat->count.kbd == 0) */
-/*      { */
+   kbd = _keyboard_create(seat);
+   if (!kbd) return EINA_FALSE;
 
-/*      } */
-/* } */
+   if (keymap)
+     {
+        kbd->info = _keyboard_info_create(keymap);
+        if (!kbd->info) goto err;
+     }
+   else
+     {
+        if (!_keyboard_global_build(kbd)) goto err;
+        kbd->info->refs++;
+     }
+
+   kbd->state = xkb_state_new(kbd->info->keymap.map);
+   if (!kbd->state)
+     {
+        ERR("Failed to init XKB state");
+        goto err;
+     }
+
+   seat->kbd = kbd;
+   seat->count.kbd = 1;
+
+   /* TODO: update seat caps */
+
+   return EINA_TRUE;
+
+err:
+   if (kbd->info) _keyboard_info_destroy(kbd->info);
+   free(kbd);
+   return EINA_FALSE;
+}
+
+void
+_ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat)
+{
+   seat->count.kbd--;
+   if (seat->count.kbd == 0)
+     {
+        _keyboard_state_reset(seat->kbd);
+        /* TODO: update seat caps */
+     }
+}
+
+Ecore_Drm2_Keyboard *
+_ecore_drm2_input_keyboard_get(Ecore_Drm2_Seat *seat)
+{
+   if (!seat) return NULL;
+   if (seat->count.kbd) return seat->kbd;
+   return NULL;
+}
 
 /* Eina_Bool */
 /* _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat) */

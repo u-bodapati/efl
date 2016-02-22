@@ -12,6 +12,10 @@
 # include "Eldbus.h"
 # include <Ecore_Drm2.h>
 
+# include <unistd.h>
+# include <sys/mman.h>
+# include <fcntl.h>
+
 # include <sys/ioctl.h>
 # include <linux/vt.h>
 # include <linux/kd.h>
@@ -23,6 +27,7 @@
 
 # include <linux/input.h>
 # include <libinput.h>
+# include <xkbcommon/xkbcommon.h>
 
 extern int _ecore_drm2_log_dom;
 
@@ -170,6 +175,68 @@ typedef struct _Ecore_Drm2_Pointer
    Ecore_Drm2_Seat *seat;
 } Ecore_Drm2_Pointer;
 
+typedef struct _Ecore_Drm2_Keyboard_Info
+{
+   int refs;
+
+   struct
+     {
+        int fd;
+        size_t size;
+        char *area;
+
+        struct xkb_keymap *map;
+     } keymap;
+
+   struct
+     {
+        xkb_mod_index_t shift;
+        xkb_mod_index_t caps;
+        xkb_mod_index_t ctrl;
+        xkb_mod_index_t alt;
+        xkb_mod_index_t mod2;
+        xkb_mod_index_t mod3;
+        xkb_mod_index_t mod5;
+        xkb_mod_index_t super;
+     } mods;
+
+   struct
+     {
+        xkb_led_index_t num;
+        xkb_led_index_t caps;
+        xkb_led_index_t scroll;
+     } leds;
+} Ecore_Drm2_Keyboard_Info;
+
+typedef struct _Ecore_Drm2_Keyboard
+{
+   /* TODO: array of keys ? */
+
+   struct
+     {
+        unsigned int depressed;
+        unsigned int latched;
+        unsigned int locked;
+        unsigned int group;
+     } modifiers;
+
+   struct
+     {
+        unsigned int key;
+        unsigned int timestamp;
+     } grab;
+
+   Ecore_Drm2_Keyboard_Info *info;
+
+   struct xkb_state *state;
+   struct xkb_keymap *pending_map;
+
+   struct xkb_context *context;
+   struct xkb_rule_names names;
+
+   Ecore_Drm2_Seat *seat;
+} Ecore_Drm2_Keyboard;
+
 struct _Ecore_Drm2_Seat
 {
    const char *name;
@@ -179,7 +246,10 @@ struct _Ecore_Drm2_Seat
         int kbd, ptr, touch;
      } count;
 
+   unsigned int modifiers;
+
    Ecore_Drm2_Pointer *ptr;
+   Ecore_Drm2_Keyboard *kbd;
 
    Eina_List *devices;
 };
@@ -253,8 +323,9 @@ Eina_Bool _ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat);
 void _ecore_drm2_input_pointer_release(Ecore_Drm2_Seat *seat);
 Ecore_Drm2_Pointer *_ecore_drm2_input_pointer_get(Ecore_Drm2_Seat *seat);
 
-/* Eina_Bool _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap); */
-/* void _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat); */
+Eina_Bool _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap);
+void _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat);
+Ecore_Drm2_Keyboard *_ecore_drm2_input_keyboard_get(Ecore_Drm2_Seat *seat);
 
 /* Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat); */
 /* void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat); */

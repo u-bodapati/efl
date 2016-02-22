@@ -1,4 +1,5 @@
 #include "ecore_drm2_private.h"
+#include <ctype.h>
 
 static void
 _device_calibration_set(Ecore_Drm2_Input_Device *dev)
@@ -308,6 +309,203 @@ _pointer_axis(struct libinput_device *idevice, struct libinput_event_pointer *ev
    return EINA_TRUE;
 }
 
+static void
+_keyboard_key_send(Ecore_Drm2_Seat *seat, enum libinput_key_state state, const char *keyname, const char *key, const char *compose, unsigned int code, unsigned int timestamp)
+{
+   Ecore_Event_Key *ev;
+
+   ev = calloc(1, sizeof(Ecore_Event_Key) + strlen(key) + strlen(keyname) + 3);
+   if (!ev) return;
+
+   ev->keyname = (char *)(ev + 1);
+   ev->key = ev->keyname + strlen(keyname) + 1;
+   ev->compose = NULL;
+   if (compose) ev->compose = ev->key + strlen(key) + 1;
+
+   strcpy((char *)ev->keyname, keyname);
+   strcpy((char *)ev->key, key);
+   if (compose) strcpy((char *)ev->compose, compose);
+
+   ev->string = ev->compose;
+   ev->keycode = code;
+   ev->modifiers = seat->modifiers;
+   ev->timestamp = timestamp;
+   ev->same_screen = 1;
+
+   /* TODO */
+   /* ev->window = ; */
+   /* ev->event_window = ; */
+   /* ev->root_window = ; */
+
+   if (state == LIBINPUT_KEY_STATE_PRESSED)
+     ecore_event_add(ECORE_EVENT_KEY_DOWN, ev, NULL, NULL);
+   else
+     ecore_event_add(ECORE_EVENT_KEY_UP, ev, NULL, NULL);
+}
+
+static void
+_keyboard_modifiers_update(Ecore_Drm2_Keyboard *kbd, Ecore_Drm2_Seat *seat)
+{
+   xkb_mod_mask_t mask;
+
+   kbd->modifiers.depressed =
+     xkb_state_serialize_mods(kbd->state, XKB_STATE_DEPRESSED);
+   kbd->modifiers.latched =
+     xkb_state_serialize_mods(kbd->state, XKB_STATE_LATCHED);
+   kbd->modifiers.locked =
+     xkb_state_serialize_mods(kbd->state, XKB_STATE_LOCKED);
+   kbd->modifiers.group =
+     xkb_state_serialize_mods(kbd->state, XKB_STATE_EFFECTIVE);
+
+   mask = (kbd->modifiers.depressed | kbd->modifiers.latched);
+
+   seat->modifiers = 0;
+   if (mask & kbd->info->mods.ctrl)
+     seat->modifiers |= ECORE_EVENT_MODIFIER_CTRL;
+   if (mask & kbd->info->mods.alt)
+     seat->modifiers |= ECORE_EVENT_MODIFIER_ALT;
+   if (mask & kbd->info->mods.shift)
+     seat->modifiers |= ECORE_EVENT_MODIFIER_SHIFT;
+   if (mask & kbd->info->mods.super)
+     seat->modifiers |= ECORE_EVENT_MODIFIER_WIN;
+
+   /* TODO: LEDs ? */
+}
+
+static int
+_keyboard_keysym_translate(xkb_keysym_t keysym, unsigned int modifiers, char *buffer, int bytes)
+{
+   unsigned long hbytes = 0;
+   unsigned char c;
+
+   if (!keysym) return 0;
+   hbytes = (keysym >> 8);
+
+   if (!(bytes &&
+         ((hbytes == 0) ||
+          ((hbytes == 0xFF) &&
+           (((keysym >= XKB_KEY_BackSpace) && (keysym <= XKB_KEY_Clear)) ||
+            (keysym == XKB_KEY_Return) || (keysym == XKB_KEY_Escape) ||
+            (keysym == XKB_KEY_KP_Space) || (keysym == XKB_KEY_KP_Tab) ||
+            (keysym == XKB_KEY_KP_Enter) ||
+            ((keysym >= XKB_KEY_KP_Multiply) && (keysym <= XKB_KEY_KP_9)) ||
+            (keysym == XKB_KEY_KP_Equal) || (keysym == XKB_KEY_Delete))))))
+     return 0;
+
+   if (keysym == XKB_KEY_KP_Space)
+     c = (XKB_KEY_space & 0x7F);
+   else if (hbytes == 0xFF)
+     c = (keysym & 0x7F);
+   else
+     c = (keysym & 0xFF);
+
+   if (modifiers & ECORE_EVENT_MODIFIER_CTRL)
+     {
+        if (((c >= '@') && (c < '\177')) || c == ' ')
+          c &= 0x1F;
+        else if (c == '2')
+          c = '\000';
+        else if ((c >= '3') && (c <= '7'))
+          c -= ('3' - '\033');
+        else if (c == '8')
+          c = '\177';
+        else if (c == '/')
+          c = '_' & 0x1F;
+     }
+   buffer[0] = c;
+   return 1;
+}
+
+static void
+_keyboard_key(struct libinput_device *idevice, struct libinput_event_keyboard *event)
+{
+   Ecore_Drm2_Input_Device *dev;
+   Ecore_Drm2_Keyboard *kbd;
+   enum libinput_key_state state;
+   xkb_keysym_t sym = XKB_KEY_NoSymbol;
+   const xkb_keysym_t *syms;
+   unsigned int code = 0;
+   unsigned int nsyms;
+   unsigned int timestamp;
+   char key[256], keyname[256], buffer[256];
+   char *tmp = NULL, *compose = NULL;
+   int count;
+
+   dev = libinput_device_get_user_data(idevice);
+   if (!dev) return;
+
+   kbd = _ecore_drm2_input_keyboard_get(dev->seat);
+   if (!kbd) return;
+
+   state = libinput_event_keyboard_get_key_state(event);
+   count = libinput_event_keyboard_get_seat_key_count(event);
+
+   /* Ignore key events that are not seat wide state changes. */
+   if (((state == LIBINPUT_KEY_STATE_PRESSED) && (count != 1)) ||
+       ((state == LIBINPUT_KEY_STATE_RELEASED) && (count != 0)))
+     return;
+
+   code = libinput_event_keyboard_get_key(event) + 8;
+   timestamp = libinput_event_keyboard_get_time(event);
+
+   if (state == LIBINPUT_KEY_STATE_PRESSED)
+     xkb_state_update_key(kbd->state, code, XKB_KEY_DOWN);
+   else
+     xkb_state_update_key(kbd->state, code, XKB_KEY_UP);
+
+   nsyms = xkb_key_get_syms(kbd->state, code, &syms);
+   if (nsyms == 1) sym = syms[0];
+
+   memset(key, 0, sizeof(key));
+   xkb_keysym_get_name(sym, key, sizeof(key));
+
+   memset(keyname, 0, sizeof(keyname));
+   memcpy(keyname, key, sizeof(keyname));
+
+   if (keyname[0] == '\0')
+     snprintf(keyname, sizeof(keyname), "Keycode-%u", code);
+
+   if (xkb_state_mod_index_is_active(kbd->state, kbd->info->mods.shift,
+                                     XKB_STATE_MODS_EFFECTIVE))
+     {
+        if (keyname[0] != '\0')
+          keyname[0] = tolower(keyname[0]);
+     }
+
+   _keyboard_modifiers_update(kbd, dev->seat);
+
+   memset(buffer, 0, sizeof(buffer));
+   if (_keyboard_keysym_translate(sym, dev->seat->modifiers, 
+                                  buffer, sizeof(buffer)))
+     {
+        compose = eina_str_convert("ISO8859-1", "UTF-8", buffer);
+        if (!compose)
+          {
+             ERR("Ecore_DRM cannot convert input key string '%s' to UTF-8. "
+                 "Is Eina built with iconv support?", buffer);
+          }
+        else
+          tmp = compose;
+     }
+
+   if (!compose) compose = buffer;
+
+   _keyboard_key_send(dev->seat, state, keyname, key, compose, code, timestamp);
+
+   if (tmp) free(tmp);
+
+   if (kbd->pending_map)
+     {
+        /* TODO: update keymap */
+     }
+
+   if (state == LIBINPUT_KEY_STATE_PRESSED)
+     {
+        kbd->grab.key = code;
+        kbd->grab.timestamp = timestamp;
+     }
+}
+
 Ecore_Drm2_Input_Device *
 _ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *device)
 {
@@ -321,7 +519,7 @@ _ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *d
 
    if (libinput_device_has_capability(device, LIBINPUT_DEVICE_CAP_KEYBOARD))
      {
-        /* _ecore_drm2_input_keyboard_init(seat, NULL); */
+        _ecore_drm2_input_keyboard_init(seat, NULL);
         dev->caps |= EVDEV_SEAT_KEYBOARD;
      }
 
@@ -352,8 +550,8 @@ _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device)
 
    if (device->caps & EVDEV_SEAT_POINTER)
      _ecore_drm2_input_pointer_release(device->seat);
-   /* if (device->caps & EVDEV_SEAT_KEYBOARD) */
-   /*   _ecore_drm2_input_keyboard_release(device->seat); */
+   if (device->caps & EVDEV_SEAT_KEYBOARD)
+     _ecore_drm2_input_keyboard_release(device->seat);
    /* if (device->caps & EVDEV_SEAT_TOUCH) */
    /*   _ecore_drm2_input_touch_release(device->seat); */
 
@@ -373,6 +571,7 @@ _ecore_drm2_input_device_event_process(struct libinput_event *event)
    switch (libinput_event_get_type(event))
      {
       case LIBINPUT_EVENT_KEYBOARD_KEY:
+        _keyboard_key(idevice, libinput_event_get_keyboard_event(event));
         break;
       case LIBINPUT_EVENT_POINTER_MOTION:
         frame =
