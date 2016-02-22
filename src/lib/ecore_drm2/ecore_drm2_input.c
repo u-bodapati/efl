@@ -1,6 +1,8 @@
 #include "ecore_drm2_private.h"
 
 EAPI int ECORE_DRM2_EVENT_SEAT_CAPS = -1;
+EAPI int ECORE_DRM2_EVENT_KEYMAP_SEND = -1;
+EAPI int ECORE_DRM2_EVENT_MODIFIERS_SEND = -1;
 
 static int
 _cb_open_restricted(const char *path, int flags, void *data)
@@ -57,7 +59,7 @@ _touch_destroy(Ecore_Drm2_Touch *touch)
    free(touch);
 }
 
-static void
+void
 _keyboard_info_destroy(Ecore_Drm2_Keyboard_Info *info)
 {
    if (--info->refs > 0) return;
@@ -146,7 +148,7 @@ _keyboard_fd_get(off_t size)
    return fd;
 }
 
-static Ecore_Drm2_Keyboard_Info *
+Ecore_Drm2_Keyboard_Info *
 _keyboard_info_create(struct xkb_keymap *keymap)
 {
    Ecore_Drm2_Keyboard_Info *info;
@@ -625,6 +627,8 @@ ecore_drm2_input_init(Ecore_Drm2_Launcher *launch, const char *seat)
    EINA_SAFETY_ON_NULL_RETURN_VAL(launch, EINA_FALSE);
 
    ECORE_DRM2_EVENT_SEAT_CAPS = ecore_event_type_new();
+   ECORE_DRM2_EVENT_KEYMAP_SEND = ecore_event_type_new();
+   ECORE_DRM2_EVENT_MODIFIERS_SEND = ecore_event_type_new();
 
    memset(&launch->input, 0, sizeof(Ecore_Drm2_Input));
 
@@ -668,6 +672,10 @@ ecore_drm2_input_shutdown(Ecore_Drm2_Launcher *launcher)
      _udev_seat_destroy(seat);
 
    libinput_unref(launcher->input.libinput);
+
+   ECORE_DRM2_EVENT_SEAT_CAPS = -1;
+   ECORE_DRM2_EVENT_KEYMAP_SEND = -1;
+   ECORE_DRM2_EVENT_MODIFIERS_SEND = -1;
 }
 
 EAPI Eina_Bool

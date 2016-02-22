@@ -394,6 +394,80 @@ _keyboard_modifiers_update(Ecore_Drm2_Keyboard *kbd, Ecore_Drm2_Seat *seat)
    /* TODO: LEDs ? */
 }
 
+static void
+_keyboard_keymap_send(Ecore_Drm2_Keyboard_Info *info)
+{
+   Ecore_Drm2_Event_Keymap_Send *ev;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Keymap_Send));
+   if (!ev) return;
+
+   ev->fd = info->keymap.fd;
+   ev->size = info->keymap.size;
+   ev->format = XKB_KEYMAP_FORMAT_TEXT_V1;
+
+   ecore_event_add(ECORE_DRM2_EVENT_KEYMAP_SEND, ev, NULL, NULL);
+}
+
+static void
+_keyboard_modifiers_send(Ecore_Drm2_Keyboard *kbd)
+{
+   Ecore_Drm2_Event_Modifiers_Send *ev;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Modifiers_Send));
+   if (!ev) return;
+
+   ev->depressed = kbd->modifiers.depressed;
+   ev->latched = kbd->modifiers.latched;
+   ev->locked = kbd->modifiers.locked;
+   ev->group = kbd->modifiers.group;
+
+   ecore_event_add(ECORE_DRM2_EVENT_MODIFIERS_SEND, ev, NULL, NULL);
+}
+
+static void
+_keyboard_keymap_update(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Keyboard *kbd;
+   Ecore_Drm2_Keyboard_Info *info;
+   struct xkb_state *state;
+   xkb_mod_mask_t latched, locked;
+
+   kbd = _ecore_drm2_input_keyboard_get(seat);
+   if (!kbd) return;
+
+   info = _keyboard_info_create(kbd->pending_map);
+   xkb_keymap_unref(kbd->pending_map);
+   kbd->pending_map = NULL;
+
+   if (!info) return;
+
+   state = xkb_state_new(info->keymap.map);
+   if (!state)
+     {
+        _keyboard_info_destroy(info);
+        return;
+     }
+
+   latched = xkb_state_serialize_mods(kbd->state, XKB_STATE_MODS_LATCHED);
+   locked = xkb_state_serialize_mods(kbd->state, XKB_STATE_MODS_LOCKED);
+   xkb_state_update_mask(state, 0, latched, locked, 0, 0, 0);
+
+   _keyboard_info_destroy(kbd->info);
+   kbd->info = info;
+
+   xkb_state_unref(kbd->state);
+   kbd->state = state;
+
+   _keyboard_keymap_send(kbd->info);
+
+   _keyboard_modifiers_update(kbd, seat);
+
+   if ((!latched) && (!locked)) return;
+
+   _keyboard_modifiers_send(kbd);
+}
+
 static int
 _keyboard_keysym_translate(xkb_keysym_t keysym, unsigned int modifiers, char *buffer, int bytes)
 {
@@ -516,10 +590,7 @@ _keyboard_key(struct libinput_device *idevice, struct libinput_event_keyboard *e
 
    if (tmp) free(tmp);
 
-   if (kbd->pending_map)
-     {
-        /* TODO: update keymap */
-     }
+   if (kbd->pending_map) _keyboard_keymap_update(dev->seat);
 
    if (state == LIBINPUT_KEY_STATE_PRESSED)
      {

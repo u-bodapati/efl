@@ -339,6 +339,8 @@ Ecore_Drm2_Pointer *_ecore_drm2_input_pointer_get(Ecore_Drm2_Seat *seat);
 Eina_Bool _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap);
 void _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat);
 Ecore_Drm2_Keyboard *_ecore_drm2_input_keyboard_get(Ecore_Drm2_Seat *seat);
+Ecore_Drm2_Keyboard_Info *_keyboard_info_create(struct xkb_keymap *keymap);
+void _keyboard_info_destroy(Ecore_Drm2_Keyboard_Info *info);
 
 Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat);
 void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat);

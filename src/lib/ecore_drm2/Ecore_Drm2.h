@@ -55,14 +55,30 @@ typedef struct _Ecore_Drm2_Fb Ecore_Drm2_Fb;
 /* structure to represent event for seat capability changes */
 typedef struct _Ecore_Drm2_Event_Seat_Caps
 {
-   Ecore_Drm2_Seat *Seat;
+   Ecore_Drm2_Seat *seat;
 
    int pointer_count;
    int keyboard_count;
    int touch_count;
 } Ecore_Drm2_Event_Seat_Caps;
 
+typedef struct _Ecore_Drm2_Event_Keymap_Send
+{
+   int fd, format;
+   size_t size;
+} Ecore_Drm2_Event_Keymap_Send;
+
+typedef struct _Ecore_Drm2_Event_Modifiers_Send
+{
+   unsigned int depressed;
+   unsigned int latched;
+   unsigned int locked;
+   unsigned int group;
+} Ecore_Drm2_Event_Modifiers_Send;
+
 EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
+EAPI extern int ECORE_DRM2_EVENT_KEYMAP_SEND;
+EAPI extern int ECORE_DRM2_EVENT_MODIFIERS_SEND;
 
 /**
  * @file
