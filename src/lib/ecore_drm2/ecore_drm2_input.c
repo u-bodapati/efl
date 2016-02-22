@@ -1,5 +1,7 @@
 #include "ecore_drm2_private.h"
 
+EAPI int ECORE_DRM2_EVENT_SEAT_CAPS = -1;
+
 static int
 _cb_open_restricted(const char *path, int flags, void *data)
 {
@@ -23,6 +25,23 @@ const struct libinput_interface _input_interface =
    _cb_open_restricted,
    _cb_close_restricted,
 };
+
+static void
+_seat_caps_update(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Event_Seat_Caps *ev;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Seat_Caps));
+   if (!ev) return;
+
+   ev->seat = seat;
+
+   ev->pointer_count = seat->count.ptr;
+   ev->keyboard_count = seat->count.kbd;
+   ev->touch_count = seat->count.touch;
+
+   ecore_event_add(ECORE_DRM2_EVENT_SEAT_CAPS, ev, NULL, NULL);
+}
 
 static void
 _pointer_destroy(Ecore_Drm2_Pointer *ptr)
@@ -448,7 +467,7 @@ _ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat)
         seat->count.ptr += 1;
         if (seat->count.ptr == 1)
           {
-             /* TODO: update seat caps */
+             _seat_caps_update(seat);
              return EINA_TRUE;
           }
      }
@@ -459,7 +478,7 @@ _ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat)
    seat->ptr = ptr;
    seat->count.ptr = 1;
 
-   /* TODO: update seat caps */
+   _seat_caps_update(seat);
 
    return EINA_TRUE;
 }
@@ -475,8 +494,7 @@ _ecore_drm2_input_pointer_release(Ecore_Drm2_Seat *seat)
    if (seat->count.ptr == 0)
      {
         ptr->buttons = 0;
-
-        /* TODO: update seat caps */
+        _seat_caps_update(seat);
      }
 }
 
@@ -498,7 +516,7 @@ _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap
         seat->count.kbd += 1;
         if (seat->count.kbd == 1)
           {
-             /* TODO: update seat caps */
+             _seat_caps_update(seat);
              return EINA_TRUE;
           }
      }
@@ -527,7 +545,7 @@ _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keymap *keymap
    seat->kbd = kbd;
    seat->count.kbd = 1;
 
-   /* TODO: update seat caps */
+   _seat_caps_update(seat);
 
    return EINA_TRUE;
 
@@ -544,7 +562,7 @@ _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat)
    if (seat->count.kbd == 0)
      {
         _keyboard_state_reset(seat->kbd);
-        /* TODO: update seat caps */
+        _seat_caps_update(seat);
      }
 }
 
@@ -566,7 +584,7 @@ _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat)
         seat->count.touch += 1;
         if (seat->count.touch == 1)
           {
-             /* TODO: update seat caps */
+             _seat_caps_update(seat);
              return EINA_TRUE;
           }
      }
@@ -577,7 +595,7 @@ _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat)
    seat->touch = touch;
    seat->count.touch = 1;
 
-   /* TODO: update seat caps */
+   _seat_caps_update(seat);
 
    return EINA_TRUE;
 }
@@ -589,7 +607,7 @@ _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat)
    if (seat->count.touch == 0)
      {
         _touch_state_reset(seat->touch);
-        /* TODO: update seat caps */
+        _seat_caps_update(seat);
      }
 }
 
@@ -605,6 +623,8 @@ EAPI Eina_Bool
 ecore_drm2_input_init(Ecore_Drm2_Launcher *launch, const char *seat)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(launch, EINA_FALSE);
+
+   ECORE_DRM2_EVENT_SEAT_CAPS = ecore_event_type_new();
 
    memset(&launch->input, 0, sizeof(Ecore_Drm2_Input));
 

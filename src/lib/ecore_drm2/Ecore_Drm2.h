@@ -52,6 +52,18 @@ typedef struct _Ecore_Drm2_Output_Mode Ecore_Drm2_Output_Mode;
 /* opaque structure to represent a framebuffer */
 typedef struct _Ecore_Drm2_Fb Ecore_Drm2_Fb;
 
+/* structure to represent event for seat capability changes */
+typedef struct _Ecore_Drm2_Event_Seat_Caps
+{
+   Ecore_Drm2_Seat *Seat;
+
+   int pointer_count;
+   int keyboard_count;
+   int touch_count;
+} Ecore_Drm2_Event_Seat_Caps;
+
+EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
+
 /**
  * @file
  * @brief Ecore functions for dealing with drm, virtual terminals
