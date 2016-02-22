@@ -506,6 +506,181 @@ _keyboard_key(struct libinput_device *idevice, struct libinput_event_keyboard *e
      }
 }
 
+static void
+_touch_event_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *event, int type)
+{
+   Ecore_Drm2_Touch *touch;
+   Ecore_Event_Mouse_Button *ev;
+   unsigned int btn = 0;
+
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (!touch) return;
+
+   ev = calloc(1, sizeof(Ecore_Event_Mouse_Button));
+   if (!ev) return;
+
+   /* TODO */
+   /* ev->window = ; */
+   /* ev->event_window = ; */
+   /* ev->root_window = ; */
+   ev->timestamp = libinput_event_touch_get_time(event);
+   ev->same_screen = 1;
+
+   ev->x = touch->x;
+   ev->y = touch->y;
+   ev->root.x = touch->x;
+   ev->root.y = touch->y;
+
+   ev->modifiers = dev->seat->modifiers;
+
+   ev->multi.device = touch->slot;
+   ev->multi.radius = 1;
+   ev->multi.radius_x = 1;
+   ev->multi.radius_y = 1;
+   ev->multi.pressure = 1.0;
+   ev->multi.angle = 0.0;
+   ev->multi.x = ev->x;
+   ev->multi.y = ev->y;
+   ev->multi.root.x = ev->x;
+   ev->multi.root.y = ev->y;
+
+   btn = ((btn & 0x00F) + 1);
+   if (btn == 3) btn = 2;
+   else if (btn == 2) btn = 3;
+   ev->buttons = btn;
+
+   ecore_event_add(type, ev, NULL, NULL);
+}
+
+static void
+_touch_down(struct libinput_device *idevice, struct libinput_event_touch *event)
+{
+   Ecore_Drm2_Input_Device *dev;
+   Ecore_Drm2_Touch *touch;
+   unsigned int timestamp;
+   int w, h, slot;
+
+   dev = libinput_device_get_user_data(idevice);
+   if (!dev) return;
+
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (!touch) return;
+
+   w = dev->output->current_mode->width;
+   h = dev->output->current_mode->height;
+
+   slot = libinput_event_touch_get_seat_slot(event);
+   timestamp = libinput_event_touch_get_time(event);
+
+   touch->x = libinput_event_touch_get_x_transformed(event, w);
+   touch->y = libinput_event_touch_get_y_transformed(event, h);
+
+   /* TODO: transform coordinates ? */
+
+   if (slot == touch->grab.id)
+     {
+        touch->grab.x = touch->x;
+        touch->grab.y = touch->y;
+     }
+
+   touch->slot = slot;
+   touch->points++;
+
+   _touch_event_send(dev, event, ECORE_EVENT_MOUSE_BUTTON_DOWN);
+
+   if (touch->points == 1)
+     {
+        touch->grab.id = slot;
+        touch->grab.x = touch->x;
+        touch->grab.y = touch->y;
+        touch->grab.timestamp = timestamp;
+     }
+}
+
+static void
+_touch_motion_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *event)
+{
+   Ecore_Drm2_Touch *touch;
+   Ecore_Event_Mouse_Move *ev;
+
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (!touch) return;
+
+   ev = calloc(1, sizeof(Ecore_Event_Mouse_Move));
+   if (!ev) return;
+
+   /* TODO */
+   /* ev->window = ; */
+   /* ev->event_window = ; */
+   /* ev->root_window = ; */
+   ev->timestamp = libinput_event_touch_get_time(event);
+   ev->same_screen = 1;
+
+   ev->x = touch->x;
+   ev->y = touch->y;
+   ev->root.x = touch->x;
+   ev->root.y = touch->y;
+
+   ev->modifiers = dev->seat->modifiers;
+
+   ev->multi.device = touch->slot;
+   ev->multi.radius = 1;
+   ev->multi.radius_x = 1;
+   ev->multi.radius_y = 1;
+   ev->multi.pressure = 1.0;
+   ev->multi.angle = 0.0;
+   ev->multi.x = ev->x;
+   ev->multi.y = ev->y;
+   ev->multi.root.x = ev->x;
+   ev->multi.root.y = ev->y;
+
+   ecore_event_add(ECORE_EVENT_MOUSE_MOVE, ev, NULL, NULL);
+}
+
+static void
+_touch_motion(struct libinput_device *idevice, struct libinput_event_touch *event)
+{
+   Ecore_Drm2_Input_Device *dev;
+   Ecore_Drm2_Touch *touch;
+   int w, h;
+
+   dev = libinput_device_get_user_data(idevice);
+   if (!dev) return;
+
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (!touch) return;
+
+   w = dev->output->current_mode->width;
+   h = dev->output->current_mode->height;
+
+   touch->x = libinput_event_touch_get_x_transformed(event, w);
+   touch->y = libinput_event_touch_get_y_transformed(event, h);
+
+   /* TODO: transform coordinates ? */
+
+   touch->slot = libinput_event_touch_get_seat_slot(event);
+
+   _touch_motion_send(dev, event);
+}
+
+static void
+_touch_up(struct libinput_device *idevice, struct libinput_event_touch *event)
+{
+   Ecore_Drm2_Input_Device *dev;
+   Ecore_Drm2_Touch *touch;
+
+   dev = libinput_device_get_user_data(idevice);
+   if (!dev) return;
+
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (!touch) return;
+
+   touch->points--;
+   touch->slot = libinput_event_touch_get_seat_slot(event);
+
+   _touch_event_send(dev, event, ECORE_EVENT_MOUSE_BUTTON_UP);
+}
+
 Ecore_Drm2_Input_Device *
 _ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *device)
 {
@@ -531,7 +706,7 @@ _ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *d
 
    if (libinput_device_has_capability(device, LIBINPUT_DEVICE_CAP_TOUCH))
      {
-        /* _ecore_drm2_input_touch_init(seat); */
+        _ecore_drm2_input_touch_init(seat);
         dev->caps |= EVDEV_SEAT_TOUCH;
      }
 
@@ -552,8 +727,8 @@ _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device)
      _ecore_drm2_input_pointer_release(device->seat);
    if (device->caps & EVDEV_SEAT_KEYBOARD)
      _ecore_drm2_input_keyboard_release(device->seat);
-   /* if (device->caps & EVDEV_SEAT_TOUCH) */
-   /*   _ecore_drm2_input_touch_release(device->seat); */
+   if (device->caps & EVDEV_SEAT_TOUCH)
+     _ecore_drm2_input_touch_release(device->seat);
 
    libinput_device_unref(device->device);
    eina_stringshare_del(device->output_name);
@@ -590,13 +765,17 @@ _ecore_drm2_input_device_event_process(struct libinput_event *event)
           _pointer_axis(idevice, libinput_event_get_pointer_event(event));
         break;
       case LIBINPUT_EVENT_TOUCH_DOWN:
+        _touch_down(idevice, libinput_event_get_touch_event(event));
         break;
       case LIBINPUT_EVENT_TOUCH_MOTION:
+        _touch_motion(idevice, libinput_event_get_touch_event(event));
         break;
       case LIBINPUT_EVENT_TOUCH_UP:
+        _touch_up(idevice, libinput_event_get_touch_event(event));
         break;
       case LIBINPUT_EVENT_TOUCH_FRAME:
-        break;
+        /* _touch_frame(idevice, libinput_event_get_touch_event(event)); */
+        /* break; */
       default:
         ret = 0;
         break;

@@ -168,7 +168,6 @@ typedef struct _Ecore_Drm2_Pointer
      {
         int x, y;
         unsigned int button;
-        unsigned int serial;
         unsigned int timestamp;
      } grab;
 
@@ -210,8 +209,6 @@ typedef struct _Ecore_Drm2_Keyboard_Info
 
 typedef struct _Ecore_Drm2_Keyboard
 {
-   /* TODO: array of keys ? */
-
    struct
      {
         unsigned int depressed;
@@ -237,6 +234,21 @@ typedef struct _Ecore_Drm2_Keyboard
    Ecore_Drm2_Seat *seat;
 } Ecore_Drm2_Keyboard;
 
+typedef struct _Ecore_Drm2_Touch
+{
+   int x, y, slot;
+   unsigned int points; // number of touch points
+
+   struct
+     {
+        int id;
+        double x, y;
+        unsigned int timestamp;
+     } grab;
+
+   Ecore_Drm2_Seat *seat;
+} Ecore_Drm2_Touch;
+
 struct _Ecore_Drm2_Seat
 {
    const char *name;
@@ -250,6 +262,7 @@ struct _Ecore_Drm2_Seat
 
    Ecore_Drm2_Pointer *ptr;
    Ecore_Drm2_Keyboard *kbd;
+   Ecore_Drm2_Touch *touch;
 
    Eina_List *devices;
 };
@@ -327,8 +340,9 @@ Eina_Bool _ecore_drm2_input_keyboard_init(Ecore_Drm2_Seat *seat, struct xkb_keym
 void _ecore_drm2_input_keyboard_release(Ecore_Drm2_Seat *seat);
 Ecore_Drm2_Keyboard *_ecore_drm2_input_keyboard_get(Ecore_Drm2_Seat *seat);
 
-/* Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat); */
-/* void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat); */
+Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat);
+void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat);
+Ecore_Drm2_Touch *_ecore_drm2_input_touch_get(Ecore_Drm2_Seat *seat);
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 
