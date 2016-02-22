@@ -64,6 +64,7 @@ static void
 _pointer_motion_send(Ecore_Drm2_Input_Device *dev)
 {
    Ecore_Drm2_Pointer *ptr;
+   Ecore_Drm2_Touch *touch;
    Ecore_Event_Mouse_Move *ev;
 
    ptr = _ecore_drm2_input_pointer_get(dev->seat);
@@ -84,7 +85,17 @@ _pointer_motion_send(Ecore_Drm2_Input_Device *dev)
    ev->root.x = ptr->x;
    ev->root.y = ptr->y;
 
-   /* TODO: multi-device */
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (touch) ev->multi.device = touch->slot;
+   ev->multi.radius = 1;
+   ev->multi.radius_x = 1;
+   ev->multi.radius_y = 1;
+   ev->multi.pressure = 1.0;
+   ev->multi.angle = 0.0;
+   ev->multi.x = ev->x;
+   ev->multi.y = ev->y;
+   ev->multi.root.x = ev->x;
+   ev->multi.root.y = ev->y;
 
    ecore_event_add(ECORE_EVENT_MOUSE_MOVE, ev, NULL, NULL);
 }
@@ -139,6 +150,7 @@ static void
 _pointer_button_send(Ecore_Drm2_Input_Device *dev, enum libinput_button_state state)
 {
    Ecore_Drm2_Pointer *ptr;
+   Ecore_Drm2_Touch *touch;
    Ecore_Event_Mouse_Button *ev;
 
    ptr = _ecore_drm2_input_pointer_get(dev->seat);
@@ -159,7 +171,17 @@ _pointer_button_send(Ecore_Drm2_Input_Device *dev, enum libinput_button_state st
    ev->root.x = ptr->x;
    ev->root.y = ptr->y;
 
-   /* TODO: multi-device */
+   touch = _ecore_drm2_input_touch_get(dev->seat);
+   if (touch) ev->multi.device = touch->slot;
+   ev->multi.radius = 1;
+   ev->multi.radius_x = 1;
+   ev->multi.radius_y = 1;
+   ev->multi.pressure = 1.0;
+   ev->multi.angle = 0.0;
+   ev->multi.x = ev->x;
+   ev->multi.y = ev->y;
+   ev->multi.root.x = ev->x;
+   ev->multi.root.y = ev->y;
 
    /* TODO: double/triple click  */
 
