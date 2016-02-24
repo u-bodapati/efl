@@ -141,6 +141,9 @@ _pointer_motion_abs(struct libinput_device *idevice, struct libinput_event_point
    ptr->y = libinput_event_pointer_get_absolute_y_transformed(event, h);
    ptr->timestamp = libinput_event_pointer_get_time(event);
 
+   _ecore_drm2_output_coordinate_transform(dev->output, ptr->x, ptr->y,
+                                           &ptr->x, &ptr->y);
+
    _pointer_motion_send(dev);
 
    return EINA_TRUE;
@@ -698,7 +701,9 @@ _touch_down(struct libinput_device *idevice, struct libinput_event_touch *event)
    touch->x = libinput_event_touch_get_x_transformed(event, w);
    touch->y = libinput_event_touch_get_y_transformed(event, h);
 
-   /* TODO: transform coordinates ? */
+   _ecore_drm2_output_coordinate_transform(dev->output,
+                                           touch->x, touch->y,
+                                           &touch->x, &touch->y);
 
    if (slot == touch->grab.id)
      {
@@ -779,7 +784,9 @@ _touch_motion(struct libinput_device *idevice, struct libinput_event_touch *even
    touch->x = libinput_event_touch_get_x_transformed(event, w);
    touch->y = libinput_event_touch_get_y_transformed(event, h);
 
-   /* TODO: transform coordinates ? */
+   _ecore_drm2_output_coordinate_transform(dev->output,
+                                           touch->x, touch->y,
+                                           &touch->x, &touch->y);
 
    touch->slot = libinput_event_touch_get_seat_slot(event);
 
