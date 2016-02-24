@@ -183,9 +183,10 @@ _pointer_button_send(Ecore_Drm2_Input_Device *dev, enum libinput_button_state st
    ev->multi.root.x = ev->x;
    ev->multi.root.y = ev->y;
 
-   /* TODO: double/triple click  */
-
    ev->buttons = ptr->buttons;
+
+   ev->double_click = ptr->mouse.double_click;
+   ev->triple_click = ptr->mouse.triple_click;
 
    if (state)
      ecore_event_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, ev, NULL, NULL);
@@ -224,6 +225,35 @@ _pointer_button(struct libinput_device *idevice, struct libinput_event_pointer *
 
    ptr->buttons = btn;
    ptr->timestamp = libinput_event_pointer_get_time(event);
+
+   if (state)
+     {
+        unsigned int current;
+
+        current = ptr->timestamp;
+        ptr->mouse.double_click = EINA_FALSE;
+        ptr->mouse.triple_click = EINA_FALSE;
+
+        if (((current - ptr->mouse.prev_time) <= ptr->mouse.threshold) &&
+            (btn == ptr->mouse.prev_button))
+          {
+             ptr->mouse.double_click = EINA_TRUE;
+             if (((current - ptr->mouse.last_time) <=
+                  (2 * ptr->mouse.threshold)) &&
+                 (btn == ptr->mouse.last_button))
+               {
+                  ptr->mouse.triple_click = EINA_TRUE;
+                  ptr->mouse.prev_time = 0;
+                  ptr->mouse.last_time = 0;
+                  current = 0;
+               }
+          }
+
+        ptr->mouse.last_time = ptr->mouse.prev_time;
+        ptr->mouse.prev_time = current;
+        ptr->mouse.last_button = ptr->mouse.prev_button;
+        ptr->mouse.prev_button = ptr->buttons;
+     }
 
    _pointer_button_send(dev, state);
 

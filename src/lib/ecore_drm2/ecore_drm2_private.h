@@ -176,6 +176,15 @@ typedef struct _Ecore_Drm2_Pointer
         unsigned int timestamp;
      } grab;
 
+   struct
+     {
+        unsigned int threshold;
+        unsigned int last_button, prev_button;
+        unsigned int last_time, prev_time;
+        Eina_Bool double_click : 1;
+        Eina_Bool triple_click : 1;
+     } mouse;
+
    Ecore_Drm2_Seat *seat;
 } Ecore_Drm2_Pointer;
 
