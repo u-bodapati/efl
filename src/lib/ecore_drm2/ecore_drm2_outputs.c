@@ -489,7 +489,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    _output_edid_find(output, conn, fd);
 
-   /* TODO: gamma */
+   output->gamma = output->ocrtc->gamma_size;
 
    _output_scale_init(output, ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL, 1);
    _output_matrix_update(output);

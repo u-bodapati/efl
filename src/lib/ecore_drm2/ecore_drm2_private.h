@@ -156,6 +156,7 @@ struct _Ecore_Drm2_Output
    drmModeCrtcPtr ocrtc;
    drmModePropertyPtr dpms_prop;
 
+   uint16_t gamma;
    Ecore_Drm2_Backlight *backlight;
 
    struct
