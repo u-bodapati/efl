@@ -139,6 +139,7 @@ struct _Ecore_Drm2_Output
 
    uint32_t crtc_id;
    uint32_t conn_id;
+   uint32_t fb_id;
 
    Ecore_Drm2_Output_Mode *current_mode;
 
@@ -301,7 +302,7 @@ struct _Ecore_Drm2_Input_Device
 {
    Ecore_Drm2_Seat *seat;
 
-   int fd;
+   /* int fd; */
    const char *path;
    const char *output_name;
    Ecore_Drm2_Output *output;

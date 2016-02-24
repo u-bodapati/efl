@@ -73,10 +73,9 @@ _pointer_motion_send(Ecore_Drm2_Input_Device *dev)
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Move));
    if (!ev) return;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
    ev->timestamp = ptr->timestamp;
    ev->same_screen = 1;
 
@@ -162,10 +161,9 @@ _pointer_button_send(Ecore_Drm2_Input_Device *dev, enum libinput_button_state st
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Button));
    if (!ev) return;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
    ev->timestamp = ptr->timestamp;
    ev->same_screen = 1;
 
@@ -275,10 +273,9 @@ _pointer_axis_send(Ecore_Drm2_Input_Device *dev, int direction, int value)
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Wheel));
    if (!ev) return;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
    ev->timestamp = ptr->timestamp;
    ev->same_screen = 1;
 
@@ -365,7 +362,7 @@ _pointer_axis(struct libinput_device *idevice, struct libinput_event_pointer *ev
 }
 
 static void
-_keyboard_key_send(Ecore_Drm2_Seat *seat, enum libinput_key_state state, const char *keyname, const char *key, const char *compose, unsigned int code, unsigned int timestamp)
+_keyboard_key_send(Ecore_Drm2_Input_Device *dev, enum libinput_key_state state, const char *keyname, const char *key, const char *compose, unsigned int code, unsigned int timestamp)
 {
    Ecore_Event_Key *ev;
 
@@ -383,14 +380,13 @@ _keyboard_key_send(Ecore_Drm2_Seat *seat, enum libinput_key_state state, const c
 
    ev->string = ev->compose;
    ev->keycode = code;
-   ev->modifiers = seat->modifiers;
+   ev->modifiers = dev->seat->modifiers;
    ev->timestamp = timestamp;
    ev->same_screen = 1;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
 
    if (state == LIBINPUT_KEY_STATE_PRESSED)
      ecore_event_add(ECORE_EVENT_KEY_DOWN, ev, NULL, NULL);
@@ -619,7 +615,7 @@ _keyboard_key(struct libinput_device *idevice, struct libinput_event_keyboard *e
 
    if (!compose) compose = buffer;
 
-   _keyboard_key_send(dev->seat, state, keyname, key, compose, code, timestamp);
+   _keyboard_key_send(dev, state, keyname, key, compose, code, timestamp);
 
    if (tmp) free(tmp);
 
@@ -645,10 +641,9 @@ _touch_event_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *eve
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Button));
    if (!ev) return;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
    ev->timestamp = libinput_event_touch_get_time(event);
    ev->same_screen = 1;
 
@@ -737,10 +732,9 @@ _touch_motion_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *ev
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Move));
    if (!ev) return;
 
-   /* TODO: focused window */
-   /* ev->window = ; */
-   /* ev->event_window = ; */
-   /* ev->root_window = ; */
+   ev->window = dev->output->fb_id;
+   ev->event_window = dev->output->fb_id;
+   ev->root_window = dev->output->fb_id;
    ev->timestamp = libinput_event_touch_get_time(event);
    ev->same_screen = 1;
 
