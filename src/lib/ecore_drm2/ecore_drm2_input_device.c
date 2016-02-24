@@ -73,7 +73,7 @@ _pointer_motion_send(Ecore_Drm2_Input_Device *dev)
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Move));
    if (!ev) return;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -159,7 +159,7 @@ _pointer_button_send(Ecore_Drm2_Input_Device *dev, enum libinput_button_state st
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Button));
    if (!ev) return;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -242,7 +242,7 @@ _pointer_axis_send(Ecore_Drm2_Input_Device *dev, int direction, int value)
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Wheel));
    if (!ev) return;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -354,7 +354,7 @@ _keyboard_key_send(Ecore_Drm2_Seat *seat, enum libinput_key_state state, const c
    ev->timestamp = timestamp;
    ev->same_screen = 1;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -612,7 +612,7 @@ _touch_event_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *eve
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Button));
    if (!ev) return;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -702,7 +702,7 @@ _touch_motion_send(Ecore_Drm2_Input_Device *dev, struct libinput_event_touch *ev
    ev = calloc(1, sizeof(Ecore_Event_Mouse_Move));
    if (!ev) return;
 
-   /* TODO */
+   /* TODO: focused window */
    /* ev->window = ; */
    /* ev->event_window = ; */
    /* ev->root_window = ; */
@@ -887,4 +887,10 @@ _ecore_drm2_input_device_output_set(Ecore_Drm2_Input_Device *device, Ecore_Drm2_
 {
    device->output = output;
    _device_calibration_set(device);
+}
+
+void
+_ecore_drm2_input_device_pointer_motion_send(Ecore_Drm2_Input_Device *device)
+{
+   _pointer_motion_send(device);
 }

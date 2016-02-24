@@ -336,6 +336,7 @@ Ecore_Drm2_Input_Device *_ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, 
 void _ecore_drm2_input_device_destroy(Ecore_Drm2_Input_Device *device);
 int _ecore_drm2_input_device_event_process(struct libinput_event *event);
 void _ecore_drm2_input_device_output_set(Ecore_Drm2_Input_Device *device, Ecore_Drm2_Output *output);
+void _ecore_drm2_input_device_pointer_motion_send(Ecore_Drm2_Input_Device *device);
 
 Eina_Bool _ecore_drm2_input_pointer_init(Ecore_Drm2_Seat *seat);
 void _ecore_drm2_input_pointer_release(Ecore_Drm2_Seat *seat);

@@ -731,7 +731,7 @@ ecore_drm2_input_pointer_warp(Ecore_Drm2_Launcher *launcher, int x, int y)
                {
                   seat->ptr->x = x;
                   seat->ptr->y = y;
-                  /* TODO: post pointer motion event */
+                  _ecore_drm2_input_device_pointer_motion_send(dev);
                }
           }
      }
