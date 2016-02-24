@@ -167,11 +167,92 @@ ecore_drm2_planes_destroy(Ecore_Drm2_Launcher *launcher, int fd)
      }
 }
 
-/* TODO: these functions should scale the fb */
 static void
-_plane_overlay_prepare(Ecore_Drm2_Plane *plane EINA_UNUSED, Ecore_Drm2_Output *output EINA_UNUSED, Ecore_Drm2_Fb *fb EINA_UNUSED)
+_plane_coord_transform(int w, int h, Ecore_Drm2_Output_Transform transform, int scale, double x, double y, double *rx, double *ry)
 {
+   *rx = x;
+   *ry = y;
+   switch (transform)
+     {
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED:
+        *rx = w - x;
+        *ry = y;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_90:
+        *rx = h - y;
+        *ry = y;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_90:
+        *rx = h - y;
+        *ry = w - x;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_180:
+        *rx = w - x;
+        *ry = h - y;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_180:
+        *rx = x;
+        *ry = h - y;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_270:
+        *rx = y;
+        *ry = w - x;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_270:
+        *rx = y;
+        *ry = x;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL:
+      default:
+        break;
+     }
 
+   *rx *= scale;
+   *ry *= scale;
+}
+
+/* TODO: these functions should scale the fb and set
+ * plane src and dest (sx, sy, dx, dy, etc, etc) */
+static void
+_plane_overlay_prepare(Ecore_Drm2_Plane *plane EINA_UNUSED, Ecore_Drm2_Output *output, Ecore_Drm2_Fb *fb EINA_UNUSED)
+{
+   Eina_Rectangle *rect;
+   double x1, y1, x2, y2;
+
+   rect = eina_rectangle_new(-output->x, -output->y, output->w, output->h);
+
+   _plane_coord_transform(output->w, output->h,
+                          output->transform, output->scale,
+                          rect->x, rect->y, &x1, &y1);
+   _plane_coord_transform(output->w, output->h,
+                          output->transform, output->scale,
+                          rect->w, rect->h, &x2, &y2);
+
+   if (x1 <= x2)
+     {
+        rect->x = x1;
+        rect->w = x2;
+     }
+   else
+     {
+        rect->x = x2;
+        rect->w = x1;
+     }
+
+   if (y1 <= y2)
+     {
+        rect->y = y1;
+        rect->h = y2;
+     }
+   else
+     {
+        rect->y = y2;
+        rect->h = y1;
+     }
+
+   DBG("Overlay Dest: %d %d %d %d", rect->x, rect->y, rect->w, rect->h);
+   DBG("\tSecondary: %d %d %d %d", rect->x, rect->y,
+       rect->w - rect->x, rect->h - rect->y);
 }
 
 static void
