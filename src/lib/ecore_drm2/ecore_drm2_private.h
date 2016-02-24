@@ -128,8 +128,9 @@ struct _Ecore_Drm2_Output
 {
    int id, pipe;
 
-   int x, y;
+   int x, y, w, h;
    int phys_width, phys_height;
+   unsigned int scale;
 
    const char *name;
    const char *make, *model, *serial;
@@ -140,6 +141,10 @@ struct _Ecore_Drm2_Output
    uint32_t conn_id;
 
    Ecore_Drm2_Output_Mode *current_mode;
+
+   Eina_Matrix4 matrix;
+   Eina_Matrix4 inverse;
+   Ecore_Drm2_Output_Transform transform;
 
    drmModeCrtcPtr ocrtc;
    drmModePropertyPtr dpms_prop;
@@ -360,6 +365,8 @@ void _keyboard_info_destroy(Ecore_Drm2_Keyboard_Info *info);
 Eina_Bool _ecore_drm2_input_touch_init(Ecore_Drm2_Seat *seat);
 void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat);
 Ecore_Drm2_Touch *_ecore_drm2_input_touch_get(Ecore_Drm2_Seat *seat);
+
+void _ecore_drm2_output_coordinate_transform(Ecore_Drm2_Output *output, int dx, int dy, int *x, int *y);
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 

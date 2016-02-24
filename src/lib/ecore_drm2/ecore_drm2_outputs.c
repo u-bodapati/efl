@@ -245,6 +245,101 @@ _output_edid_find(Ecore_Drm2_Output *output, drmModeConnector *conn, int fd)
    drmModeFreePropertyBlob(blob);
 }
 
+static void
+_output_scale_init(Ecore_Drm2_Output *output, Ecore_Drm2_Output_Transform transform, unsigned int scale)
+{
+   output->transform = transform;
+
+   switch (transform)
+     {
+      case ECORE_DRM2_OUTPUT_TRANSFORM_90:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_270:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_90:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_270:
+        output->w = output->current_mode->height;
+        output->h = output->current_mode->width;
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_180:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_180:
+        output->w = output->current_mode->width;
+        output->h = output->current_mode->height;
+        break;
+      default:
+        break;
+     }
+
+   output->scale = scale;
+   output->w /= scale;
+   output->h /= scale;
+}
+
+static void
+_output_matrix_rotate_xy(Eina_Matrix3 *matrix, double x, double y)
+{
+   Eina_Matrix4 tmp, m;
+
+   eina_matrix4_identity(&tmp);
+   eina_matrix4_values_set(&tmp, x, y, 0, 0, -y, x, 0, 0,
+                           0, 0, 1, 0, 0, 0, 0, 1);
+
+   eina_matrix3_matrix4_to(&m, matrix);
+   eina_matrix4_multiply(&m, &m, &tmp);
+   eina_matrix4_matrix3_to(matrix, &m);
+}
+
+static void
+_output_matrix_update(Ecore_Drm2_Output *output)
+{
+   Eina_Matrix3 m3;
+
+   eina_matrix4_identity(&output->matrix);
+   eina_matrix4_matrix3_to(&m3, &output->matrix);
+   eina_matrix3_translate(&m3, -output->x, -output->y);
+
+   switch (output->transform)
+     {
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_90:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_180:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_270:
+        eina_matrix3_translate(&m3, -output->w, 0);
+        break;
+      default:
+        break;
+     }
+
+   switch (output->transform)
+     {
+      case ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED:
+      default:
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_90:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_90:
+        eina_matrix3_translate(&m3, 0, -output->h);
+        _output_matrix_rotate_xy(&m3, 0, 1);
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_180:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_180:
+        eina_matrix3_translate(&m3, -output->w, -output->h);
+        _output_matrix_rotate_xy(&m3, -1, 0);
+        break;
+      case ECORE_DRM2_OUTPUT_TRANSFORM_270:
+      case ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_270:
+        eina_matrix3_translate(&m3, -output->w, 0);
+        _output_matrix_rotate_xy(&m3, 0, -1);
+        break;
+     }
+
+   if (output->scale != 1)
+     eina_matrix3_scale(&m3, output->scale, output->scale);
+
+   eina_matrix3_matrix4_to(&output->matrix, &m3);
+   eina_matrix4_inverse(&output->inverse, &output->matrix);
+}
+
 static Eina_Bool
 _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConnector *conn, int fd, int x, int y, int *w)
 {
@@ -340,6 +435,9 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    /* TODO: gamma */
 
+   _output_scale_init(output, ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL, 1);
+   _output_matrix_update(output);
+
    DBG("Created New Output At %d,%d", output->x, output->y);
    DBG("\tCrtc Pos: %d %d", output->ocrtc->x, output->ocrtc->y);
    DBG("\tCrtc: %d", output->crtc_id);
@@ -407,6 +505,35 @@ _output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd
    eina_stringshare_del(output->serial);
 
    free(output);
+}
+
+void
+_ecore_drm2_output_coordinate_transform(Ecore_Drm2_Output *output, int dx, int dy, int *x, int *y)
+{
+   int i, j;
+   float p[4], s[4];
+   double m[16];
+
+   s[0] = dx;
+   s[1] = dy;
+   s[2] = 0.0;
+   s[3] = 1.0;
+
+   eina_matrix4_values_get(&output->inverse,
+                           &m[0], &m[1], &m[2], &m[3],
+                           &m[4], &m[5], &m[6], &m[7],
+                           &m[8], &m[9], &m[10], &m[11],
+                           &m[12], &m[13], &m[14], &m[15]);
+
+   for (i = 0; i < 4; i++)
+     {
+        p[i] = 0;
+        for (j = 0; j < 4; j++)
+          p[i] += s[j] * m[i + j * 4];
+     }
+
+   if (x) *x = p[0] / p[3];
+   if (y) *y = p[1] / p[3];
 }
 
 EAPI Eina_Bool
