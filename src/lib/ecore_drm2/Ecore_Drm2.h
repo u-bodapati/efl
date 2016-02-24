@@ -28,6 +28,13 @@
 
 # ifdef EFL_BETA_API_SUPPORT
 
+#  define ECORE_DRM2_PLANE_ROTATION_NORMAL 1
+#  define ECORE_DRM2_PLANE_ROTATION_90 2
+#  define ECORE_DRM2_PLANE_ROTATION_180 4
+#  define ECORE_DRM2_PLANE_ROTATION_270 8
+#  define ECORE_DRM2_PLANE_ROTATION_REFLECT_X 16
+#  define ECORE_DRM2_PLANE_ROTATION_REFLECT_Y 32
+
 /* opaque structure to represent a launcher */
 typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
 

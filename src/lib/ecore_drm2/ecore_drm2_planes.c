@@ -77,7 +77,7 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
         if (props)
           {
              uint32_t j;
-             int type = -1;
+             int type = -1, k = 0;
 
              for (j = 0; type == -1 && j < props->count_props; j++)
                {
@@ -88,14 +88,42 @@ ecore_drm2_planes_create(Ecore_Drm2_Launcher *launcher, int fd)
 
                   if (!strcmp(prop->name, "type"))
                     plane->type = props->prop_values[j];
+                  else if (!strcmp(prop->name, "rotation"))
+                    {
+                       plane->rotation_prop_id = props->props[j];
+                       plane->rotation = props->prop_values[j];
+
+                       for (k = 0; k < prop->count_enums; k++)
+                         {
+                            int r = -1;
+
+                            if (!strcmp(prop->enums[k].name, "rotate-0"))
+                              r = ECORE_DRM2_PLANE_ROTATION_NORMAL;
+                            else if (!strcmp(prop->enums[k].name, "rotate-90"))
+                              r = ECORE_DRM2_PLANE_ROTATION_90;
+                            else if (!strcmp(prop->enums[k].name, "rotate-180"))
+                              r = ECORE_DRM2_PLANE_ROTATION_180;
+                            else if (!strcmp(prop->enums[k].name, "rotate-270"))
+                              r = ECORE_DRM2_PLANE_ROTATION_270;
+                            else if (!strcmp(prop->enums[k].name, "reflect-x"))
+                              r = ECORE_DRM2_PLANE_ROTATION_REFLECT_X;
+                            else if (!strcmp(prop->enums[k].name, "reflect-y"))
+                              r = ECORE_DRM2_PLANE_ROTATION_REFLECT_Y;
+
+                            if (r != -1)
+                              {
+                                 plane->supported_rotations |= r;
+                                 plane->rotation_map[ffs(r)] =
+                                   1 << prop->enums[k].value;
+                              }
+                         }
+                    }
 
                   if (plane->type == DRM_PLANE_TYPE_CURSOR)
                     {
                        plane->cw = cw;
                        plane->ch = ch;
                     }
-
-                  /* TODO: supported rotations */
 
                   drmModeFreeProperty(prop);
                }

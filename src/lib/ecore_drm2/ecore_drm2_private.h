@@ -106,6 +106,11 @@ struct _Ecore_Drm2_Plane
    uint32_t dx, dy; // dest
    uint32_t dw, dh;
 
+   uint32_t rotation;
+   uint32_t rotation_map[6];
+   uint32_t rotation_prop_id;
+   uint32_t supported_rotations;
+
    void *output;
 
    uint32_t formats[];
