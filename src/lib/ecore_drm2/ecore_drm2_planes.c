@@ -347,7 +347,5 @@ ecore_drm2_plane_fb_set(Ecore_Drm2_Plane *plane, Ecore_Drm2_Fb *fb)
         return EINA_FALSE;
      }
 
-   output->fb_id = fb->id;
-
    return EINA_TRUE;
 }

@@ -646,8 +646,8 @@ ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output)
 }
 
 EAPI int
-ecore_drm2_output_buffer_id_get(Ecore_Drm2_Output *output)
+ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, 0);
-   return output->ocrtc->buffer_id;
+   return output->crtc_id;
 }

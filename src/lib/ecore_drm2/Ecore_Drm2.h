@@ -435,16 +435,16 @@ EAPI void ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd);
 EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
 
 /**
- * Get the buffer id associated with an output's crtc
+ * Get the crtc id associated with an output's crtc
  *
  * @param output
  *
- * @return The framebuffer id of the given output's crtc or zero on error
+ * @return The id of the given output's crtc or zero on error
  *
  * @ingroup Ecore_Drm2_Output_Group
  * @since 1.18
  */
-EAPI int ecore_drm2_output_buffer_id_get(Ecore_Drm2_Output *output);
+EAPI int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
 
 /**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
