@@ -340,6 +340,62 @@ _output_matrix_update(Ecore_Drm2_Output *output)
    eina_matrix4_inverse(&output->inverse, &output->matrix);
 }
 
+static Ecore_Drm2_Backlight *
+_output_backlight_init(unsigned int conn_type)
+{
+   const char *dev, *t;
+   Eina_List *devs, *l;
+   Eina_Bool found = EINA_FALSE;
+   Ecore_Drm2_Backlight *bl = NULL;
+   Ecore_Drm2_Backlight_Type type = 0;
+
+   devs = eeze_udev_find_by_filter("backlight", NULL, NULL);
+
+   EINA_LIST_FOREACH(devs, l, dev)
+     {
+        t = eeze_udev_syspath_get_sysattr(dev, "type");
+        if (!t) continue;
+
+        if (!strcmp(t, "raw"))
+          type = ECORE_DRM2_BACKLIGHT_RAW;
+        else if (!strcmp(t, "platform"))
+          type = ECORE_DRM2_BACKLIGHT_PLATFORM;
+        else if (!strcmp(t, "firmware"))
+          type = ECORE_DRM2_BACKLIGHT_FIRMWARE;
+
+        if ((conn_type == DRM_MODE_CONNECTOR_LVDS) ||
+            (conn_type == DRM_MODE_CONNECTOR_eDP) ||
+            (type == ECORE_DRM2_BACKLIGHT_RAW))
+          found = EINA_TRUE;
+
+        eina_stringshare_del(t);
+        if (found) break;
+     }
+
+   if (found)
+     {
+        bl = calloc(1, sizeof(Ecore_Drm2_Backlight));
+        if (bl)
+          {
+             bl->type = type;
+             bl->path = eina_stringshare_add(dev);
+          }
+     }
+
+   EINA_LIST_FREE(devs, dev)
+     eina_stringshare_del(dev);
+
+   return bl;
+}
+
+static void
+_output_backlight_shutdown(Ecore_Drm2_Backlight *bl)
+{
+   if (!bl) return;
+   if (bl->path) eina_stringshare_del(bl->path);
+   free(bl);
+}
+
 static Eina_Bool
 _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConnector *conn, int fd, int x, int y, int *w)
 {
@@ -429,7 +485,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    /* TODO: ?? disable output if config is off ?? */
 
-   /* TODO: backlight */
+   output->backlight = _output_backlight_init(conn->connector_type);
 
    _output_edid_find(output, conn, fd);
 
@@ -448,6 +504,23 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    DBG("\tSerial: %s", output->serial);
    /* DBG("\tCloned: %d", output->cloned); */
    /* DBG("\tPrimary: %d", output->primary); */
+   if (output->backlight)
+     {
+        DBG("\tBacklight");
+        switch (output->backlight->type)
+          {
+           case ECORE_DRM2_BACKLIGHT_RAW:
+             DBG("\t\tType: Raw");
+             break;
+           case ECORE_DRM2_BACKLIGHT_PLATFORM:
+             DBG("\t\tType: Platform");
+             break;
+           case ECORE_DRM2_BACKLIGHT_FIRMWARE:
+             DBG("\t\tType: Firmware");
+             break;
+          }
+        DBG("\t\tPath: %s", output->backlight->path);
+     }
 
    EINA_LIST_FOREACH(output->modes, l, omode)
      {
@@ -486,7 +559,7 @@ _output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd
 
    ocrtc = output->ocrtc;
 
-   /* TODO: backlight */
+   _output_backlight_shutdown(output->backlight);
 
    drmModeFreeProperty(output->dpms_prop);
 

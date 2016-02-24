@@ -78,6 +78,13 @@ typedef enum _Ecore_Drm2_Input_Device_Capability
    EVDEV_SEAT_TOUCH = (1 << 2)
 } Ecore_Drm2_Input_Device_Capability;
 
+struct _Ecore_Drm2_Backlight
+{
+   const char *path;
+   int max, value;
+   Ecore_Drm2_Backlight_Type type;
+};
+
 struct _Ecore_Drm2_Fb
 {
    int fd;
@@ -148,6 +155,8 @@ struct _Ecore_Drm2_Output
 
    drmModeCrtcPtr ocrtc;
    drmModePropertyPtr dpms_prop;
+
+   Ecore_Drm2_Backlight *backlight;
 
    struct
      {

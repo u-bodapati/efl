@@ -47,6 +47,13 @@ typedef enum _Ecore_Drm2_Output_Transform
    ECORE_DRM2_OUTPUT_TRANSFORM_FLIPPED_270 = 7,
 } Ecore_Drm2_Output_Transform;
 
+typedef enum _Ecore_Drm2_Backlight_Type
+{
+   ECORE_DRM2_BACKLIGHT_RAW,
+   ECORE_DRM2_BACKLIGHT_PLATFORM,
+   ECORE_DRM2_BACKLIGHT_FIRMWARE
+} Ecore_Drm2_Backlight_Type;
+
 /* opaque structure to represent a launcher */
 typedef struct _Ecore_Drm2_Launcher Ecore_Drm2_Launcher;
 
@@ -71,6 +78,9 @@ typedef struct _Ecore_Drm2_Output_Mode Ecore_Drm2_Output_Mode;
 /* opaque structure to represent a framebuffer */
 typedef struct _Ecore_Drm2_Fb Ecore_Drm2_Fb;
 
+/* opaque structure to represent a backlight */
+typedef struct _Ecore_Drm2_Backlight Ecore_Drm2_Backlight;
+
 /* structure to represent event for seat capability changes */
 typedef struct _Ecore_Drm2_Event_Seat_Caps
 {
@@ -81,12 +91,14 @@ typedef struct _Ecore_Drm2_Event_Seat_Caps
    int touch_count;
 } Ecore_Drm2_Event_Seat_Caps;
 
+/* structure to represent event for seat keymap changes */
 typedef struct _Ecore_Drm2_Event_Keymap_Send
 {
    int fd, format;
    size_t size;
 } Ecore_Drm2_Event_Keymap_Send;
 
+/* structure to represent event for seat modifiers changes */
 typedef struct _Ecore_Drm2_Event_Modifiers_Send
 {
    unsigned int depressed;
