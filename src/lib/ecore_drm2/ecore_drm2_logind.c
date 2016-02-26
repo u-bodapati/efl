@@ -86,9 +86,7 @@ _cb_device_paused(void *data, const Eldbus_Message *msg)
           _logind_device_pause_complete(l, maj, min);
 
         if ((l->sync) && (maj == DRM_MAJOR))
-          {
-             /* TODO: set active (false) */
-          }
+          _ecore_drm2_launcher_activate_send(l, EINA_FALSE);
      }
 }
 
@@ -111,22 +109,28 @@ _cb_device_resumed(void *data, const Eldbus_Message *msg)
    if (eldbus_message_arguments_get(msg, "uuh", &maj, &min, &fd))
      {
         if ((l->sync) && (maj == DRM_MAJOR))
-          {
-             /* TODO: set active (true) */
-          }
+          _ecore_drm2_launcher_activate_send(l, EINA_TRUE);
      }
 }
 
 static void
-_cb_property_changed(void *data EINA_UNUSED, Eldbus_Proxy *proxy EINA_UNUSED, void *event)
+_cb_property_changed(void *data, Eldbus_Proxy *proxy EINA_UNUSED, void *event)
 {
-   /* Ecore_Drm2_Launcher *l; */
+   Ecore_Drm2_Launcher *l;
    Eldbus_Proxy_Event_Property_Changed *ev;
+   Eina_Bool active = EINA_FALSE;
 
-   /* l = data; */
+   l = data;
    ev = event;
 
    DBG("DBus Property Changed: %s", ev->name);
+
+   if (!strcmp(ev->name, "Active"))
+     {
+        eina_value_get(ev->value, &active);
+        if ((!l->sync) || (!active))
+          _ecore_drm2_launcher_activate_send(l, active);
+     }
 }
 
 static Eina_Bool

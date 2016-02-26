@@ -351,6 +351,7 @@ struct _Ecore_Drm2_Launcher
    Eina_List *outputs;
 
    Eina_Bool sync;
+   Eina_Bool active;
 };
 
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);
@@ -377,6 +378,8 @@ void _ecore_drm2_input_touch_release(Ecore_Drm2_Seat *seat);
 Ecore_Drm2_Touch *_ecore_drm2_input_touch_get(Ecore_Drm2_Seat *seat);
 
 void _ecore_drm2_output_coordinate_transform(Ecore_Drm2_Output *output, int dx, int dy, int *x, int *y);
+
+void _ecore_drm2_launcher_activate_send(Ecore_Drm2_Launcher *launcher, Eina_Bool active);
 
 extern Ecore_Drm2_Launcher_Interface _logind_iface;
 

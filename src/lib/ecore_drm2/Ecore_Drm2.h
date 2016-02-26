@@ -113,10 +113,17 @@ typedef struct _Ecore_Drm2_Event_Modifiers_Send
    unsigned int group;
 } Ecore_Drm2_Event_Modifiers_Send;
 
+/* structure to represet event for session state */
+typedef struct _Ecore_Drm2_Event_Activate
+{
+   Eina_Bool active : 1;
+} Ecore_Drm2_Event_Activate;
+
 EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
 EAPI extern int ECORE_DRM2_EVENT_SEAT_FRAME;
 EAPI extern int ECORE_DRM2_EVENT_KEYMAP_SEND;
 EAPI extern int ECORE_DRM2_EVENT_MODIFIERS_SEND;
+EAPI extern int ECORE_DRM2_EVENT_ACTIVATE;
 
 /**
  * @file

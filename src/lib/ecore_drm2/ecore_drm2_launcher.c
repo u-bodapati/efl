@@ -11,6 +11,23 @@ static Ecore_Drm2_Launcher_Interface *_ifaces[] =
    NULL,
 };
 
+void
+_ecore_drm2_launcher_activate_send(Ecore_Drm2_Launcher *launcher, Eina_Bool active)
+{
+   Ecore_Drm2_Event_Activate *ev;
+
+   if (!launcher->active == !active) return;
+
+   launcher->active = active;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Activate));
+   if (!ev) return;
+
+   ev->active = active;
+
+   ecore_event_add(ECORE_DRM2_EVENT_ACTIVATE, ev, NULL, NULL);
+}
+
 EAPI Ecore_Drm2_Launcher *
 ecore_drm2_launcher_connect(const char *seat, unsigned int tty, Eina_Bool sync)
 {

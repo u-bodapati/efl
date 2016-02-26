@@ -1,5 +1,7 @@
 #include "ecore_drm2_private.h"
 
+EAPI int ECORE_DRM2_EVENT_ACTIVATE = -1;
+
 static int _ecore_drm2_init_count = 0;
 
 int _ecore_drm2_log_dom = -1;
@@ -37,6 +39,8 @@ ecore_drm2_init(void)
         goto log_err;
      }
 
+   ECORE_DRM2_EVENT_ACTIVATE = ecore_event_type_new();
+
    return _ecore_drm2_init_count;
 
 log_err:
@@ -61,6 +65,8 @@ ecore_drm2_shutdown(void)
      }
 
    if (--_ecore_drm2_init_count != 0) return _ecore_drm2_init_count;
+
+   ECORE_DRM2_EVENT_ACTIVATE = -1;
 
    eina_log_domain_unregister(_ecore_drm2_log_dom);
    _ecore_drm2_log_dom = -1;
