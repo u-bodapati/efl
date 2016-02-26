@@ -94,16 +94,16 @@ _ecore_evas_drm_init(Ecore_Evas_Engine_Drm_Data *edata, const char *device)
    edata->clockid = ecore_drm2_device_clock_id_get(edata->fd);
    ecore_drm2_device_cursor_size_get(edata->fd, &edata->cw, &edata->ch);
 
-   if (!ecore_drm2_input_init(edata->launcher, "seat0"))
-     {
-        ERR("Could not init inputs");
-        goto input_err;
-     }
-
    if (!ecore_drm2_outputs_create(edata->launcher, edata->fd))
      {
         ERR("Could not create outputs");
         goto output_err;
+     }
+
+   if (!ecore_drm2_input_init(edata->launcher, "seat0"))
+     {
+        ERR("Could not init inputs");
+        goto input_err;
      }
 
    if (!ecore_drm2_planes_create(edata->launcher, edata->fd))
@@ -121,10 +121,10 @@ _ecore_evas_drm_init(Ecore_Evas_Engine_Drm_Data *edata, const char *device)
    return _drm_init_count;
 
 plane_err:
-   ecore_drm2_outputs_destroy(edata->launcher, edata->fd);
-output_err:
    ecore_drm2_input_shutdown(edata->launcher);
 input_err:
+   ecore_drm2_outputs_destroy(edata->launcher, edata->fd);
+output_err:
    ecore_drm2_launcher_close(edata->launcher, edata->fd);
 open_err:
    eina_stringshare_del(edata->device);
@@ -676,6 +676,8 @@ ecore_evas_drm_new_internal(const char *device, unsigned int parent, int x, int 
           }
      }
 
+   ee->prop.window = ecore_drm2_output_crtc_id_get(edata->output);
+
    _ecore_evas_register(ee);
    ecore_evas_input_event_register(ee);
    ecore_event_window_register(ee->prop.window, ee, ee->evas,
@@ -798,6 +800,8 @@ ecore_evas_gl_drm_new_internal(const char *device, unsigned int parent EINA_UNUS
              goto eng_err;
           }
      }
+
+   ee->prop.window = ecore_drm2_output_crtc_id_get(edata->output);
 
    _ecore_evas_register(ee);
    ecore_evas_input_event_register(ee);
