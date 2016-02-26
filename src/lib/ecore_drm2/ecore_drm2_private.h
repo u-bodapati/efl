@@ -328,6 +328,7 @@ struct _Ecore_Drm2_Launcher
 
    const char *seat;
 
+   int fd;
    char *sid;
    unsigned int vt_num;
 
@@ -349,6 +350,8 @@ struct _Ecore_Drm2_Launcher
      } dbus;
 
    Ecore_Drm2_Input input;
+
+   Eeze_Udev_Watch *watch;
 
    Eina_List *outputs;
 

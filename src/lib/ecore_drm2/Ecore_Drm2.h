@@ -119,11 +119,24 @@ typedef struct _Ecore_Drm2_Event_Activate
    Eina_Bool active : 1;
 } Ecore_Drm2_Event_Activate;
 
+/* structure to represent event for output changes */
+typedef struct _Ecore_Drm2_Event_Output_Changed
+{
+   unsigned int id;
+   int x, y, w, h;
+   int phys_width, phys_height;
+   unsigned int refresh, scale;
+   int subpixel, transform;
+   const char *make, *model, *name;
+   Eina_Bool connected : 1;
+} Ecore_Drm2_Event_Output_Changed;
+
 EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
 EAPI extern int ECORE_DRM2_EVENT_SEAT_FRAME;
 EAPI extern int ECORE_DRM2_EVENT_KEYMAP_SEND;
 EAPI extern int ECORE_DRM2_EVENT_MODIFIERS_SEND;
 EAPI extern int ECORE_DRM2_EVENT_ACTIVATE;
+EAPI extern int ECORE_DRM2_EVENT_OUTPUT_CHANGED;
 
 /**
  * @file

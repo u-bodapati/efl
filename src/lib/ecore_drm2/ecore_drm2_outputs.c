@@ -13,12 +13,57 @@
 #define EDID_OFFSET_PNPID 0x08
 #define EDID_OFFSET_SERIAL 0x0c
 
+EAPI int ECORE_DRM2_EVENT_OUTPUT_CHANGED = -1;
+
 static const char *conn_types[] =
 {
    "None", "VGA", "DVI-I", "DVI-D", "DVI-A",
    "Composite", "S-Video", "LVDS", "Component", "DIN",
    "DisplayPort", "HDMI-A", "HDMI-B", "TV", "eDP", "Virtual", "DSI",
 };
+
+static void
+_cb_output_event_free(void *data EINA_UNUSED, void *event)
+{
+   Ecore_Drm2_Event_Output_Changed *ev;
+
+   ev = event;
+   eina_stringshare_del(ev->make);
+   eina_stringshare_del(ev->model);
+   eina_stringshare_del(ev->name);
+   free(ev);
+}
+
+static void
+_output_event_send(Ecore_Drm2_Output *output)
+{
+   Ecore_Drm2_Event_Output_Changed *ev;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Output_Changed));
+   if (!ev) return;
+
+   ev->id = output->crtc_id;
+
+   ev->x = output->x;
+   ev->y = output->y;
+   ev->w = output->current_mode->width;
+   ev->h = output->current_mode->height;
+   ev->phys_width = output->phys_width;
+   ev->phys_height = output->phys_height;
+   ev->refresh = output->current_mode->refresh;
+
+   ev->scale = output->scale;
+   ev->subpixel = output->subpixel;
+   ev->transform = output->transform;
+   ev->connected = output->connected;
+
+   ev->name = eina_stringshare_ref(output->name);
+   ev->make = eina_stringshare_ref(output->make);
+   ev->model = eina_stringshare_ref(output->model);
+
+   ecore_event_add(ECORE_DRM2_EVENT_OUTPUT_CHANGED, ev,
+                   _cb_output_event_free, NULL);
+}
 
 static int
 _output_crtc_find(const drmModeRes *res, const drmModeConnector *conn, int fd, int alloc)
@@ -589,6 +634,77 @@ _output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd
    free(output);
 }
 
+static void
+_outputs_update(Ecore_Drm2_Launcher *launcher)
+{
+   drmModeRes *res;
+   drmModeConnector *conn;
+   uint32_t connected = 0, disconnected = 0;
+   int i = 0, x = 0, y = 0;
+
+   res = drmModeGetResources(launcher->fd);
+   if (!res) return;
+
+   for (i = 0; i < res->count_connectors; i++)
+     {
+        conn = drmModeGetConnector(launcher->fd, res->connectors[i]);
+        if (!conn) continue;
+
+        if (conn->connection != DRM_MODE_CONNECTED) goto next;
+
+        connected |= (1 << res->connectors[i]);
+
+        if (!(launcher->conn_allocator & (1 << res->connectors[i])))
+          {
+             if (launcher->outputs)
+               {
+                  Ecore_Drm2_Output *last;
+
+                  last = eina_list_last_data_get(launcher->outputs);
+                  if (last) x = last->x + last->current_mode->width;
+                  else x = 0;
+               }
+             else
+               x = 0;
+
+             if (!_output_create(launcher, res, conn,
+                                 launcher->fd, x, y, NULL, EINA_TRUE))
+               goto next;
+          }
+
+next:
+        drmModeFreeConnector(conn);
+     }
+
+   drmModeFreeResources(res);
+
+   disconnected = (launcher->conn_allocator & ~connected);
+   if (disconnected)
+     {
+        Ecore_Drm2_Output *output;
+        Eina_List *l;
+
+        EINA_LIST_FOREACH(launcher->outputs, l, output)
+          {
+             if (disconnected & (1 << output->conn_id))
+               {
+                  disconnected &= ~(1 << output->conn_id);
+                  output->connected = EINA_FALSE;
+                  _output_event_send(output);
+               }
+          }
+     }
+}
+
+static void
+_cb_output_event(const char *device EINA_UNUSED, Eeze_Udev_Event event EINA_UNUSED, void *data, Eeze_Udev_Watch *watch EINA_UNUSED)
+{
+   Ecore_Drm2_Launcher *launcher;
+
+   launcher = data;
+   _outputs_update(launcher);
+}
+
 void
 _ecore_drm2_output_coordinate_transform(Ecore_Drm2_Output *output, int dx, int dy, int *x, int *y)
 {
@@ -624,6 +740,7 @@ ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd)
    drmModeConnector *conn;
    drmModeRes *res;
    int i = 0, x = 0, y = 0, w = 0;
+   int events = 0;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, EINA_FALSE);
    EINA_SAFETY_ON_TRUE_RETURN_VAL((fd < 0), EINA_FALSE);
@@ -642,6 +759,7 @@ ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd)
         goto err;
      }
 
+   launcher->fd = fd;
    launcher->min.width = res->min_width;
    launcher->min.height = res->min_height;
    launcher->max.width = res->max_width;
@@ -669,6 +787,16 @@ next:
    if (eina_list_count(launcher->outputs) < 1) goto err;
 
    drmModeFreeResources(res);
+
+   events = (EEZE_UDEV_EVENT_ADD | EEZE_UDEV_EVENT_REMOVE |
+             EEZE_UDEV_EVENT_CHANGE);
+
+   launcher->watch =
+     eeze_udev_watch_add(EEZE_UDEV_TYPE_DRM, events,
+                         _cb_output_event, launcher);
+
+   ECORE_DRM2_EVENT_OUTPUT_CHANGED = ecore_event_type_new();
+
    return EINA_TRUE;
 
 err:
@@ -685,6 +813,11 @@ ecore_drm2_outputs_destroy(Ecore_Drm2_Launcher *launcher, int fd)
 
    EINA_LIST_FREE(launcher->outputs, output)
      _output_destroy(launcher, output, fd);
+
+   if (launcher->watch) eeze_udev_watch_del(launcher->watch);
+   launcher->watch = NULL;
+
+   ECORE_DRM2_EVENT_OUTPUT_CHANGED = -1;
 }
 
 EAPI Ecore_Drm2_Output *
