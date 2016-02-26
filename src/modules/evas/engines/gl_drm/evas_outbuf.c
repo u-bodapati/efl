@@ -176,11 +176,7 @@ _evas_outbuf_buffer_swap(Outbuf *ob, Eina_Rectangle *rects, unsigned int count)
                }
 
              ret = drmWaitVBlank(ob->fd, &vbl);
-             if (ret)
-               {
-                  ERR("Could not WaitVBLank: %m");
-                  return;
-               }
+             if (ret) return;
           }
         else
           WRN("NO PLANE FOUND");
