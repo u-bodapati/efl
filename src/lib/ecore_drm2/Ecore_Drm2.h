@@ -293,6 +293,18 @@ EAPI int ecore_drm2_launcher_activate(Ecore_Drm2_Launcher *launcher, int vt);
 EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
 
 /**
+ * Get the current state of the launcher session
+ *
+ * @param launcher
+ *
+ * @return EINA_TRUE if session is active, EINA_FALSE otherwise
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_launcher_active_get(Ecore_Drm2_Launcher *launcher);
+
+/**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions
  *
  * Functions that deal with setup of inputs

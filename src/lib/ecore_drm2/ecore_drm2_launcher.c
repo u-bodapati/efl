@@ -101,3 +101,10 @@ ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher)
    if (launcher->iface->restore)
      launcher->iface->restore(launcher);
 }
+
+EAPI Eina_Bool
+ecore_drm2_launcher_active_get(Ecore_Drm2_Launcher *launcher)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, EINA_FALSE);
+   return launcher->active;
+}
