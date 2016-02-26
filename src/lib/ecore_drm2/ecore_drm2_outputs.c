@@ -397,7 +397,7 @@ _output_backlight_shutdown(Ecore_Drm2_Backlight *bl)
 }
 
 static Eina_Bool
-_output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConnector *conn, int fd, int x, int y, int *w)
+_output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConnector *conn, int fd, int x, int y, int *w, Eina_Bool cloned)
 {
    Eina_List *l;
    Ecore_Drm2_Output *output;
@@ -427,6 +427,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    output->model = eina_stringshare_add("unknown");
    output->serial = eina_stringshare_add("unknown");
 
+   output->cloned = cloned;
    output->connected = (conn->connection == DRM_MODE_CONNECTED);
 
    output->pipe = i;
@@ -494,6 +495,13 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    _output_scale_init(output, ECORE_DRM2_OUTPUT_TRANSFORM_NORMAL, 1);
    _output_matrix_update(output);
 
+   /* NB: 'primary' output property is not supported in HW, so we need to
+    * implement it via software. As such, the First output which gets
+    * listed via libdrm will be assigned 'primary' until user changes
+    * it via config */
+   if (!eina_list_count(launcher->outputs))
+     output->primary = EINA_TRUE;
+
    DBG("Created New Output At %d,%d", output->x, output->y);
    DBG("\tCrtc Pos: %d %d", output->ocrtc->x, output->ocrtc->y);
    DBG("\tCrtc: %d", output->crtc_id);
@@ -502,8 +510,9 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    DBG("\tModel: %s", output->model);
    DBG("\tName: %s", output->name);
    DBG("\tSerial: %s", output->serial);
-   /* DBG("\tCloned: %d", output->cloned); */
-   /* DBG("\tPrimary: %d", output->primary); */
+   DBG("\tCloned: %d", output->cloned);
+   DBG("\tPrimary: %d", output->primary);
+
    if (output->backlight)
      {
         DBG("\tBacklight");
@@ -648,7 +657,7 @@ ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd)
 
         if (conn->connection == DRM_MODE_CONNECTED)
           {
-             if (!_output_create(launcher, res, conn, fd, x, y, &w))
+             if (!_output_create(launcher, res, conn, fd, x, y, &w, EINA_FALSE))
                goto next;
 
              x += w;

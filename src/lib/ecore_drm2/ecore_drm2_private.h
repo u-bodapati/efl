@@ -171,6 +171,8 @@ struct _Ecore_Drm2_Output
    Eina_List *planes;
 
    Eina_Bool connected : 1;
+   Eina_Bool primary : 1;
+   Eina_Bool cloned : 1;
 };
 
 typedef struct _Ecore_Drm2_Pointer
