@@ -805,6 +805,19 @@ _touch_up(struct libinput_device *idevice, struct libinput_event_touch *event)
    _touch_event_send(dev, event, ECORE_EVENT_MOUSE_BUTTON_UP);
 }
 
+static void
+_seat_frame_send(Ecore_Drm2_Seat *seat)
+{
+   Ecore_Drm2_Event_Seat_Frame *ev;
+
+   ev = calloc(1, sizeof(Ecore_Drm2_Event_Seat_Frame));
+   if (!ev) return;
+
+   ev->seat = seat;
+
+   ecore_event_add(ECORE_DRM2_EVENT_SEAT_FRAME, ev, NULL, NULL);
+}
+
 Ecore_Drm2_Input_Device *
 _ecore_drm2_input_device_create(Ecore_Drm2_Seat *seat, struct libinput_device *device)
 {
@@ -907,7 +920,10 @@ _ecore_drm2_input_device_event_process(struct libinput_event *event)
 
    if (frame)
      {
-        /* TODO: notify pointer frame */
+        Ecore_Drm2_Input_Device *dev;
+
+        dev = libinput_device_get_user_data(idevice);
+        if (dev) _seat_frame_send(dev->seat);
      }
 
    return ret;

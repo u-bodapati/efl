@@ -91,6 +91,12 @@ typedef struct _Ecore_Drm2_Event_Seat_Caps
    int touch_count;
 } Ecore_Drm2_Event_Seat_Caps;
 
+/* structure to represent event for seat frame */
+typedef struct _Ecore_Drm2_Event_Seat_Frame
+{
+   Ecore_Drm2_Seat *seat;
+} Ecore_Drm2_Event_Seat_Frame;
+
 /* structure to represent event for seat keymap changes */
 typedef struct _Ecore_Drm2_Event_Keymap_Send
 {
@@ -108,6 +114,7 @@ typedef struct _Ecore_Drm2_Event_Modifiers_Send
 } Ecore_Drm2_Event_Modifiers_Send;
 
 EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
+EAPI extern int ECORE_DRM2_EVENT_SEAT_FRAME;
 EAPI extern int ECORE_DRM2_EVENT_KEYMAP_SEND;
 EAPI extern int ECORE_DRM2_EVENT_MODIFIERS_SEND;
 

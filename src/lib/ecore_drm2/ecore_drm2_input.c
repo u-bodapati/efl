@@ -1,6 +1,7 @@
 #include "ecore_drm2_private.h"
 
 EAPI int ECORE_DRM2_EVENT_SEAT_CAPS = -1;
+EAPI int ECORE_DRM2_EVENT_SEAT_FRAME = -1;
 EAPI int ECORE_DRM2_EVENT_KEYMAP_SEND = -1;
 EAPI int ECORE_DRM2_EVENT_MODIFIERS_SEND = -1;
 
@@ -627,6 +628,7 @@ ecore_drm2_input_init(Ecore_Drm2_Launcher *launch, const char *seat)
    EINA_SAFETY_ON_NULL_RETURN_VAL(launch, EINA_FALSE);
 
    ECORE_DRM2_EVENT_SEAT_CAPS = ecore_event_type_new();
+   ECORE_DRM2_EVENT_SEAT_FRAME = ecore_event_type_new();
    ECORE_DRM2_EVENT_KEYMAP_SEND = ecore_event_type_new();
    ECORE_DRM2_EVENT_MODIFIERS_SEND = ecore_event_type_new();
 
@@ -674,6 +676,7 @@ ecore_drm2_input_shutdown(Ecore_Drm2_Launcher *launcher)
    libinput_unref(launcher->input.libinput);
 
    ECORE_DRM2_EVENT_SEAT_CAPS = -1;
+   ECORE_DRM2_EVENT_SEAT_FRAME = -1;
    ECORE_DRM2_EVENT_KEYMAP_SEND = -1;
    ECORE_DRM2_EVENT_MODIFIERS_SEND = -1;
 }
