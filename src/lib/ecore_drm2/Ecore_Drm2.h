@@ -498,6 +498,20 @@ EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
 EAPI int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
 
 /**
+ * Return a list of outputs associated with this launcher
+ *
+ * @param launcher
+ *
+ * @return A const list of outputs associated with this launcher
+ *
+ * @note This list and it's contents should not be modified or freed
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI const Eina_List *ecore_drm2_outputs_get(Ecore_Drm2_Launcher *launcher);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
