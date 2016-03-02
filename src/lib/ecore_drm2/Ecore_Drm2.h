@@ -542,6 +542,18 @@ EAPI Eina_Stringshare *ecore_drm2_output_model_get(Ecore_Drm2_Output *output);
 EAPI char *ecore_drm2_output_edid_get(Ecore_Drm2_Output *output);
 
 /**
+ * Return if a given output supports a backlight
+ *
+ * @param output
+ *
+ * @return EINA_TRUE if this output supports a backlight, EINA_FALSE otherwise
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_output_backlight_supported_get(Ecore_Drm2_Output *output);
+
+/**
  * Return if a given output is connected
  *
  * @param output
