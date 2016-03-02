@@ -146,6 +146,7 @@ struct _Ecore_Drm2_Output
 
    uint32_t crtc_id;
    uint32_t conn_id;
+   uint32_t conn_type;
 
    Ecore_Drm2_Output_Mode *current_mode;
 

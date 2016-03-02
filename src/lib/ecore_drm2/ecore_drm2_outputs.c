@@ -479,6 +479,8 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    /* output->crtc_index = i; */
    output->crtc_id = res->crtcs[i];
    output->conn_id = conn->connector_id;
+   output->conn_type = conn->connector_type;
+
    launcher->crtc_allocator |= (1 << output->crtc_id);
    launcher->conn_allocator |= (1 << output->conn_id);
 
@@ -894,6 +896,13 @@ ecore_drm2_output_connected_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
    return output->connected;
+}
+
+EAPI unsigned int
+ecore_drm2_output_connector_type_get(Ecore_Drm2_Output *output)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, 0);
+   return output->conn_type;
 }
 
 EAPI char *
