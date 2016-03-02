@@ -604,6 +604,18 @@ EAPI void ecore_drm2_output_physical_size_get(Ecore_Drm2_Output *output, int *w,
 EAPI const Eina_List *ecore_drm2_output_modes_get(Ecore_Drm2_Output *output);
 
 /**
+ * Return the output which is marked as the primary output
+ *
+ * @param launcher
+ *
+ * @return The primary output or NULL if no primary output is found
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Output *ecore_drm2_output_primary_get(Ecore_Drm2_Launcher *launcher);
+
+/**
  * Return a list of outputs associated with this launcher
  *
  * @param launcher

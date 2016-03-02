@@ -957,3 +957,17 @@ ecore_drm2_output_modes_get(Ecore_Drm2_Output *output)
    EINA_SAFETY_ON_NULL_RETURN_VAL(output->modes, NULL);
    return output->modes;
 }
+
+EAPI Ecore_Drm2_Output *
+ecore_drm2_output_primary_get(Ecore_Drm2_Launcher *launcher)
+{
+   Ecore_Drm2_Output *ret;
+   const Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, NULL);
+
+   EINA_LIST_FOREACH(launcher->outputs, l, ret)
+     if (ret->primary) return ret;
+
+   return NULL;
+}
