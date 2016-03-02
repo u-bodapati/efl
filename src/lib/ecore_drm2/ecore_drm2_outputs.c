@@ -880,3 +880,10 @@ ecore_drm2_output_name_get(Ecore_Drm2_Output *output)
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
    return eina_stringshare_ref(output->name);
 }
+
+EAPI Eina_Bool
+ecore_drm2_output_connected_get(Ecore_Drm2_Output *output)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
+   return output->connected;
+}
