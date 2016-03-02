@@ -139,8 +139,8 @@ struct _Ecore_Drm2_Output
    int phys_width, phys_height;
    unsigned int scale;
 
-   const char *name;
-   const char *make, *model, *serial;
+   Eina_Stringshare *name;
+   Eina_Stringshare *make, *model, *serial;
 
    uint32_t subpixel;
 

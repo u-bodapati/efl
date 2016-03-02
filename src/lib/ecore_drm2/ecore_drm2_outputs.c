@@ -873,3 +873,10 @@ ecore_drm2_outputs_get(Ecore_Drm2_Launcher *launcher)
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, NULL);
    return launcher->outputs;
 }
+
+EAPI Eina_Stringshare *
+ecore_drm2_output_name_get(Ecore_Drm2_Output *output)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
+   return eina_stringshare_ref(output->name);
+}

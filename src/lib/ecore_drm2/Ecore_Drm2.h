@@ -498,6 +498,21 @@ EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
 EAPI int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
 
 /**
+ * Get the name of a given output
+ *
+ * @param output
+ *
+ * @return The name of the given output or NULL on failure
+ *
+ * @note: When finished with the returned string, callers of this API should
+ * call @ref eina_stringshare_del on the returned string
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Eina_Stringshare *ecore_drm2_output_name_get(Ecore_Drm2_Output *output);
+
+/**
  * Return a list of outputs associated with this launcher
  *
  * @param launcher
