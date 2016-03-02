@@ -590,6 +590,20 @@ EAPI unsigned int ecore_drm2_output_connector_type_get(Ecore_Drm2_Output *output
 EAPI void ecore_drm2_output_physical_size_get(Ecore_Drm2_Output *output, int *w, int *h);
 
 /**
+ * Return a list of the modes supported by an output
+ *
+ * @param output
+ *
+ * @return An Eina_List of the modes supported by this output
+ *
+ * @note This list and it's contents should not be modified or freed
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI const Eina_List *ecore_drm2_output_modes_get(Ecore_Drm2_Output *output);
+
+/**
  * Return a list of outputs associated with this launcher
  *
  * @param launcher

@@ -949,3 +949,11 @@ ecore_drm2_output_physical_size_get(Ecore_Drm2_Output *output, int *w, int *h)
    if (w) *w = output->phys_width;
    if (h) *h = output->phys_height;
 }
+
+EAPI const Eina_List *
+ecore_drm2_output_modes_get(Ecore_Drm2_Output *output)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output->modes, NULL);
+   return output->modes;
+}
