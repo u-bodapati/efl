@@ -318,6 +318,18 @@ EAPI void ecore_drm2_launcher_restore(Ecore_Drm2_Launcher *launcher);
 EAPI Eina_Bool ecore_drm2_launcher_active_get(Ecore_Drm2_Launcher *launcher);
 
 /**
+ * Get the number of available crtcs
+ *
+ * @param launcher
+ *
+ * @return The number of available crtcs or -1 on error
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI unsigned int ecore_drm2_launcher_crtc_count_get(Ecore_Drm2_Launcher *launcher);
+
+/**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions
  *
  * Functions that deal with setup of inputs

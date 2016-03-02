@@ -108,3 +108,10 @@ ecore_drm2_launcher_active_get(Ecore_Drm2_Launcher *launcher)
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, EINA_FALSE);
    return launcher->active;
 }
+
+EAPI unsigned int
+ecore_drm2_launcher_crtc_count_get(Ecore_Drm2_Launcher *launcher)
+{
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, -1);
+   return launcher->num_crtcs;
+}
