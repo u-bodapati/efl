@@ -165,6 +165,7 @@ struct _Ecore_Drm2_Output
         char monitor[13];
         char pnp[5];
         char serial[13];
+        unsigned char *blob;
      } edid;
 
    Eina_List *modes;

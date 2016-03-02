@@ -274,7 +274,7 @@ _output_edid_find(Ecore_Drm2_Output *output, drmModeConnector *conn, int fd)
 
    if (!blob) return;
 
-   /* output->edid.blob = eina_memdup(blob->data, blob->length, 1); */
+   output->edid.blob = eina_memdup(blob->data, blob->length, 1);
 
    ret = _output_edid_parse(output, blob->data, blob->length);
    if (!ret)
@@ -631,6 +631,7 @@ _output_destroy(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output, int fd
    eina_stringshare_del(output->model);
    eina_stringshare_del(output->serial);
 
+   free(output->edid.blob);
    free(output);
 }
 
@@ -893,4 +894,30 @@ ecore_drm2_output_connected_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
    return output->connected;
+}
+
+EAPI char *
+ecore_drm2_output_edid_get(Ecore_Drm2_Output *output)
+{
+   char *edid_str = NULL;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output->edid.blob, NULL);
+
+   edid_str = malloc((128 * 2) + 1);
+   if (edid_str)
+     {
+        unsigned int k, kk;
+        const char *hexch = "0123456789abcdef";
+
+        for (kk = 0, k = 0; k < 128; k++)
+          {
+             edid_str[kk] = hexch[(output->edid.blob[k] >> 4) & 0xf];
+             edid_str[kk + 1] = hexch[output->edid.blob[k] & 0xf];
+             kk += 2;
+          }
+        edid_str[kk] = 0;
+     }
+
+   return edid_str;
 }

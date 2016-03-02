@@ -528,6 +528,20 @@ EAPI Eina_Stringshare *ecore_drm2_output_name_get(Ecore_Drm2_Output *output);
 EAPI Eina_Stringshare *ecore_drm2_output_model_get(Ecore_Drm2_Output *output);
 
 /**
+ * Get the edid information of a given output
+ *
+ * @param output
+ *
+ * @return A string representing the edid, or NULL on failure.
+ *
+ * @note The returned string should be free'd by the user when finished
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI char *ecore_drm2_output_edid_get(Ecore_Drm2_Output *output);
+
+/**
  * Return if a given output is connected
  *
  * @param output
