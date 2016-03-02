@@ -578,6 +578,18 @@ EAPI Eina_Bool ecore_drm2_output_connected_get(Ecore_Drm2_Output *output);
 EAPI unsigned int ecore_drm2_output_connector_type_get(Ecore_Drm2_Output *output);
 
 /**
+ * Get the physical size of a given output
+ *
+ * @param output
+ * @param *w The parameter in which to store the physical width
+ * @param *h The parameter in which to store the physical height
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_physical_size_get(Ecore_Drm2_Output *output, int *w, int *h);
+
+/**
  * Return a list of outputs associated with this launcher
  *
  * @param launcher
