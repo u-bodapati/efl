@@ -1031,3 +1031,19 @@ ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output)
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
    return output->current_fb;
 }
+
+EAPI void
+ecore_drm2_output_geometry_get(Ecore_Drm2_Output *output, int *x, int *y, int *w, int *h)
+{
+   if (x) *x = 0;
+   if (y) *y = 0;
+   if (w) *w = 0;
+   if (h) *h = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(output);
+
+   if (x) *x = output->x;
+   if (y) *y = output->y;
+   if (w) *w = output->w;
+   if (h) *h = output->h;
+}

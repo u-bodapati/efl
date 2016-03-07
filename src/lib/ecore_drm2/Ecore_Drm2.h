@@ -679,6 +679,20 @@ EAPI Eina_Bool ecore_drm2_output_possible_crtc_get(Ecore_Drm2_Output *output, un
 EAPI const Ecore_Drm2_Fb *ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output);
 
 /**
+ * Return the geometry of a given output
+ *
+ * @param output
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_geometry_get(Ecore_Drm2_Output *output, int *x, int *y, int *w, int *h);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
