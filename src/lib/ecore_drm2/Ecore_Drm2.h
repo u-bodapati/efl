@@ -791,6 +791,21 @@ EAPI unsigned int ecore_drm2_output_supported_rotations_get(Ecore_Drm2_Output *o
 EAPI void ecore_drm2_output_mode_info_get(Ecore_Drm2_Output_Mode *mode, int *width, int *height, double *refresh, unsigned int *flags);
 
 /**
+ * Set an output to a given mode
+ *
+ * @param output
+ * @param mode
+ * @param x
+ * @param y
+ *
+ * @return EINA_TRUE on success, EINA_FALSE otherwise
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_output_mode_set(Ecore_Drm2_Output *output, Ecore_Drm2_Output_Mode *mode, int x, int y);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
