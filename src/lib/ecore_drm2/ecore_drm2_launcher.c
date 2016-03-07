@@ -138,3 +138,29 @@ ecore_drm2_launcher_screen_size_range_get(Ecore_Drm2_Launcher *launcher, int *mi
    if (maxw) *maxw = launcher->max.width;
    if (maxh) *maxh = launcher->max.height;
 }
+
+EAPI void
+ecore_drm2_launcher_outputs_geometry_get(Ecore_Drm2_Launcher *launcher, int *x, int *y, int *w, int *h)
+{
+   Ecore_Drm2_Output *output;
+   const Eina_List *l;
+   int ow = 0, oh = 0;
+
+   if (x) *x = 0;
+   if (y) *y = 0;
+   if (w) *w = 0;
+   if (h) *h = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   EINA_LIST_FOREACH(launcher->outputs, l, output)
+     {
+        if ((!output->connected) || (!output->enabled)) continue;
+        if (output->cloned) continue;
+        ow += MAX(ow, output->current_mode->width);
+        oh = MAX(oh, output->current_mode->height);
+     }
+
+   if (w) *w = ow;
+   if (h) *h = oh;
+}

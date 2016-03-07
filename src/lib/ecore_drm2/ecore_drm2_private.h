@@ -178,6 +178,7 @@ struct _Ecore_Drm2_Output
    Eina_Bool connected : 1;
    Eina_Bool primary : 1;
    Eina_Bool cloned : 1;
+   Eina_Bool enabled : 1;
 };
 
 typedef struct _Ecore_Drm2_Pointer

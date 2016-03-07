@@ -356,6 +356,20 @@ EAPI unsigned int *ecore_drm2_launcher_crtcs_get(Ecore_Drm2_Launcher *launcher);
 EAPI void ecore_drm2_launcher_screen_size_range_get(Ecore_Drm2_Launcher *launcher, int *minw, int *minh, int *maxw, int *maxh);
 
 /**
+ * Get the combined screen geometry of all outputs
+ *
+ * @param launcher
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_launcher_outputs_geometry_get(Ecore_Drm2_Launcher *launcher, int *x, int *y, int *w, int *h);
+
+/**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions
  *
  * Functions that deal with setup of inputs
