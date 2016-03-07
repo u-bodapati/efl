@@ -1169,3 +1169,37 @@ ecore_drm2_output_mode_set(Ecore_Drm2_Output *output, Ecore_Drm2_Output_Mode *mo
 
    return ret;
 }
+
+EAPI Eina_Bool
+ecore_drm2_output_rotation_set(Ecore_Drm2_Output *output, int plane_type, unsigned int rotation)
+{
+   Ecore_Drm2_Plane *plane;
+   const Eina_List *l;
+   Eina_Bool ret = EINA_FALSE;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
+
+   EINA_LIST_FOREACH(output->planes, l, plane)
+     {
+        if (plane->type != plane_type) continue;
+        if ((plane->supported_rotations & rotation) == 0)
+          {
+             WRN("Unsupported rotation");
+             return EINA_FALSE;
+          }
+
+        if (drmModeObjectSetProperty(output->fd, plane->id,
+                                     DRM_MODE_OBJECT_PLANE,
+                                     plane->rotation_prop_id,
+                                     plane->rotation_map[ffs(rotation)]) < 0)
+          {
+             WRN("Failed to set rotation");
+             return EINA_FALSE;
+          }
+
+        ret = EINA_TRUE;
+        break;
+     }
+
+   return ret;
+}
