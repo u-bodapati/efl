@@ -1085,3 +1085,51 @@ ecore_drm2_output_crtc_size_get(Ecore_Drm2_Output *output, int *w, int *h)
    if (w) *w = output->ocrtc->width;
    if (h) *h = output->ocrtc->height;
 }
+
+EAPI void
+ecore_drm2_output_current_resolution_get(Ecore_Drm2_Output *output, int *w, int *h, unsigned int *refresh)
+{
+   if (w) *w = 0;
+   if (h) *h = 0;
+   if (refresh) *refresh = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(output);
+   EINA_SAFETY_ON_NULL_RETURN(output->current_mode);
+
+   if (w) *w = output->current_mode->width;
+   if (h) *h = output->current_mode->height;
+   if (refresh) *refresh = output->current_mode->refresh;
+}
+
+EAPI unsigned int
+ecore_drm2_output_supported_rotations_get(Ecore_Drm2_Output *output, int plane_type)
+{
+   Ecore_Drm2_Plane *plane;
+   const Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, 0);
+
+   EINA_LIST_FOREACH(output->planes, l, plane)
+     {
+        if (plane->type != plane_type) continue;
+        return plane->supported_rotations;
+     }
+
+   return 0;
+}
+
+EAPI void
+ecore_drm2_output_mode_info_get(Ecore_Drm2_Output_Mode *mode, int *width, int *height, double *refresh, unsigned int *flags)
+{
+   if (width) *width = 0;
+   if (height) *height = 0;
+   if (refresh) *refresh = 0.0;
+   if (flags) *flags = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(mode);
+
+   if (width) *width = mode->width;
+   if (height) *height = mode->height;
+   if (refresh) *refresh = mode->refresh;
+   if (flags) *flags = mode->flags;
+}

@@ -723,6 +723,46 @@ EAPI void ecore_drm2_output_dpms_set(Ecore_Drm2_Output *output, int level);
 EAPI void ecore_drm2_output_crtc_size_get(Ecore_Drm2_Output *output, int *w, int *h);
 
 /**
+ * Get the current resolution of a given output
+ *
+ * @param output
+ * @param w
+ * @param h
+ * @param refresh
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_current_resolution_get(Ecore_Drm2_Output *output, int *w, int *h, unsigned int *refresh);
+
+/**
+ * Get the rotations which are supported by this output
+ *
+ * @param output
+ * @param plane_type
+ *
+ * @return
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI unsigned int ecore_drm2_output_supported_rotations_get(Ecore_Drm2_Output *output, int plane_type);
+
+/**
+ * Get information about a given output mode
+ *
+ * @param mode
+ * @param width
+ * @param height
+ * @param refresh
+ * @param flags
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_mode_info_get(Ecore_Drm2_Output_Mode *mode, int *width, int *height, double *refresh, unsigned int *flags);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
