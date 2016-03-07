@@ -519,7 +519,7 @@ EAPI unsigned int ecore_drm2_output_vblank_get(Ecore_Drm2_Output *output);
  * @ingroup Ecore_Drm2_Output_Group
  * @since 1.18
  */
-EAPI int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
+EAPI unsigned int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
 
 /**
  * Get the name of a given output
