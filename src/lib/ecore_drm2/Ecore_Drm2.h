@@ -129,6 +129,7 @@ typedef struct _Ecore_Drm2_Event_Output_Changed
    int subpixel, transform;
    const char *make, *model, *name;
    Eina_Bool connected : 1;
+   Eina_Bool enabled : 1;
 } Ecore_Drm2_Event_Output_Changed;
 
 EAPI extern int ECORE_DRM2_EVENT_SEAT_CAPS;
@@ -829,6 +830,17 @@ EAPI Eina_Bool ecore_drm2_output_mode_set(Ecore_Drm2_Output *output, Ecore_Drm2_
  * @since 1.18
  */
 EAPI Eina_Bool ecore_drm2_output_rotation_set(Ecore_Drm2_Output *output, int plane_type, unsigned int rotation);
+
+/**
+ * Enable or disable a given output
+ *
+ * @param output
+ * @param enabled
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_enabled_set(Ecore_Drm2_Output *output, Eina_Bool enabled);
 
 /**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions

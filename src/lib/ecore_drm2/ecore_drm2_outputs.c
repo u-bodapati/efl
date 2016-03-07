@@ -56,6 +56,7 @@ _output_event_send(Ecore_Drm2_Output *output)
    ev->subpixel = output->subpixel;
    ev->transform = output->transform;
    ev->connected = output->connected;
+   ev->enabled = output->enabled;
 
    ev->name = eina_stringshare_ref(output->name);
    ev->make = eina_stringshare_ref(output->make);
@@ -533,6 +534,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    output->current_mode->flags |= DRM_MODE_TYPE_DEFAULT;
 
    /* TODO: ?? disable output if config is off ?? */
+   output->enabled = EINA_TRUE;
 
    output->backlight = _output_backlight_init(conn->connector_type);
 
@@ -1202,4 +1204,19 @@ ecore_drm2_output_rotation_set(Ecore_Drm2_Output *output, int plane_type, unsign
      }
 
    return ret;
+}
+
+EAPI void
+ecore_drm2_output_enabled_set(Ecore_Drm2_Output *output, Eina_Bool enabled)
+{
+   EINA_SAFETY_ON_NULL_RETURN(output);
+
+   output->enabled = enabled;
+
+   if (enabled)
+     ecore_drm2_output_dpms_set(output, DRM_MODE_DPMS_ON);
+   else
+     ecore_drm2_output_dpms_set(output, DRM_MODE_DPMS_OFF);
+
+   _output_event_send(output);
 }
