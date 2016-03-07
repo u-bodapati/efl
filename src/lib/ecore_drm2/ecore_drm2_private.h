@@ -161,6 +161,8 @@ struct _Ecore_Drm2_Output
    uint16_t gamma;
    Ecore_Drm2_Backlight *backlight;
 
+   Ecore_Drm2_Fb *current_fb;
+
    struct
      {
         char eisa[13];

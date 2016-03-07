@@ -347,5 +347,7 @@ ecore_drm2_plane_fb_set(Ecore_Drm2_Plane *plane, Ecore_Drm2_Fb *fb)
         return EINA_FALSE;
      }
 
+   output->current_fb = fb;
+
    return EINA_TRUE;
 }

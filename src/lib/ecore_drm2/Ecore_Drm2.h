@@ -667,6 +667,18 @@ EAPI const Eina_List *ecore_drm2_outputs_get(Ecore_Drm2_Launcher *launcher);
 EAPI Eina_Bool ecore_drm2_output_possible_crtc_get(Ecore_Drm2_Output *output, unsigned int crtc);
 
 /**
+ * Return the current Ecore_Drm2_Fb used on a given output
+ *
+ * @param output
+ *
+ * @return The current Ecore_Drm2_Fb used on given output, or NULL on failure
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI const Ecore_Drm2_Fb *ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
