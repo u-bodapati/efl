@@ -878,18 +878,20 @@ ecore_drm2_outputs_get(Ecore_Drm2_Launcher *launcher)
    return launcher->outputs;
 }
 
-EAPI Eina_Stringshare *
+EAPI const char *
 ecore_drm2_output_name_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
-   return eina_stringshare_ref(output->name);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output->name, NULL);
+   return output->name;
 }
 
-EAPI Eina_Stringshare *
+EAPI const char *
 ecore_drm2_output_model_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, NULL);
-   return eina_stringshare_ref(output->model);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output->model, NULL);
+   return output->model;
 }
 
 EAPI Eina_Bool

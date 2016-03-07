@@ -528,13 +528,10 @@ EAPI unsigned int ecore_drm2_output_crtc_id_get(Ecore_Drm2_Output *output);
  *
  * @return The name of the given output or NULL on failure
  *
- * @note: When finished with the returned string, callers of this API should
- * call @ref eina_stringshare_del on the returned string
- *
  * @ingroup Ecore_Drm2_Output_Group
  * @since 1.18
  */
-EAPI Eina_Stringshare *ecore_drm2_output_name_get(Ecore_Drm2_Output *output);
+EAPI const char *ecore_drm2_output_name_get(Ecore_Drm2_Output *output);
 
 /**
  * Get the model of a given output
@@ -543,13 +540,10 @@ EAPI Eina_Stringshare *ecore_drm2_output_name_get(Ecore_Drm2_Output *output);
  *
  * @return The model of the given output or NULL on failure
  *
- * @note: When finished with the returned string, callers of this API should
- * call @ref eina_stringshare_del on the returned string
- *
  * @ingroup Ecore_Drm2_Output_Group
  * @since 1.18
  */
-EAPI Eina_Stringshare *ecore_drm2_output_model_get(Ecore_Drm2_Output *output);
+EAPI const char *ecore_drm2_output_model_get(Ecore_Drm2_Output *output);
 
 /**
  * Get the edid information of a given output
