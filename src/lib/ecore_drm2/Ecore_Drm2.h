@@ -711,6 +711,18 @@ EAPI Ecore_Drm2_Output *ecore_drm2_output_name_find(Ecore_Drm2_Launcher *launche
 EAPI void ecore_drm2_output_dpms_set(Ecore_Drm2_Output *output, int level);
 
 /**
+ * Get the current size of a given output's crtc
+ *
+ * @param output
+ * @param w
+ * @param h
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_crtc_size_get(Ecore_Drm2_Output *output, int *w, int *h);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers

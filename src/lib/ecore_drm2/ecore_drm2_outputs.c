@@ -1073,3 +1073,15 @@ ecore_drm2_output_dpms_set(Ecore_Drm2_Output *output, int level)
    drmModeConnectorSetProperty(output->fd, output->conn_id,
                                output->dpms_prop->prop_id, level);
 }
+
+EAPI void
+ecore_drm2_output_crtc_size_get(Ecore_Drm2_Output *output, int *w, int *h)
+{
+   if (w) *w = 0;
+   if (h) *h = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(output);
+
+   if (w) *w = output->ocrtc->width;
+   if (h) *h = output->ocrtc->height;
+}
