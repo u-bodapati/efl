@@ -1064,3 +1064,12 @@ ecore_drm2_output_name_find(Ecore_Drm2_Launcher *launcher, const char *name)
 
    return NULL;
 }
+
+EAPI void
+ecore_drm2_output_dpms_set(Ecore_Drm2_Output *output, int level)
+{
+   EINA_SAFETY_ON_NULL_RETURN(output);
+
+   drmModeConnectorSetProperty(output->fd, output->conn_id,
+                               output->dpms_prop->prop_id, level);
+}

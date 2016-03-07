@@ -700,6 +700,17 @@ EAPI void ecore_drm2_output_geometry_get(Ecore_Drm2_Output *output, int *x, int 
 EAPI Ecore_Drm2_Output *ecore_drm2_output_name_find(Ecore_Drm2_Launcher *launcher, const char *name);
 
 /**
+ * Set the DPMS level of a given output
+ *
+ * @param output
+ * @param level
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_output_dpms_set(Ecore_Drm2_Output *output, int level);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
