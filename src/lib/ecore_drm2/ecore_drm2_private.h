@@ -133,6 +133,7 @@ struct _Ecore_Drm2_Output_Mode
 
 struct _Ecore_Drm2_Output
 {
+   int fd;
    int id, pipe;
 
    int x, y, w, h;
@@ -334,8 +335,8 @@ struct _Ecore_Drm2_Launcher
    char *sid;
    unsigned int vt_num;
 
-   uint32_t *crtcs;
    int num_crtcs;
+   uint32_t *crtcs;
    uint32_t crtc_allocator;
    uint32_t conn_allocator;
 
@@ -357,8 +358,8 @@ struct _Ecore_Drm2_Launcher
 
    Eina_List *outputs;
 
-   Eina_Bool sync;
-   Eina_Bool active;
+   Eina_Bool sync : 1;
+   Eina_Bool active : 1;
 };
 
 Eina_Bool _ecore_drm2_dbus_open(Eldbus_Connection **conn);

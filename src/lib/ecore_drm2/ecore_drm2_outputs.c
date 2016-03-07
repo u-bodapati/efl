@@ -463,6 +463,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
 
    output->x = x;
    output->y = y;
+   output->fd = fd;
    output->phys_width = conn->mmWidth;
    output->phys_height = conn->mmHeight;
    output->subpixel = _output_subpixel_get(conn->subpixel);
@@ -970,4 +971,56 @@ ecore_drm2_output_primary_get(Ecore_Drm2_Launcher *launcher)
      if (ret->primary) return ret;
 
    return NULL;
+}
+
+EAPI Eina_Bool
+ecore_drm2_output_possible_crtc_get(Ecore_Drm2_Output *output, unsigned int crtc)
+{
+   drmModeRes *res;
+   drmModeConnector *conn;
+   drmModeEncoder *enc;
+   Eina_Bool ret = EINA_FALSE;
+   int i = 0, j = 0, k = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(output->fd < 0, EINA_FALSE);
+
+   res = drmModeGetResources(output->fd);
+   if (!res) return EINA_FALSE;
+
+   for (i = 0; i < res->count_connectors; i++)
+     {
+        conn = drmModeGetConnector(output->fd, res->connectors[i]);
+        if (!conn) continue;
+
+        for (j = 0; j < conn->count_encoders; j++)
+          {
+             enc = drmModeGetEncoder(output->fd, conn->encoders[j]);
+             if (!enc) continue;
+
+             if (enc->crtc_id != crtc) goto next;
+
+             for (k = 0; k < res->count_crtcs; k++)
+               {
+                  if (res->crtcs[k] != output->crtc_id) continue;
+
+                  if (enc->possible_crtcs & (1 << k))
+                    {
+                       ret = EINA_TRUE;
+                       break;
+                    }
+               }
+
+next:
+             drmModeFreeEncoder(enc);
+             if (ret) break;
+          }
+
+        drmModeFreeConnector(conn);
+        if (ret) break;
+     }
+
+   drmModeFreeResources(res);
+
+   return ret;
 }

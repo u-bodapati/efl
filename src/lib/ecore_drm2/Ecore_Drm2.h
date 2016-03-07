@@ -654,6 +654,19 @@ EAPI Ecore_Drm2_Output *ecore_drm2_output_primary_get(Ecore_Drm2_Launcher *launc
 EAPI const Eina_List *ecore_drm2_outputs_get(Ecore_Drm2_Launcher *launcher);
 
 /**
+ * Return if an output can be assigned to a given crtc
+ *
+ * @param output
+ * @param crtcs
+ *
+ * @return EINA_TRUE if given output can be assigned to crtcs, EINA_FALSE otherwise
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Eina_Bool ecore_drm2_output_possible_crtc_get(Ecore_Drm2_Output *output, unsigned int crtc);
+
+/**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions
  *
  * Functions that deal with setup of framebuffers
