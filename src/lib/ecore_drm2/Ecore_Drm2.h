@@ -336,10 +336,24 @@ EAPI unsigned int ecore_drm2_launcher_crtc_count_get(Ecore_Drm2_Launcher *launch
  *
  * @return A pointer to the available crtcs
  *
- * @ingroup Ecore_Drm2_Output_Group
+ * @ingroup Ecore_Drm2_Launcher_Group
  * @since 1.18
  */
 EAPI unsigned int *ecore_drm2_launcher_crtcs_get(Ecore_Drm2_Launcher *launcher);
+
+/**
+ * Get the minimum and maximum size of a screen
+ *
+ * @param launcher
+ * @param minw
+ * @param minh
+ * @param maxw
+ * @param maxh
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_launcher_screen_size_range_get(Ecore_Drm2_Launcher *launcher, int *minw, int *minh, int *maxw, int *maxh);
 
 /**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions

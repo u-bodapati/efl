@@ -122,3 +122,19 @@ ecore_drm2_launcher_crtcs_get(Ecore_Drm2_Launcher *launcher)
    EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, 0);
    return launcher->crtcs;
 }
+
+EAPI void
+ecore_drm2_launcher_screen_size_range_get(Ecore_Drm2_Launcher *launcher, int *minw, int *minh, int *maxw, int *maxh)
+{
+   if (minw) *minw = 0;
+   if (minh) *minh = 0;
+   if (maxw) *maxw = 0;
+   if (maxh) *maxh = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   if (minw) *minw = launcher->min.width;
+   if (minh) *minh = launcher->min.height;
+   if (maxw) *maxw = launcher->max.width;
+   if (maxh) *maxh = launcher->max.height;
+}
