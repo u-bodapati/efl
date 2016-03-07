@@ -676,7 +676,7 @@ EAPI Eina_Bool ecore_drm2_output_possible_crtc_get(Ecore_Drm2_Output *output, un
  * @ingroup Ecore_Drm2_Output_Group
  * @since 1.18
  */
-EAPI const Ecore_Drm2_Fb *ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output);
+EAPI Ecore_Drm2_Fb *ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output);
 
 /**
  * Return the geometry of a given output
@@ -691,6 +691,19 @@ EAPI const Ecore_Drm2_Fb *ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *ou
  * @since 1.18
  */
 EAPI void ecore_drm2_output_geometry_get(Ecore_Drm2_Output *output, int *x, int *y, int *w, int *h);
+
+/**
+ * Find an existing output at the given coordinates
+ *
+ * @param launcher
+ * @param name
+ *
+ * @return An Ecore_Drm2_Output (if found), NULL otherwise
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI Ecore_Drm2_Output *ecore_drm2_output_name_find(Ecore_Drm2_Launcher *launcher, const char *name);
 
 /**
  * @defgroup Ecore_Drm2_Fb_Group Drm framebuffer functions

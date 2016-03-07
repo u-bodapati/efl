@@ -1025,7 +1025,7 @@ next:
    return ret;
 }
 
-EAPI const Ecore_Drm2_Fb *
+EAPI Ecore_Drm2_Fb *
 ecore_drm2_output_current_fb_get(Ecore_Drm2_Output *output)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(output, EINA_FALSE);
@@ -1046,4 +1046,19 @@ ecore_drm2_output_geometry_get(Ecore_Drm2_Output *output, int *x, int *y, int *w
    if (y) *y = output->y;
    if (w) *w = output->w;
    if (h) *h = output->h;
+}
+
+EAPI Ecore_Drm2_Output *
+ecore_drm2_output_name_find(Ecore_Drm2_Launcher *launcher, const char *name)
+{
+   Ecore_Drm2_Output *output;
+   Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(launcher, NULL);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(name, NULL);
+
+   EINA_LIST_FOREACH(launcher->outputs, l, output)
+     if (!strcmp(output->name, name)) return output;
+
+   return NULL;
 }
