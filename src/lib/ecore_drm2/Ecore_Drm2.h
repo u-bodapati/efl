@@ -330,6 +330,18 @@ EAPI Eina_Bool ecore_drm2_launcher_active_get(Ecore_Drm2_Launcher *launcher);
 EAPI unsigned int ecore_drm2_launcher_crtc_count_get(Ecore_Drm2_Launcher *launcher);
 
 /**
+ * Return the available crtcs
+ *
+ * @param launcher
+ *
+ * @return A pointer to the available crtcs
+ *
+ * @ingroup Ecore_Drm2_Output_Group
+ * @since 1.18
+ */
+EAPI unsigned int *ecore_drm2_launcher_crtcs_get(Ecore_Drm2_Launcher *launcher);
+
+/**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions
  *
  * Functions that deal with setup of inputs
