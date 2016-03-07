@@ -164,3 +164,18 @@ ecore_drm2_launcher_outputs_geometry_get(Ecore_Drm2_Launcher *launcher, int *x, 
    if (w) *w = ow;
    if (h) *h = oh;
 }
+
+EAPI void
+ecore_drm2_launcher_primary_output_set(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output)
+{
+   Ecore_Drm2_Output *o;
+   const Eina_List *l;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+   EINA_SAFETY_ON_NULL_RETURN(output);
+
+   EINA_LIST_FOREACH(launcher->outputs, l, o)
+     o->primary = EINA_FALSE;
+
+   output->primary = EINA_TRUE;
+}

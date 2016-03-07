@@ -370,6 +370,17 @@ EAPI void ecore_drm2_launcher_screen_size_range_get(Ecore_Drm2_Launcher *launche
 EAPI void ecore_drm2_launcher_outputs_geometry_get(Ecore_Drm2_Launcher *launcher, int *x, int *y, int *w, int *h);
 
 /**
+ * Mark a given output as being the primary output
+ *
+ * @param launcher
+ * @param output
+ *
+ * @ingroup Ecore_Drm2_Launcher_Group
+ * @since 1.18
+ */
+EAPI void ecore_drm2_launcher_primary_output_set(Ecore_Drm2_Launcher *launcher, Ecore_Drm2_Output *output);
+
+/**
  * @defgroup Ecore_Drm2_Input_Group Drm input functions
  *
  * Functions that deal with setup of inputs
