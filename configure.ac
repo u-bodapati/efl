@@ -704,9 +704,12 @@ AC_SUBST([USER_SESSION_DIR])
 
 if test "x${have_systemd_pkg}" = "xauto" -o "x${have_systemd_pkg}" = "xyes"; then
    PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209],
-   [have_systemd_pkg="yes"],
-   [have_systemd_pkg="no"])
+   [have_systemd_login_209="yes";have_systemd_pkg="yes"],
+   [have_systemd_login_209="no";have_systemd_pkg="no"])
 fi
+
+AS_IF([test "x$have_systemd_login_209" = "xyes"],
+      [AC_DEFINE([HAVE_SYSTEMD_LOGIN_209], [1], [Have systemd-login >= 209])])
 
 # check for systemd library if requested
 if test "x${want_systemd}" = "xyes" -a "x${have_systemd_pkg}" = "xno"; then
