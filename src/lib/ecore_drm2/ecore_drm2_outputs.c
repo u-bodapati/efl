@@ -534,7 +534,7 @@ _output_create(Ecore_Drm2_Launcher *launcher, const drmModeRes *res, drmModeConn
    output->current_mode->flags |= DRM_MODE_TYPE_DEFAULT;
 
    /* TODO: ?? disable output if config is off ?? */
-   output->enabled = EINA_TRUE;
+   if (output->connected) output->enabled = EINA_TRUE;
 
    output->backlight = _output_backlight_init(conn->connector_type);
 
@@ -696,6 +696,7 @@ next:
                {
                   disconnected &= ~(1 << output->conn_id);
                   output->connected = EINA_FALSE;
+                  output->enabled = EINA_FALSE;
                   _output_event_send(output);
                }
           }
@@ -779,13 +780,11 @@ ecore_drm2_outputs_create(Ecore_Drm2_Launcher *launcher, int fd)
         conn = drmModeGetConnector(fd, res->connectors[i]);
         if (!conn) continue;
 
-        if (conn->connection == DRM_MODE_CONNECTED)
-          {
-             if (!_output_create(launcher, res, conn, fd, x, y, &w, EINA_FALSE))
-               goto next;
+        if (!_output_create(launcher, res, conn, fd, x, y, &w, EINA_FALSE))
+          goto next;
 
-             x += w;
-          }
+        x += w;
+
 next:
         drmModeFreeConnector(conn);
      }
@@ -1150,6 +1149,8 @@ ecore_drm2_output_mode_set(Ecore_Drm2_Output *output, Ecore_Drm2_Output_Mode *mo
 
    if (mode)
      {
+        EINA_SAFETY_ON_NULL_RETURN_VAL(output->current_fb, EINA_FALSE);
+
         if (drmModeSetCrtc(output->fd, output->crtc_id, output->current_fb->id,
                            output->x, output->y, &output->conn_id,
                            1, &mode->info) < 0)
