@@ -441,7 +441,6 @@ _drm_object_cursor_set(Ecore_Evas *ee, Evas_Object *obj, int layer, int hot_x, i
    ee->prop.cursor.hot.x = hot_x;
    ee->prop.cursor.hot.y = hot_y;
 
-   /* TODO */
    ecore_evas_pointer_xy_get(ee, &x, &y);
 
    if (obj != old)
