@@ -739,3 +739,26 @@ ecore_drm2_input_pointer_warp(Ecore_Drm2_Launcher *launcher, int x, int y)
           }
      }
 }
+
+EAPI void
+ecore_drm2_input_pointer_xy_get(Ecore_Drm2_Launcher *launcher, int *x, int *y)
+{
+   Ecore_Drm2_Pointer *ptr;
+   Ecore_Drm2_Seat *seat;
+   Eina_List *l;
+
+   if (x) *x = 0;
+   if (y) *y = 0;
+
+   EINA_SAFETY_ON_NULL_RETURN(launcher);
+
+   EINA_LIST_FOREACH(launcher->input.seats, l, seat)
+     {
+        ptr = _ecore_drm2_input_pointer_get(seat);
+        if (!ptr) continue;
+
+        if (x) *x = ptr->x;
+        if (y) *y = ptr->y;
+        break;
+     }
+}
