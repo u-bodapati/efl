@@ -491,6 +491,15 @@ _drm_aspect_set(Ecore_Evas *ee, double aspect)
    ee->prop.aspect = aspect;
 }
 
+static void
+_drm_screen_geometry_get(const Ecore_Evas *ee, int *x, int *y, int *w, int *h)
+{
+   Ecore_Evas_Engine_Drm_Data *edata;
+
+   edata = ee->engine.data;
+   ecore_drm2_launcher_outputs_geometry_get(edata->launcher, x, y, w, h);
+}
+
 static Ecore_Evas_Interface_Drm *
 _ecore_evas_drm_interface_new(void)
 {
@@ -566,12 +575,12 @@ static Ecore_Evas_Engine_Func _ecore_evas_drm_engine_func =
 
    _drm_render,
 
-   NULL, //_ecore_evas_drm_screen_geometry_get,
+   _drm_screen_geometry_get,
    NULL, //void (*fn_screen_dpi_get) (const Ecore_Evas *ee, int *xdpi, int *ydpi);
    NULL, //void (*fn_msg_parent_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
    NULL, //void (*fn_msg_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
 
-   NULL, //_ecore_evas_drm_pointer_xy_get,
+   NULL, //_ecore_evas_drm_pointer_xy_get, // TODO
    _drm_pointer_warp,
 
    NULL, // wm_rot_preferred_rotation_set
@@ -685,6 +694,12 @@ ecore_evas_drm_new_internal(const char *device, unsigned int parent, int x, int 
                                (Ecore_Event_Multi_Move_Cb)_ecore_evas_mouse_multi_move_process,
                                (Ecore_Event_Multi_Down_Cb)_ecore_evas_mouse_multi_down_process,
                                (Ecore_Event_Multi_Up_Cb)_ecore_evas_mouse_multi_up_process);
+
+   /* NB: We set the launcher data here on the ecore_evas so that
+    * inside Enlightenment code, we can fetch the launcher easier
+    * (used for iterating outputs, etc) without having to deal
+    * with exposing more (potentially useless & dangerous) API */
+   ecore_evas_data_set(ee, "launcher", edata->launcher);
 
    return ee;
 
@@ -810,6 +825,12 @@ ecore_evas_gl_drm_new_internal(const char *device, unsigned int parent EINA_UNUS
                                (Ecore_Event_Multi_Move_Cb)_ecore_evas_mouse_multi_move_process,
                                (Ecore_Event_Multi_Down_Cb)_ecore_evas_mouse_multi_down_process,
                                (Ecore_Event_Multi_Up_Cb)_ecore_evas_mouse_multi_up_process);
+
+   /* NB: We set the launcher data here on the ecore_evas so that
+    * inside Enlightenment code, we can fetch the launcher easier
+    * (used for iterating outputs, etc) without having to deal
+    * with exposing more (potentially useless & dangerous) API */
+   ecore_evas_data_set(ee, "launcher", edata->launcher);
 
    return ee;
 
