@@ -183,7 +183,7 @@ struct _Ecore_Drm2_Output
 
 typedef struct _Ecore_Drm2_Pointer
 {
-   int x, y;
+   double x, y;
    int buttons;
    unsigned int timestamp;
 
