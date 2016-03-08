@@ -344,7 +344,7 @@ static Eina_Bool
 _logind_session_vt_get(const char *sid, unsigned int *vt)
 {
 # ifdef HAVE_SYSTEMD_LOGIN_209
-   return sd_session_get_vt(sid, vt);
+   return sd_session_get_vt(sid, vt) >= 0;
 # else
    int ret;
    char *tty;
