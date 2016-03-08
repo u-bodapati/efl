@@ -190,7 +190,10 @@ _drm_render_updates(void *data, Evas *evas EINA_UNUSED, void *event)
    Ecore_Evas *ee;
 
    ev = event;
+   if (!ev) return;
+
    ee = data;
+   if (!ee) return;
 
    ee->in_async_render = EINA_FALSE;
    _drm_render_updates_process(ee, ev->updated_area);
@@ -236,6 +239,15 @@ _drm_render(Ecore_Evas *ee)
      }
 
    return rend;
+}
+
+static void
+_drm_pointer_xy_get(const Ecore_Evas *ee, Evas_Coord *x, Evas_Coord *y)
+{
+   Ecore_Evas_Engine_Drm_Data *edata;
+
+   edata = ee->engine.data;
+   ecore_drm2_input_pointer_xy_get(edata->launcher, x, y);
 }
 
 static Eina_Bool
@@ -643,7 +655,7 @@ static Ecore_Evas_Engine_Func _ecore_evas_drm_engine_func =
    NULL, //void (*fn_msg_parent_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
    NULL, //void (*fn_msg_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
 
-   NULL, //_ecore_evas_drm_pointer_xy_get, // TODO
+   _drm_pointer_xy_get,
    _drm_pointer_warp,
 
    NULL, // wm_rot_preferred_rotation_set
