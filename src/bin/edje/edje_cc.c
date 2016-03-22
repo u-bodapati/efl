@@ -21,6 +21,7 @@ Eina_List *fnt_dirs = NULL;
 Eina_List *data_dirs = NULL;
 Eina_List *defines = NULL;
 char      *file_in = NULL;
+char      *file_import = NULL;
 char      *tmp_dir = NULL;
 char      *file_out = NULL;
 char      *watchfile = NULL;
@@ -310,6 +311,11 @@ main(int argc, char **argv)
 	     depfile = argv[i];
 	     unlink(depfile);
 	  }
+        else if ((!strcmp(argv[i], "-I")) && (i < (argc - 1)))
+          {
+             i++;
+             file_import = argv[i];
+          }
 	else if (!file_in)
 	  file_in = argv[i];
 	else if (!file_out)
@@ -395,6 +401,8 @@ main(int argc, char **argv)
 				*/
    edje_file->base_scale = FROM_INT(1);
 
+   import();
+
    source_edd();
    source_fetch();
 
@@ -406,9 +414,11 @@ main(int argc, char **argv)
    data_process_script_lookups();
    data_write();
 
+   import_close();
+
    eina_prefix_free(pfx);
    pfx = NULL;
-   
+
    edje_shutdown();
    eina_log_domain_unregister(_edje_cc_log_dom);
    eina_shutdown();

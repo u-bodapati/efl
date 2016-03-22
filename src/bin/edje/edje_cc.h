@@ -165,6 +165,8 @@ struct _Edje_Part_Collection_Parser
 };
 
 /* global fn calls */
+void    import(void);
+void    import_close(void);
 void    data_setup(void);
 void    data_write(void);
 void    data_queue_face_group_lookup(const char *name);
@@ -265,6 +267,7 @@ extern Eina_List             *vibration_dirs;
 extern Eina_List             *data_dirs;
 extern char                  *file_in;
 extern char                  *file_out;
+extern char                  *file_import;
 extern char                  *watchfile;
 extern char                  *depfile;
 extern char                  *license;
@@ -281,6 +284,7 @@ extern int                    max_quality;
 extern int                    line;
 extern Eina_List             *stack;
 extern Edje_File             *edje_file;
+extern Edje_File             *edje_file_import;
 extern Eina_List             *edje_collections;
 extern Eina_Hash             *edje_collections_lookup;
 extern Eina_List             *externals;

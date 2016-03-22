@@ -213,6 +213,7 @@ static void data_process_string(Edje_Part_Collection *pc, const char *prefix, ch
 extern Eina_List *po_files;
 
 Edje_File *edje_file = NULL;
+Edje_File *edje_file_import = NULL;
 Eina_List *edje_collections = NULL;
 Eina_Hash *edje_collections_lookup = NULL;
 Eina_List *externals = NULL;
@@ -346,6 +347,55 @@ data_part_lookup_free(Part_Lookup *pl)
 {
    free(pl->name);
    free(pl);
+}
+
+void
+import(void)
+{
+   int error_ret = 0;
+   Eina_File *f;
+
+   if (!file_import) return;
+
+   f = eina_file_open(file_import, EINA_FALSE);
+   if (f)
+      edje_file_import = _edje_file_open(f, &error_ret,
+                                         eina_file_mtime_get(f),
+                                         EINA_TRUE);
+   else
+      WRN("import file does not exist.");
+
+   // copy all image data from imported edj file.
+   // unused ones will be removed when writing edj.
+   if (edje_file_import->image_dir)
+     {
+        unsigned int i;
+        Edje_Image_Directory *eid, *eid2;
+
+        eid2 = edje_file_import->image_dir;
+        eid = edje_file->image_dir = mem_alloc(SZ(Edje_Image_Directory));
+
+        eid->entries_count = eid2->entries_count;
+        eid->entries = mem_alloc(SZ(Edje_Image_Directory_Entry) * eid->entries_count);
+
+        for (i = 0; i < eid->entries_count; i++)
+          {
+             eid->entries[i].entry = strdup(eid2->entries[i].entry);
+             eid->entries[i].source_type = eid2->entries[i].source_type;
+             eid->entries[i].source_param = eid2->entries[i].source_param;
+             eid->entries[i].id = eid2->entries[i].id;
+          }
+     }
+}
+
+void
+import_close(void)
+{
+   if (!edje_file_import) return;
+
+   eet_close(edje_file_import->ef);
+   eina_file_close(edje_file_import->f);
+   free(edje_file_import);
 }
 
 void
@@ -1322,9 +1372,26 @@ data_write_images(Eet_File *ef, int *image_num)
                }
              else
                {
-                  free(iw);
-                  error_and_abort_image_load_error(ef, img->entry, load_err);
-                  exit(1); // ensure static analysis tools know we exit
+                  char buf[PATH_MAX];
+                  snprintf(buf, sizeof(buf), "edje/images/%d", img->id);
+                  evas_object_image_file_set(im, file_import, buf);
+                  load_err = evas_object_image_load_error_get(im);
+                  if (load_err == EVAS_LOAD_ERROR_NONE)
+                    {
+                       *image_num += 1;
+                       iw->path = strdup(buf);
+                       pending_threads++;
+                       if (threads)
+                         evas_object_image_preload(im, 0);
+                       if (!threads)
+                         data_image_preload_done(iw, evas, im, NULL);
+                    }
+                  else
+                    {
+                       free(iw);
+                       error_and_abort_image_load_error(ef, img->entry, load_err);
+                       exit(1); // ensure static analysis tools know we exit
+                    }
                }
           }
      }
