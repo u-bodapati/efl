@@ -163,6 +163,7 @@ static Edje_Part_Description_Common *parent_desc = NULL;
 static Edje_Program *current_program = NULL;
 static Eina_List *current_program_lookups = NULL;
 Eina_Bool current_group_inherit = EINA_FALSE;
+Eina_Bool current_group_import = EINA_FALSE;
 Eina_Bool script_override = EINA_FALSE;
 static Edje_Program *sequencing = NULL;
 static Eina_List *sequencing_lookups = NULL;
@@ -1818,7 +1819,7 @@ _edje_program_check(const char *name, Edje_Program *me, Edje_Program **pgrms, un
 }
 
 static void
-_edje_program_copy(Edje_Program *ep, Edje_Program *ep2)
+_edje_program_copy(Edje_Program *ep, Edje_Program *ep2, Edje_Part_Collection *pc2)
 {
    Edje_Part_Collection *pc;
    Edje_Program_Target *et, *et2;
@@ -1832,6 +1833,7 @@ _edje_program_copy(Edje_Program *ep, Edje_Program *ep2)
 
    #define STRDUP(x) x ? strdup(x) : NULL
    ep->name = STRDUP(ep2->name);
+   printf("JC9:: %s %d:%d %d:%d\n", ep->name, pc->id, ep->id, pc2->id, ep2->id);
 
    _edje_program_remove(pc, current_program);
    ep->signal = STRDUP(ep2->signal);
@@ -1861,7 +1863,10 @@ _edje_program_copy(Edje_Program *ep, Edje_Program *ep2)
 
    EINA_LIST_FOREACH(ep2->targets, l, et2)
      {
-        name = (char*) (et2 + 1);
+        if (!current_group_import)
+          name = (char*) (et2 + 1);
+        else
+          name = STRDUP(pc2->parts[et2->id]->name);
         et = mem_alloc(SZ(Edje_Program_Target) + strlen(name) + 1);
         ep->targets = eina_list_append(ep->targets, et);
         copy = (char*) (et + 1);
@@ -1912,6 +1917,38 @@ _edje_program_copy(Edje_Program *ep, Edje_Program *ep2)
 
    epp = (Edje_Program_Parser *)ep;
    epp->can_override = EINA_TRUE;
+
+   if (current_group_import)
+     {
+        Code *cd;
+        Code_Program *cp;
+        char buf[PATH_MAX];
+        int size_ret;
+        void *data;
+
+        cd = eina_list_data_get(eina_list_last(codes));
+
+        snprintf(buf, sizeof(buf), "edje/scripts/embryo/source/%i/%i", pc2->id, ep2->id);
+        data = eet_read(edje_file_import->ef, buf, &size_ret);
+        if (size_ret)
+          {
+             char *s = data;
+             cp = mem_alloc(SZ(Code_Program));
+
+             cp->l1 = 3;
+             cp->l2 = 3;
+
+             while ((s) && (*s))
+               {
+                  if (*s == '\n') cp->l2++;
+                  s++;
+               }
+             cp->id = ep2->id;
+             cp->script = STRDUP(data);
+             cp->original = STRDUP(data);
+             cd->programs = eina_list_append(cd->programs, cp);
+          }
+     }
 
    #undef STRDUP
 }
@@ -3936,6 +3973,7 @@ ob_collections_group(void)
    current_desc = NULL;
 
    current_group_inherit = EINA_FALSE;
+   current_group_import = EINA_FALSE;
    script_override = EINA_FALSE;
 
    current_de = mem_alloc(SZ(Edje_Part_Collection_Directory_Entry));
@@ -4069,7 +4107,7 @@ _edje_data_item_list_foreach(const Eina_Hash *hash EINA_UNUSED, const void *key,
 
 #define STRDUP(x) x ? strdup(x) : NULL
 static void
-_part_copy(Edje_Part *ep, Edje_Part *ep2)
+_part_copy(Edje_Part *ep, Edje_Part *ep2, Edje_Part_Collection *pc2)
 {
    Edje_Part_Collection *pc;
    Edje_Part_Parser *epp, *epp2;
@@ -4088,7 +4126,10 @@ _part_copy(Edje_Part *ep, Edje_Part *ep2)
    ep->source5 = STRDUP(ep2->source5);
    ep->source6 = STRDUP(ep2->source6);
 
-   data_queue_copied_part_lookup(pc, &(ep2->clip_to_id), &(ep->clip_to_id));
+   if (!pc2)
+     data_queue_copied_part_lookup(pc, &(ep2->clip_to_id), &(ep->clip_to_id));
+   else if (ep2->clip_to_id >= 0)
+     data_queue_part_lookup(pc, pc2->parts[ep2->clip_to_id]->name, &(ep->clip_to_id));
 
    ep->type = ep2->type;
    ep->mouse_events = ep2->mouse_events;
@@ -4115,15 +4156,31 @@ _part_copy(Edje_Part *ep, Edje_Part *ep2)
    ep->dragable.count_y = ep2->dragable.count_y;
    ep->nested_children_count = ep2->nested_children_count;
 
-   data_queue_copied_part_lookup(pc, &(ep2->dragable.confine_id), &(ep->dragable.confine_id));
-   data_queue_copied_part_lookup(pc, &(ep2->dragable.threshold_id), &(ep->dragable.threshold_id));
-   data_queue_copied_part_lookup(pc, &(ep2->dragable.event_id), &(ep->dragable.event_id));
+   if (!pc2)
+     {
+        data_queue_copied_part_lookup(pc, &(ep2->dragable.confine_id), &(ep->dragable.confine_id));
+        data_queue_copied_part_lookup(pc, &(ep2->dragable.threshold_id), &(ep->dragable.threshold_id));
+        data_queue_copied_part_lookup(pc, &(ep2->dragable.event_id), &(ep->dragable.event_id));
+     }
+   else
+     {
+        if (ep2->dragable.confine_id >= 0)
+          data_queue_part_lookup(pc, pc2->parts[ep2->dragable.confine_id]->name, &(ep->dragable.confine_id));
+        if (ep2->dragable.threshold_id >= 0)
+          data_queue_part_lookup(pc, pc2->parts[ep2->dragable.threshold_id]->name, &(ep->dragable.threshold_id));
+        if (ep2->dragable.event_id >= 0)
+          data_queue_part_lookup(pc, pc2->parts[ep2->dragable.event_id]->name, &(ep->dragable.event_id));
+     }
 
    epp = (Edje_Part_Parser *)ep;
-   epp2 = (Edje_Part_Parser *)ep2;
-   epp->reorder.insert_before = STRDUP(epp2->reorder.insert_before);
-   epp->reorder.insert_after = STRDUP(epp2->reorder.insert_after);
    epp->can_override = EINA_TRUE;
+
+   if (!current_group_import)
+     {
+        epp2 = (Edje_Part_Parser *)ep2;
+        epp->reorder.insert_before = STRDUP(epp2->reorder.insert_before);
+        epp->reorder.insert_after = STRDUP(epp2->reorder.insert_after);
+     }
 
    for (j = 0 ; j < ep2->items_count ; j++)
      {
@@ -4297,9 +4354,18 @@ st_collections_group_inherit(void)
      }
    if (!pc2)
      {
-        ERR("parse error %s:%i. There isn't a group with the name %s",
-            file_in, line - 1, parent_name);
-        exit(-1);
+        if (edje_file_import)
+          {
+             pc2 = _edje_file_coll_open(edje_file_import, parent_name);
+             current_group_import = EINA_TRUE;
+          }
+
+        if (!pc2)
+          {
+             ERR("parse error %s:%i. There isn't a group with the name %s",
+                 file_in, line - 1, parent_name);
+             exit(-1);
+          }
      }
    if (pc2 == pc)
      {
@@ -4371,22 +4437,25 @@ st_collections_group_inherit(void)
 
    pc->lua_script_only = pc2->lua_script_only;
 
-   pcp = (Edje_Part_Collection_Parser *)pc;
-   pcp2 = (Edje_Part_Collection_Parser *)pc2;
-   pcp->default_mouse_events = pcp2->default_mouse_events;
-
-   /* as of 7 April 2014, target groups cannot be modified and are not freed.
-    * this code will break if that ever changes.
-    *
-    * BORKER CERTIFICATION: BRONZE
-    */
-   if (pcp2->target_groups)
-     pcp->target_groups = eina_list_clone(pcp2->target_groups);
-
-   if (pcp2->default_source)
+   if (!current_group_import)
      {
-        free(pcp->default_source);
-        pcp->default_source = strdup(pcp2->default_source);
+        pcp = (Edje_Part_Collection_Parser *)pc;
+        pcp2 = (Edje_Part_Collection_Parser *)pc2;
+        pcp->default_mouse_events = pcp2->default_mouse_events;
+
+        /* as of 7 April 2014, target groups cannot be modified and are not freed.
+         * this code will break if that ever changes.
+         *
+         * BORKER CERTIFICATION: BRONZE
+         */
+        if (pcp2->target_groups)
+          pcp->target_groups = eina_list_clone(pcp2->target_groups);
+
+        if (pcp2->default_source)
+          {
+             free(pcp->default_source);
+             pcp->default_source = strdup(pcp2->default_source);
+          }
      }
 
    if (pc2->limits.vertical_count || pc2->limits.horizontal_count)
@@ -4461,59 +4530,83 @@ st_collections_group_inherit(void)
         edje_cc_handlers_part_make(-1);
         ep = pc->parts[i + offset];
         ep2 = pc2->parts[i];
-        _part_copy(ep, ep2);
+        _part_copy(ep, ep2, pc2);
      }
 
    //copy programs
    for (j = 0 ; j < pc2->programs.fnmatch_count ; j++)
      {
         ob_collections_group_programs_program();
-        _edje_program_copy(current_program, pc2->programs.fnmatch[j]);
+        _edje_program_copy(current_program, pc2->programs.fnmatch[j], pc2);
      }
    for (j = 0 ; j < pc2->programs.strcmp_count ; j++)
      {
         ob_collections_group_programs_program();
-        _edje_program_copy(current_program, pc2->programs.strcmp[j]);
+        _edje_program_copy(current_program, pc2->programs.strcmp[j], pc2);
      }
    for (j = 0 ; j < pc2->programs.strncmp_count ; j++)
      {
         ob_collections_group_programs_program();
-        _edje_program_copy(current_program, pc2->programs.strncmp[j]);
+        _edje_program_copy(current_program, pc2->programs.strncmp[j], pc2);
      }
    for (j = 0 ; j < pc2->programs.strrncmp_count ; j++)
      {
         ob_collections_group_programs_program();
-        _edje_program_copy(current_program, pc2->programs.strrncmp[j]);
+        _edje_program_copy(current_program, pc2->programs.strrncmp[j], pc2);
      }
    for (j = 0 ; j < pc2->programs.nocmp_count ; j++)
      {
         ob_collections_group_programs_program();
-        _edje_program_copy(current_program, pc2->programs.nocmp[j]);
+        _edje_program_copy(current_program, pc2->programs.nocmp[j], pc2);
      }
 
-   Code *cd, *cd2;
-   Code_Program *cp, *cp2;
-   Edje_Part_Collection_Directory_Entry *de;
-
-   de = eina_hash_find(edje_file->collection, pc2->part);
-   cd2 = eina_list_nth(codes, de->id);
-   cd = eina_list_data_get(eina_list_last(codes));
-
-   cd->is_lua = cd2->is_lua;
-   cd->shared = STRDUP(cd2->shared);
-   cd->original = STRDUP(cd2->original);
-   script_override = EINA_TRUE;
-
-   EINA_LIST_FOREACH(cd2->programs, l, cp2)
+   if (!current_group_import)
      {
-        cp = mem_alloc(SZ(Code_Program));
+        Code *cd, *cd2;
+        Code_Program *cp, *cp2;
+        Edje_Part_Collection_Directory_Entry *de;
 
-        cp->l1 = cp2->l1;
-        cp->l2 = cp2->l2;
-        cp->script = STRDUP(cp2->script);
-        cp->original = STRDUP(cp2->original);
-        cd->programs = eina_list_append(cd->programs, cp);
-        data_queue_copied_anonymous_lookup(pc, &(cp2->id), &(cp->id));
+        de = eina_hash_find(edje_file->collection, pc2->part);
+        cd2 = eina_list_nth(codes, de->id);
+        cd = eina_list_data_get(eina_list_last(codes));
+
+        cd->is_lua = cd2->is_lua;
+        cd->shared = STRDUP(cd2->shared);
+        cd->original = STRDUP(cd2->original);
+        script_override = EINA_TRUE;
+
+        EINA_LIST_FOREACH(cd2->programs, l, cp2)
+          {
+             cp = mem_alloc(SZ(Code_Program));
+
+             cp->l1 = cp2->l1;
+             cp->l2 = cp2->l2;
+             cp->script = STRDUP(cp2->script);
+             cp->original = STRDUP(cp2->original);
+             cd->programs = eina_list_append(cd->programs, cp);
+             data_queue_copied_anonymous_lookup(pc, &(cp2->id), &(cp->id));
+          }
+     }
+   else
+     {
+        Code *cd;
+        Edje_Part_Collection_Directory_Entry *de;
+        char buf[PATH_MAX];
+        int size_ret;
+        void *data;
+
+        de = eina_hash_find(edje_file_import->collection, pc2->part);
+        cd = eina_list_data_get(eina_list_last(codes));
+
+        snprintf(buf, sizeof(buf), "edje/scripts/embryo/source/%i", de->id);
+        data = eet_read(edje_file_import->ef, buf, &size_ret);
+
+        cd->is_lua = 0;
+        cd->shared = STRDUP(data);
+        cd->original = STRDUP(data);
+        script_override = EINA_TRUE;
+
+        free(data);
      }
 
    free(parent_name);
@@ -5696,7 +5789,7 @@ st_collections_group_parts_part_inherit(void)
         current_part->name = NULL;
         current_part = _part_free(pc, current_part);
         edje_cc_handlers_part_make(id);
-        _part_copy(current_part, pc->parts[i]);
+        _part_copy(current_part, pc->parts[i], NULL);
         free((void*)current_part->name);
         current_part->name = pname;
         free(name);
@@ -7782,7 +7875,11 @@ st_collections_group_parts_part_description_inherit(void)
               ied->image = iparent->image;
 
               data_queue_image_remove(&ied->image.id, &ied->image.set);
-              data_queue_copied_image_lookup(&iparent->image.id, &ied->image.id, &ied->image.set);
+              if (!current_group_import)
+                data_queue_copied_image_lookup(&iparent->image.id, &ied->image.id, &ied->image.set);
+              else
+                data_queue_image_lookup(strdup(edje_file->image_dir->entries[ied->image.id].entry),
+                                        &ied->image.id, &ied->image.set);
 
               ied->image.tweens = calloc(iparent->image.tweens_count,
                                          sizeof (Edje_Part_Image_Id*));
@@ -7794,7 +7891,11 @@ st_collections_group_parts_part_description_inherit(void)
 
                    iid_new = mem_alloc(SZ(Edje_Part_Image_Id));
                    data_queue_image_remove(&ied->image.id, &ied->image.set);
-                   data_queue_copied_image_lookup(&(iid->id), &(iid_new->id), &(iid_new->set));
+                   if (!current_group_import)
+                     data_queue_copied_image_lookup(&(iid->id), &(iid_new->id), &(iid_new->set));
+                   else
+                      data_queue_image_lookup(strdup(edje_file->image_dir->entries[iid->id].entry),
+                                              &iid_new->id, &iid_new->set);
                    ied->image.tweens[i] = iid_new;
                 }
 
