@@ -373,6 +373,8 @@ import(void)
      {
         unsigned int i;
         Edje_Image_Directory *eid, *eid2;
+        Edje_Image_Directory_Set_Entry *entry, *entry2;
+        Eina_List *list;
 
         eid2 = edje_file_import->image_dir;
         eid = edje_file->image_dir = mem_alloc(SZ(Edje_Image_Directory));
@@ -386,6 +388,18 @@ import(void)
              eid->entries[i].source_type = eid2->entries[i].source_type;
              eid->entries[i].source_param = eid2->entries[i].source_param;
              eid->entries[i].id = eid2->entries[i].id;
+          }
+
+        for (i = 0; i < eid->sets_count; i++)
+          {
+             eid->sets[i].name = strdup(eid2->sets[i].name);
+             eid->sets[i].id = eid2->sets[i].id;
+
+             EINA_LIST_FOREACH(eid2->sets[i].entries, list, entry2)
+               {
+                  entry = mem_alloc(SZ(Edje_Image_Directory_Set_Entry));
+                  memcpy(entry, entry2, sizeof(Edje_Image_Directory_Set_Entry));
+               }
           }
      }
 }
