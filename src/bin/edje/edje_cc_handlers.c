@@ -1833,7 +1833,6 @@ _edje_program_copy(Edje_Program *ep, Edje_Program *ep2, Edje_Part_Collection *pc
 
    #define STRDUP(x) x ? strdup(x) : NULL
    ep->name = STRDUP(ep2->name);
-   printf("JC9:: %s %d:%d %d:%d\n", ep->name, pc->id, ep->id, pc2->id, ep2->id);
 
    _edje_program_remove(pc, current_program);
    ep->signal = STRDUP(ep2->signal);
@@ -1900,14 +1899,26 @@ _edje_program_copy(Edje_Program *ep, Edje_Program *ep2, Edje_Part_Collection *pc
           }
      }
 
-   EINA_LIST_FOREACH(ep2->after, l, pa2)
+   if (!current_group_import)
      {
-        name = (char*) (pa2 + 1);
-        pa = mem_alloc(SZ(Edje_Program_After) + strlen(name) + 1);
-        ep->after = eina_list_append(ep->after, pa);
-        copy = (char*) (pa + 1);
-        memcpy(copy, name, strlen(name) + 1);
-        data_queue_copied_program_lookup(pc, &(pa2->id), &(pa->id));
+        EINA_LIST_FOREACH(ep2->after, l, pa2)
+          {
+             name = (char*) (pa2 + 1);
+             pa = mem_alloc(SZ(Edje_Program_After) + strlen(name) + 1);
+             ep->after = eina_list_append(ep->after, pa);
+             copy = (char*) (pa + 1);
+             memcpy(copy, name, strlen(name) + 1);
+             data_queue_copied_program_lookup(pc, &(pa2->id), &(pa->id));
+          }
+     }
+   else
+     {
+        EINA_LIST_FOREACH(ep2->after, l, pa2)
+          {
+             pa = mem_alloc(SZ(Edje_Program_After));
+             pa->id = pa2->id;
+             ep->after = eina_list_append(ep->after, pa);
+          }
      }
 
    ep->api.name = STRDUP(ep2->api.name);
@@ -7878,7 +7889,7 @@ st_collections_group_parts_part_description_inherit(void)
               if (!current_group_import)
                 data_queue_copied_image_lookup(&iparent->image.id, &ied->image.id, &ied->image.set);
               else
-                data_queue_image_lookup(strdup(edje_file->image_dir->entries[ied->image.id].entry),
+                data_queue_image_lookup(strdup(edje_file->image_dir->entries[iparent->image.id].entry),
                                         &ied->image.id, &ied->image.set);
 
               ied->image.tweens = calloc(iparent->image.tweens_count,
@@ -7894,8 +7905,8 @@ st_collections_group_parts_part_description_inherit(void)
                    if (!current_group_import)
                      data_queue_copied_image_lookup(&(iid->id), &(iid_new->id), &(iid_new->set));
                    else
-                      data_queue_image_lookup(strdup(edje_file->image_dir->entries[iid->id].entry),
-                                              &iid_new->id, &iid_new->set);
+                     data_queue_image_lookup(strdup(edje_file->image_dir->entries[iid->id].entry),
+                                             &iid_new->id, &iid_new->set);
                    ied->image.tweens[i] = iid_new;
                 }
 
