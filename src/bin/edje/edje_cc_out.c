@@ -235,6 +235,8 @@ static Eina_List *model_lookups = NULL;
 static Eina_Hash *part_dest_lookup = NULL;
 static Eina_Hash *part_pc_dest_lookup = NULL;
 
+static int image_import[PATH_MAX];
+
 void
 error_and_abort(Eet_File *ef EINA_UNUSED, const char *fmt, ...)
 {
@@ -1373,7 +1375,7 @@ data_write_images(Eet_File *ef, int *image_num)
              else
                {
                   char buf[PATH_MAX];
-                  snprintf(buf, sizeof(buf), "edje/images/%d", img->id);
+                  snprintf(buf, sizeof(buf), "edje/images/%i", image_import[img->id] ? image_import[img->id] : img->id);
                   evas_object_image_file_set(im, file_import, buf);
                   load_err = evas_object_image_load_error_get(im);
                   if (load_err == EVAS_LOAD_ERROR_NONE)
@@ -3823,6 +3825,7 @@ free_group:
              images_unused_list = eina_list_append(images_unused_list, iui);
              iui->new_id = i;
              de_last->id = i;
+             image_import[iui->new_id] = iui->old_id;
              memcpy(de, de_last, sizeof (Edje_Image_Directory_Entry));
              --i; /* need to check a moved image on this index */
              edje_file->image_dir->entries_count--;
