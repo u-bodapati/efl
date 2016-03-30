@@ -164,6 +164,12 @@ struct _Edje_Part_Collection_Parser
    Eina_Bool inherit_only;
 };
 
+typedef struct Edje_Color_Class_Parser
+{
+   Edje_Color_Class cc;
+   Eina_Bool imported;
+} Edje_Color_Class_Parser;
+
 /* global fn calls */
 void    import(void);
 void    import_close(void);

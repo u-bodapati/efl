@@ -2770,7 +2770,7 @@ ob_color_class(void)
 {
    Edje_Color_Class *cc;
 
-   cc = mem_alloc(SZ(Edje_Color_Class));
+   cc = mem_alloc(SZ(Edje_Color_Class_Parser));
    edje_file->color_classes = eina_list_append(edje_file->color_classes, cc);
 
    cc->r = 0;
@@ -2791,6 +2791,7 @@ static void
 _color_class_name(char *name)
 {
    Edje_Color_Class *cc, *tcc;
+   Edje_Color_Class_Parser *ccp;
    Eina_List *l;
 
    cc = eina_list_data_get(eina_list_last(edje_file->color_classes));
@@ -2799,9 +2800,20 @@ _color_class_name(char *name)
      {
         if ((cc != tcc) && (!strcmp(cc->name, tcc->name)))
           {
-             ERR("parse error %s:%i. There is already a color class named \"%s\"",
-                 file_in, line - 1, cc->name);
-             exit(-1);
+             ccp = (Edje_Color_Class_Parser *)tcc;
+
+             if (ccp->imported)
+               {
+                  edje_file->color_classes = eina_list_remove(edje_file->color_classes, tcc);
+                  free(tcc);
+                  break;
+               }
+             else
+               {
+                  ERR("parse error %s:%i. There is already a color class named \"%s\"",
+                      file_in, line - 1, cc->name);
+                  exit(-1);
+               }
           }
      }
 }
@@ -2822,18 +2834,30 @@ static void
 st_color_class_name(void)
 {
    Edje_Color_Class *cc, *tcc;
+   Edje_Color_Class_Parser *ccp;
    Eina_List *l;
 
    cc = eina_list_data_get(eina_list_last(edje_file->color_classes));
    cc->name = parse_str(0);
    EINA_LIST_FOREACH(edje_file->color_classes, l, tcc)
      {
-	if ((cc != tcc) && (!strcmp(cc->name, tcc->name)))
-	  {
-	     ERR("parse error %s:%i. There is already a color class named \"%s\"",
-		 file_in, line - 1, cc->name);
-	     exit(-1);
-	  }
+        if ((cc != tcc) && (!strcmp(cc->name, tcc->name)))
+          {
+             ccp = (Edje_Color_Class_Parser *)tcc;
+
+             if (ccp->imported)
+               {
+                  edje_file->color_classes = eina_list_remove(edje_file->color_classes, tcc);
+                  free(tcc);
+                  break;
+               }
+             else
+               {
+                  ERR("parse error %s:%i. There is already a color class named \"%s\"",
+                      file_in, line - 1, cc->name);
+                  exit(-1);
+               }
+          }
      }
 }
 
@@ -7830,6 +7854,39 @@ st_collections_group_parts_part_description_inherit(void)
    ed->size_class = STRDUP(ed->size_class);
    ed->color_class = STRDUP(ed->color_class);
    ed->map.colors = _copied_map_colors_get(parent);
+
+   if ((ed->color_class) && (current_group_import))
+     {
+        Edje_Color_Class *cc;
+        Edje_Color_Class_Parser *ccp;
+        Eina_List *l;
+        Eina_Bool overriden = EINA_FALSE;
+
+        EINA_LIST_FOREACH(edje_file->color_classes, l, cc)
+          {
+             if (!strcmp(ed->color_class, cc->name))
+               {
+                  overriden = EINA_TRUE;
+                  break;
+               }
+          }
+
+        if (!overriden)
+          {
+             EINA_LIST_FOREACH(edje_file_import->color_classes, l, cc)
+               {
+                  if (!strcmp(ed->color_class, cc->name))
+                    {
+                       ccp = mem_alloc(SZ(Edje_Color_Class_Parser));
+                       memcpy(ccp, cc, sizeof(Edje_Color_Class));
+                       ccp->imported = EINA_TRUE;
+
+                       edje_file->color_classes = eina_list_append(edje_file->color_classes, ccp);
+                       break;
+                    }
+               }
+          }
+     }
 
    if (parent_ep && (parent_ep->type != ep->type))
      {
