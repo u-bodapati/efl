@@ -124,6 +124,7 @@ elm_eolian_files = \
 	efl_ui_box.eo \
 	efl_ui_box_flow.eo \
 	efl_ui_grid.eo \
+	efl_ui_grid_static.eo \
 	efl_ui_layout_internal_box.eo \
 	efl_ui_layout_internal_table.eo \
 	$(NULL)
@@ -494,6 +495,7 @@ includesub_HEADERS = \
 	elm_win_standard.h \
 	elm_helper.h \
 	efl_ui_box_private.h \
+	efl_ui_grid_private.h \
 	$(NULL)
 
 includesubdir = $(includedir)/elementary-@VMAJ@/
@@ -625,6 +627,7 @@ libelementary_la_SOURCES = \
 	efl_ui_box_flow.c \
 	efl_ui_box_layout.c \
 	efl_ui_grid.c \
+	efl_ui_grid_static.c \
 	$(NULL)
 
 libelementary_la_CFLAGS = @ELEMENTARY_CFLAGS@
