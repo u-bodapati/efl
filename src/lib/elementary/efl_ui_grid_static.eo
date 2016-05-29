@@ -1,7 +1,7 @@
 class Efl.Ui.Grid.Static (Efl.Ui.Grid)
 {
    implements {
+      Evas.Object.Smart.add;
       Efl.Pack.Layout.layout_do;
-      Efl.Pack.Layout.layout_update;
    }
 }

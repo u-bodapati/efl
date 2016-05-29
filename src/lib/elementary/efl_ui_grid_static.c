@@ -9,10 +9,14 @@ struct _Efl_Ui_Grid_Static_Data
 };
 
 EOLIAN static void
-_efl_ui_grid_static_efl_pack_layout_layout_update(Eo *obj, Efl_Ui_Grid_Static_Data *pd EINA_UNUSED)
+_efl_ui_grid_static_evas_object_smart_add(Eo *obj, Efl_Ui_Grid_Static_Data *pd EINA_UNUSED)
 {
+   elm_widget_sub_object_parent_add(obj);
+
+   evas_obj_smart_add(eo_super(obj, MY_CLASS));
+
    Efl_Ui_Grid_Data *gd = eo_data_scope_get(obj, EFL_UI_GRID_CLASS);
-   efl_pack_layout_do(gd->layout_engine, obj, gd->layout_data);
+   gd->layout_engine = MY_CLASS;
 }
 
 EOLIAN static void
