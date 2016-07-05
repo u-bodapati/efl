@@ -8,6 +8,7 @@
 #endif
 
 #include <Eina.h>
+#include <Ecore.h>
 
 #ifdef EAPI
 # undef EAPI
@@ -56,6 +57,8 @@ extern "C" {
    EAPI extern int ECORE_EVENT_AXIS_UPDATE; /**< @since 1.13 */
    EAPI extern int ECORE_EVENT_MOUSE_BUTTON_CANCEL; /**< @since 1.15 */
    EAPI extern int ECORE_EVENT_JOYSTICK; /**< @since 1.18 */
+   EAPI extern int ECORE_EVENT_DEVICE_ADD; /**< @since 1.18 */
+   EAPI extern int ECORE_EVENT_DEVICE_DEL; /**< @since 1.18 */
 
 #define ECORE_EVENT_MODIFIER_SHIFT      0x0001
 #define ECORE_EVENT_MODIFIER_CTRL       0x0002
@@ -84,6 +87,7 @@ extern "C" {
    typedef struct _Ecore_Event_Axis_Update  Ecore_Event_Axis_Update; /**< @since 1.13 */
    typedef struct _Ecore_Axis               Ecore_Axis; /**< @since 1.13 */
    typedef struct _Ecore_Event_Joystick     Ecore_Event_Joystick; /**< @since 1.18 */
+   typedef struct _Ecore_Event_Device_Info  Ecore_Event_Device_Info; /**< @since 1.18 */
 
    /**
     * @typedef Ecore_Event_Modifier
@@ -187,6 +191,15 @@ extern "C" {
         ECORE_EVENT_JOYSTICK_EVENT_TYPE_LAST
      } Ecore_Event_Joystick_Event_Type; /**< @since 1.18 */
 
+   struct _Ecore_Event_Device_Info
+     {
+        Ecore_Window window;
+        Eina_Stringshare *name;
+        Eina_Stringshare *identifier;
+        Eina_Stringshare *seatname;
+        Ecore_Device_Class clas;
+     }; /**< @since 1.18 */
+
    /**
     * @struct _Ecore_Event_Key
     * Contains information about an Ecore keyboard event.
@@ -209,6 +222,8 @@ extern "C" {
         unsigned int     keycode; /**< Key scan code numeric value @since 1.10 */
 
         void            *data; /**< User data associated with an Ecore_Event_Key @since 1.10 */
+
+        Ecore_Device    *dev; /**< source device object associated with an Ecore_Event_Key @since 1.18 */
      };
 
    /**
@@ -245,6 +260,8 @@ extern "C" {
               double     x, y;
            } root; /**< same as root.x, root.y, but with sub-pixel precision, if available */
         } multi;
+
+        Ecore_Device    *dev; /**< source device object associated with an Ecore_Event_Mouse_Button @since 1.18 */
      };
 
    /**
@@ -256,7 +273,7 @@ extern "C" {
         Ecore_Window     window; /**< The main window where event happened */
         Ecore_Window     root_window; /**< The root window where event happened */
         Ecore_Window     event_window; /**< The child window where event happened */
-        
+
         unsigned int     timestamp; /**< Time when the event occurred */
         unsigned int     modifiers; /**< The combination of modifiers key (SHIFT,CTRL,ALT,..)*/
         
@@ -270,6 +287,8 @@ extern "C" {
            int           x;
            int           y;
         } root; /**< Coordinates relative to root window */
+
+        Ecore_Device    *dev; /**< source device object associated with an Ecore_Event_Mouse_Wheel @since 1.18 */
      };
 
    /**
@@ -281,7 +300,7 @@ extern "C" {
         Ecore_Window     window; /**< The main window where event happened */
         Ecore_Window     root_window; /**< The root window where event happened */
         Ecore_Window     event_window; /**< The child window where event happened */
-        
+
         unsigned int     timestamp; /**< Time when the event occurred */
         unsigned int     modifiers; /**< The combination of modifiers key (SHIFT,CTRL,ALT,..)*/
         
@@ -304,6 +323,8 @@ extern "C" {
               double     x, y;
            } root;
         } multi;
+
+        Ecore_Device    *dev; /**< source device object associated with an Ecore_Event_Mouse_Move @since 1.18 */
      };
 
    typedef enum _Ecore_Axis_Label
@@ -356,6 +377,8 @@ extern "C" {
         
         int              x; /**< x coordinate relative to window where event happened */
         int              y; /**< y coordinate relative to window where event happened */
+
+        Ecore_Device    *dev; /**< source device object associated with an Ecore_Event_Mouse_IO @since 1.18 */
      };
 
    /**

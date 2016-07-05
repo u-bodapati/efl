@@ -57,7 +57,7 @@ struct _Ecore_Input_Last
 };
 
 static int _ecore_event_evas_init_count = 0;
-static Ecore_Event_Handler *ecore_event_evas_handlers[10];
+static Ecore_Event_Handler *ecore_event_evas_handlers[12];
 static Eina_Hash *_window_hash = NULL;
 
 static Eina_List *_last_events = NULL;
@@ -403,13 +403,43 @@ _ecore_event_window_match(Ecore_Window id)
    return lookup;
 }
 
+static Evas_Device *
+_ecore_event_get_evas_device(Evas *e, Ecore_Device *dev)
+{
+   const Eina_List *dev_list;
+   const Eina_List *l;
+   Evas_Device *edev;
+   const char *name;
+   Ecore_Device_Class clas;
+
+   if (!dev) return NULL;
+   name = ecore_device_identifier_get(dev);
+   if (!name) return NULL;
+   clas = ecore_device_class_get(dev);
+
+   dev_list = evas_device_list(e, NULL);
+   if (!dev_list) return NULL;
+   EINA_LIST_FOREACH(dev_list, l, edev)
+     {
+        if (!edev) continue;
+        if ((evas_device_class_get(edev) == (Evas_Device_Class)clas) &&
+            (eina_streq(evas_device_description_get(edev), name)))
+          return edev;
+     }
+   return NULL;
+}
+
 static Eina_Bool
 _ecore_event_evas_key(Ecore_Event_Key *e, Ecore_Event_Press press)
 {
    Ecore_Input_Window *lookup;
+   Evas_Device *dev;
 
    lookup = _ecore_event_window_match(e->event_window);
    if (!lookup) return ECORE_CALLBACK_PASS_ON;
+   dev = _ecore_event_get_evas_device(lookup->evas, e->dev);
+   if (dev)
+     evas_device_push(lookup->evas, dev);
    ecore_event_evas_modifier_lock_update(lookup->evas, e->modifiers);
    if (press == ECORE_DOWN)
      {
@@ -441,7 +471,8 @@ _ecore_event_evas_key(Ecore_Event_Key *e, Ecore_Event_Press press)
                                                  e->keycode);
           }
      }
-
+   if (dev)
+     evas_device_pop(lookup->evas);
    return ECORE_CALLBACK_PASS_ON;
 }
 
@@ -479,6 +510,7 @@ _ecore_event_evas_mouse_button(Ecore_Event_Mouse_Button *e, Ecore_Event_Press pr
    Ecore_Event_Last *eel;
    Ecore_Input_Window *lookup;
    Evas_Button_Flags flags = EVAS_BUTTON_NONE;
+   Evas_Device *dev;
 
    lookup = _ecore_event_window_match(e->event_window);
    if (!lookup) return ECORE_CALLBACK_PASS_ON;
@@ -520,6 +552,9 @@ _ecore_event_evas_mouse_button(Ecore_Event_Mouse_Button *e, Ecore_Event_Press pr
           }
      }
 
+   dev = _ecore_event_get_evas_device(lookup->evas, e->dev);
+   if (dev)
+     evas_device_push(lookup->evas, dev);
    if (e->multi.device == 0)
      {
         ecore_event_evas_modifier_lock_update(lookup->evas, e->modifiers);
@@ -587,6 +622,8 @@ _ecore_event_evas_mouse_button(Ecore_Event_Mouse_Button *e, Ecore_Event_Press pr
                }
           }
      }
+   if (dev)
+     evas_device_pop(lookup->evas);
    return ECORE_CALLBACK_PASS_ON;
 }
 
@@ -595,10 +632,15 @@ ecore_event_evas_mouse_move(void *data EINA_UNUSED, int type EINA_UNUSED, void *
 {
    Ecore_Event_Mouse_Move *e;
    Ecore_Input_Window *lookup;
+   Evas_Device *dev;
 
    e = event;
    lookup = _ecore_event_window_match(e->event_window);
    if (!lookup) return ECORE_CALLBACK_PASS_ON;
+
+   dev = _ecore_event_get_evas_device(lookup->evas, e->dev);
+   if (dev)
+     evas_device_push(lookup->evas, dev);
    if (e->multi.device == 0)
      {
         _ecore_event_evas_push_mouse_move(e);
@@ -633,6 +675,8 @@ ecore_event_evas_mouse_move(void *data EINA_UNUSED, int type EINA_UNUSED, void *
                                            NULL);
           }
      }
+   if (dev)
+     evas_device_pop(lookup->evas);
    return ECORE_CALLBACK_PASS_ON;
 }
 
@@ -660,9 +704,13 @@ static Eina_Bool
 _ecore_event_evas_mouse_io(Ecore_Event_Mouse_IO *e, Ecore_Event_IO io)
 {
    Ecore_Input_Window *lookup;
+   Evas_Device *dev;
 
    lookup = _ecore_event_window_match(e->event_window);
    if (!lookup) return ECORE_CALLBACK_PASS_ON;
+   dev = _ecore_event_get_evas_device(lookup->evas, e->dev);
+   if (dev)
+     evas_device_push(lookup->evas, dev);
    ecore_event_evas_modifier_lock_update(lookup->evas, e->modifiers);
    switch (io)
      {
@@ -685,6 +733,8 @@ _ecore_event_evas_mouse_io(Ecore_Event_Mouse_IO *e, Ecore_Event_IO io)
      }
 
    lookup->move_mouse(lookup->window, e->x, e->y, e->timestamp);
+   if (dev)
+     evas_device_pop(lookup->evas);
    return ECORE_CALLBACK_PASS_ON;
 }
 
@@ -705,16 +755,22 @@ ecore_event_evas_mouse_wheel(void *data EINA_UNUSED, int type EINA_UNUSED, void 
 {
    Ecore_Event_Mouse_Wheel *e;
    Ecore_Input_Window *lookup;
+   Evas_Device *dev;
 
    e = event;
    lookup = _ecore_event_window_match(e->event_window);
    if (!lookup) return ECORE_CALLBACK_PASS_ON;
+   dev = _ecore_event_get_evas_device(lookup->evas, e->dev);
+   if (dev)
+     evas_device_push(lookup->evas, dev);
    ecore_event_evas_modifier_lock_update(lookup->evas, e->modifiers);
    if (!lookup->direct ||
        !lookup->direct(lookup->window, ECORE_EVENT_MOUSE_WHEEL, e))
      {
         evas_event_feed_mouse_wheel(lookup->evas, e->direction, e->z, e->timestamp, NULL);
      }
+   if (dev)
+     evas_device_pop(lookup->evas);
 
    return ECORE_CALLBACK_PASS_ON;
 }
@@ -747,6 +803,87 @@ ecore_event_evas_axis_update(void *data EINA_UNUSED, int type EINA_UNUSED, void 
                                     e->toolid, e->naxis,
                                     (Evas_Axis *)e->axis, NULL);
      }
+
+   return ECORE_CALLBACK_PASS_ON;
+}
+
+static void
+_ecore_event_evas_add_evas_device(Evas *e, const char *name, const char *identifier, Ecore_Device_Class clas)
+{
+   const Eina_List *dev_list;
+   const Eina_List *l;
+   Evas_Device *edev;
+
+   dev_list = evas_device_list(e, NULL);
+   EINA_LIST_FOREACH(dev_list, l, edev)
+     {
+        if (!edev) continue;
+        if ((evas_device_class_get(edev) == (Evas_Device_Class)clas) &&
+            (eina_streq(evas_device_description_get(edev), identifier)))
+          return;
+     }
+
+   edev = evas_device_add(e);
+   if (!edev)
+     {
+        ERR("_ecore_event_add_evas_device: failed to add evas device");
+        return;
+     }
+   evas_device_name_set(edev, name);
+   evas_device_description_set(edev, identifier);
+   evas_device_class_set(edev, (Evas_Device_Class)clas);
+}
+
+static void
+_ecore_event_evas_del_evas_device(Evas *e, const char *name EINA_UNUSED,
+                                  const char *identifier, Ecore_Device_Class clas)
+{
+   const Eina_List *dev_list;
+   const Eina_List *l;
+   Evas_Device *edev;
+
+   dev_list = evas_device_list(e, NULL);
+   if (!dev_list)
+     {
+        ERR("_ecore_event_evas_del_evas_device: failed to get the list of evas device");
+        return;
+     }
+   EINA_LIST_FOREACH(dev_list, l, edev)
+     {
+        if (!edev) continue;
+        if ((evas_device_class_get(edev) == (Evas_Device_Class)clas) &&
+            (eina_streq(evas_device_description_get(edev), identifier)))
+          {
+             evas_device_del(edev);
+             return;
+          }
+     }
+}
+
+EAPI Eina_Bool
+ecore_event_evas_device_add(void *data EINA_UNUSED, int type EINA_UNUSED, void *event)
+{
+   Ecore_Event_Device_Info *e = event;
+   Ecore_Input_Window *lookup;
+
+   lookup = _ecore_event_window_match(e->window);
+   if (!lookup) return ECORE_CALLBACK_PASS_ON;
+
+   _ecore_event_evas_add_evas_device(lookup->evas, e->name, e->identifier, e->clas);
+
+   return ECORE_CALLBACK_PASS_ON;
+}
+
+EAPI Eina_Bool
+ecore_event_evas_device_del(void *data EINA_UNUSED, int type EINA_UNUSED, void *event)
+{
+   Ecore_Event_Device_Info *e = event;
+   Ecore_Input_Window *lookup;
+
+   lookup = _ecore_event_window_match(e->window);
+   if (!lookup) return ECORE_CALLBACK_PASS_ON;
+
+   _ecore_event_evas_del_evas_device(lookup->evas, e->name, e->identifier, e->clas);
 
    return ECORE_CALLBACK_PASS_ON;
 }
@@ -804,6 +941,12 @@ ecore_event_evas_init(void)
                                                           NULL);
    ecore_event_evas_handlers[9] = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_CANCEL,
                                                           ecore_event_evas_mouse_button_cancel,
+                                                          NULL);
+   ecore_event_evas_handlers[10] = ecore_event_handler_add(ECORE_EVENT_DEVICE_ADD,
+                                                          ecore_event_evas_device_add,
+                                                          NULL);
+   ecore_event_evas_handlers[11] = ecore_event_handler_add(ECORE_EVENT_DEVICE_DEL,
+                                                          ecore_event_evas_device_del,
                                                           NULL);
 
    _window_hash = eina_hash_pointer_new(free);

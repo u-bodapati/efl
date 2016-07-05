@@ -140,6 +140,7 @@ struct _Ecore_Drm_Device
 
    Eina_Bool active : 1;
    Eina_Bool left_handed : 1;
+   Eina_Bool window_valid : 1;
 };
 
 struct _Ecore_Drm_Event_Activate
@@ -1043,6 +1044,7 @@ EAPI Eina_Bool ecore_drm_output_rotation_set(Ecore_Drm_Output *output, Ecore_Drm
  * @since 1.17
  */
 EAPI Eina_Bool ecore_drm_evdev_key_remap_enable(Ecore_Drm_Evdev *edev, Eina_Bool enable);
+EAPI Ecore_Device *ecore_drm_evdev_get_ecore_device(const char *path, Ecore_Device_Class clas);
 
 /**
  * Set a given set of keys as remapped keys on a Ecore_Drm_Evdev
