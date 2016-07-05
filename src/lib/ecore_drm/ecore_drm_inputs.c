@@ -160,51 +160,52 @@ _ecore_drm_device_info_send(unsigned int window, Ecore_Drm_Evdev *edev, Ecore_De
 static Eina_Bool
 _ecore_drm_device_add_ecore_device(Ecore_Drm_Evdev *edev, Ecore_Device_Class clas)
 {
-   const Eina_List *dev_list;
-   const Eina_List *l;
+   Eina_Iterator *it;
    Ecore_Device *dev;
 
    if (!edev->path) return EINA_FALSE;
 
-   dev_list = ecore_device_list();
-   EINA_LIST_FOREACH(dev_list, l, dev)
+   it = ecore_device_iterate();
+   EINA_ITERATOR_FOREACH(it, dev)
      {
         if (!dev) continue;
         if ((ecore_device_class_get(dev) == clas) &&
             (eina_streq(ecore_device_identifier_get(dev), edev->path)))
-           return EINA_FALSE;
+          {
+             eina_iterator_free(it);
+             return EINA_FALSE;
+          }
      }
+   eina_iterator_free(it);
 
-   if(!(dev = ecore_device_add())) return EINA_FALSE;
-
-   ecore_device_name_set(dev, libinput_device_get_name(edev->device));
-   ecore_device_description_set(dev, libinput_device_get_name(edev->device));
-   ecore_device_identifier_set(dev, edev->path);
-   ecore_device_class_set(dev, clas);
-   return EINA_TRUE;
+   dev = ecore_device_add(clas, ECORE_DEVICE_SUBCLASS_NONE,
+                          libinput_device_get_name(edev->device),
+                          libinput_device_get_name(edev->device),
+                          edev->path);
+   return !!dev;
 }
 
 static Eina_Bool
 _ecore_drm_device_del_ecore_device(Ecore_Drm_Evdev *edev, Ecore_Device_Class clas)
 {
-   const Eina_List *dev_list;
-   const Eina_List *l;
+   Eina_Iterator *it;
    Ecore_Device *dev;
 
    if (!edev->path) return EINA_FALSE;
 
-   dev_list = ecore_device_list();
-   if (!dev_list) return EINA_FALSE;
-   EINA_LIST_FOREACH(dev_list, l, dev)
-      {
-         if (!dev) continue;
-         if ((ecore_device_class_get(dev) == clas) &&
-             (eina_streq(ecore_device_identifier_get(dev), edev->path)))
-           {
-              ecore_device_del(dev);
-              return EINA_TRUE;
-           }
-      }
+   it = ecore_device_iterate();
+   if (!it) return EINA_FALSE;
+   EINA_ITERATOR_FOREACH(it, dev)
+     {
+        if (!dev) continue;
+        if ((ecore_device_class_get(dev) == clas) &&
+            (eina_streq(ecore_device_identifier_get(dev), edev->path)))
+          {
+             ecore_device_del(dev);
+             return EINA_TRUE;
+          }
+     }
+   eina_iterator_free(it);
    return EINA_FALSE;
 }
 

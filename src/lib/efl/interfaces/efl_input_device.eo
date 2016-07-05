@@ -75,6 +75,15 @@ class Efl.Input.Device (Eo.Base)
             desc: string;
          }
       }
+      @property identifier {
+         [[A unique identifier for this device.
+
+           Note that it may be $null if unknown.
+         ]]
+         values {
+            id: string;
+         }
+      }
       @property parent {
          /* set {} */
          get {}

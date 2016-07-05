@@ -6,14 +6,12 @@
 
 /* WARNING: This API is not used across EFL, hard to test! */
 
-#ifdef DEBUG_UNTESTED_
-// booh
-#define SAFETY_CHECK(obj, klass, ...) \
-   do { MAGIC_CHECK(dev, Evas_Device, 1); \
-        return __VA_ARGS__; \
-        MAGIC_CHECK_END(); \
-   } while (0)
-
+#ifdef DEBUG
+#define SAFETY_CHECK(obj, klass, ...) do { \
+   if (EINA_UNLIKELY(!eo_isa(dev, klass)) { \
+       ERR("Invalid object type: %s wanted: %d", eo_class_name_get(obj), eo_class_name_get(klass)); \
+       return __VA_ARGS__; \
+   }} while (0)
 #else
 #define SAFETY_CHECK(obj, klass, ...) \
    do { if (!obj) return __VA_ARGS__; } while (0)

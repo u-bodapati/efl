@@ -7,163 +7,84 @@
 #include "Ecore.h"
 #include "ecore_private.h"
 
-/**
- * @struct _Ecore_Devicei
- * Contains information about a device.
- */
-struct _Ecore_Device
-{
-   ECORE_MAGIC; /**< ecore magic data */
-   Eina_Stringshare *name; /**< name of device */
-   Eina_Stringshare *desc; /**< description of device */
-   Eina_Stringshare *identifier; /**< identifier of device */
-   Ecore_Device_Class clas; /**<Device class */
-   Ecore_Device_Subclass subclas; /**< device subclass */
-};
+/* WARNING: This API is not tested yet! */
+
+#ifdef DEBUG
+#define SAFETY_CHECK(obj, klass, ...) do { \
+   if (EINA_UNLIKELY(!eo_isa(dev, klass)) { \
+       ERR("Invalid object type: %s wanted: %d", eo_class_name_get(obj), eo_class_name_get(klass)); \
+       return __VA_ARGS__; \
+   }} while (0)
+#else
+#define SAFETY_CHECK(obj, klass, ...) \
+   do { if (!obj) return __VA_ARGS__; } while (0)
+#endif
 
 static Eina_List *_ecore_devices = NULL;
 
-void _ecore_device_free(Ecore_Device *dev);
+static void
+_del_cb(void *data, const Eo_Event *ev)
+{
+   Eina_List **plist = data;
+
+   *plist = eina_list_remove(*plist, ev->object);
+}
 
 EAPI Ecore_Device *
-ecore_device_add(void)
+ecore_device_add(Ecore_Device_Class klass, Ecore_Device_Subclass subklass,
+                 const char *name, const char *description, const char *identifier)
 {
-   Ecore_Device *dev;
-
-   dev = calloc(1, sizeof(Ecore_Device));
-   if (!dev) return NULL;
-   ECORE_MAGIC_SET(dev, ECORE_MAGIC_DEV);
+   Ecore_Device *dev = eo_add(EFL_INPUT_DEVICE_CLASS, ecore_main_loop_get(),
+                              efl_input_device_type_set(eo_self, klass),
+                              efl_input_device_subtype_set(eo_self, subklass),
+                              efl_input_device_name_set(eo_self, name),
+                              efl_input_device_description_set(eo_self, description),
+                              efl_input_device_identifier_set(eo_self, identifier));
    _ecore_devices = eina_list_append(_ecore_devices, dev);
+   eo_event_callback_add(dev, EO_EVENT_DEL, _del_cb, &_ecore_devices);
    return dev;
 }
 
 EAPI void
 ecore_device_del(Ecore_Device *dev)
 {
-   if (!dev) return;
-
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_del");
-        return;
-     }
-   _ecore_device_free(dev);
+   eo_del(dev);
 }
 
-EAPI const Eina_List *
-ecore_device_list(void)
+EAPI Eina_Iterator *
+ecore_device_iterate(void)
 {
-   return _ecore_devices;
-}
-
-EAPI void
-ecore_device_name_set(Ecore_Device *dev, const char *name)
-{
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_name_set");
-        return;
-     }
-   eina_stringshare_replace(&dev->name, name);
+   return _ecore_devices ? eina_list_iterator_new(_ecore_devices) : NULL;
 }
 
 EAPI Eina_Stringshare *
 ecore_device_name_get(const Ecore_Device *dev)
 {
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_name_get");
-        return NULL;
-     }
-   return dev->name;
-}
-
-EAPI void
-ecore_device_description_set(Ecore_Device *dev, const char *desc)
-{
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_description_set");
-        return;
-     }
-   eina_stringshare_replace(&dev->desc, desc);
+   return efl_input_device_name_get(dev);
 }
 
 EAPI Eina_Stringshare *
 ecore_device_description_get(const Ecore_Device *dev)
 {
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_description_get");
-        return NULL;
-     }
-   return dev->desc;
-}
-
-EAPI void
-ecore_device_identifier_set(Ecore_Device *dev, const char *identifier)
-{
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_identifier_set");
-        return;
-     }
-   eina_stringshare_replace(&dev->identifier, identifier);
+   return efl_input_device_description_get(dev);
 }
 
 EAPI Eina_Stringshare *
 ecore_device_identifier_get(const Ecore_Device *dev)
 {
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_identifier_get");
-        return NULL;
-     }
-   return dev->identifier;
-}
-
-EAPI void
-ecore_device_class_set(Ecore_Device *dev, Ecore_Device_Class clas)
-{
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_class_set");
-        return;
-     }
-   dev->clas = clas;
+   return efl_input_device_identifier_get(dev);
 }
 
 EAPI Ecore_Device_Class
 ecore_device_class_get(const Ecore_Device *dev)
 {
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_class_get");
-        return ECORE_DEVICE_CLASS_NONE;
-     }
-   return dev->clas;
-}
-
-EAPI void
-ecore_device_subclass_set(Ecore_Device *dev, Ecore_Device_Subclass subclas)
-{
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_class_set");
-        return;
-     }
-   dev->subclas = subclas;
+   return efl_input_device_type_get(dev);
 }
 
 EAPI Ecore_Device_Subclass
 ecore_device_subclass_get(const Ecore_Device *dev)
 {
-   if (!ECORE_MAGIC_CHECK(dev, ECORE_MAGIC_DEV))
-     {
-        ECORE_MAGIC_FAIL(dev, ECORE_MAGIC_DEV, "ecore_device_class_get");
-        return ECORE_DEVICE_SUBCLASS_NONE;
-     }
-   return dev->subclas;
+   return efl_input_device_subtype_get(dev);
 }
 
 void
@@ -173,16 +94,5 @@ _ecore_device_cleanup(void)
     Eina_List *l1, *l2;
 
     EINA_LIST_FOREACH_SAFE(_ecore_devices, l1, l2, dev)
-    _ecore_device_free(dev);
-}
-
-void
-_ecore_device_free(Ecore_Device *dev)
-{
-    _ecore_devices = eina_list_remove(_ecore_devices, dev);
-    eina_stringshare_del(dev->name);
-    eina_stringshare_del(dev->desc);
-    eina_stringshare_del(dev->identifier);
-    ECORE_MAGIC_SET(dev, 0);
-    free(dev);
+      eo_del(dev);
 }

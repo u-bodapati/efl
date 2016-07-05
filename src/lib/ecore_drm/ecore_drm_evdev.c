@@ -291,21 +291,26 @@ _device_remapped_key_get(Ecore_Drm_Evdev *edev, int code)
 EAPI Ecore_Device *
 ecore_drm_evdev_get_ecore_device(const char *path, Ecore_Device_Class clas)
 {
-   const Eina_List *dev_list;
-   const Eina_List *l;
+   Eina_Iterator *it;
    Ecore_Device *dev;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(path, NULL);
 
-   dev_list = ecore_device_list();
-   if (!dev_list) return NULL;
-   EINA_LIST_FOREACH(dev_list, l, dev)
+   if (path) return EINA_FALSE;
+
+   it = ecore_device_iterate();
+   EINA_ITERATOR_FOREACH(it, dev)
      {
         if (!dev) continue;
         if ((ecore_device_class_get(dev) == clas) &&
             (eina_streq(ecore_device_identifier_get(dev), path)))
-          return dev;
+          {
+             eina_iterator_free(it);
+             return dev;
+          }
      }
+   eina_iterator_free(it);
+
    return NULL;
 }
 

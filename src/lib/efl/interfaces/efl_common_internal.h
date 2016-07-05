@@ -87,6 +87,7 @@ struct _Efl_Input_Device_Data
    Eina_List        *children; /* ref */
    Eina_Stringshare *name;
    Eina_Stringshare *desc;
+   Eina_Stringshare *identifier;
    Efl_Input_Device_Class klass;
    Efl_Input_Device_Sub_Class subclass;
 };

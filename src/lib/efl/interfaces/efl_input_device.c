@@ -24,6 +24,7 @@ _efl_input_device_eo_base_destructor(Eo *obj, Efl_Input_Device_Data *pd)
 
    eina_stringshare_del(pd->name);
    eina_stringshare_del(pd->desc);
+   eina_stringshare_del(pd->identifier);
    EINA_LIST_FREE(pd->children, eo_child)
      {
         Efl_Input_Device_Data *child = eo_data_scope_get(eo_child, EFL_INPUT_DEVICE_CLASS);
@@ -95,6 +96,18 @@ EOLIAN static const char *
 _efl_input_device_description_get(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd)
 {
    return pd->desc;
+}
+
+EOLIAN static void
+_efl_input_device_identifier_set(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd, const char *identifier)
+{
+   eina_stringshare_replace(&pd->identifier, identifier);
+}
+
+EOLIAN static const char *
+_efl_input_device_identifier_get(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd)
+{
+   return pd->identifier;
 }
 
 EOLIAN static Efl_Input_Device *
