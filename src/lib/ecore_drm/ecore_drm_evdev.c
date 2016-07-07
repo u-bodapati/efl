@@ -288,32 +288,6 @@ _device_remapped_key_get(Ecore_Drm_Evdev *edev, int code)
    return code;
 }
 
-EAPI Ecore_Device *
-ecore_drm_evdev_get_ecore_device(const char *path, Ecore_Device_Class clas)
-{
-   Eina_Iterator *it;
-   Ecore_Device *dev;
-
-   EINA_SAFETY_ON_NULL_RETURN_VAL(path, NULL);
-
-   if (path) return EINA_FALSE;
-
-   it = ecore_device_iterate();
-   EINA_ITERATOR_FOREACH(it, dev)
-     {
-        if (!dev) continue;
-        if ((ecore_device_class_get(dev) == clas) &&
-            (eina_streq(ecore_device_identifier_get(dev), path)))
-          {
-             eina_iterator_free(it);
-             return dev;
-          }
-     }
-   eina_iterator_free(it);
-
-   return NULL;
-}
-
 static void
 _device_handle_key(struct libinput_device *device, struct libinput_event_keyboard *event)
 {
@@ -414,7 +388,6 @@ _device_handle_key(struct libinput_device *device, struct libinput_event_keyboar
    _device_modifiers_update(edev);
 
    e->modifiers = edev->xkb.modifiers;
-   e->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_KEYBOARD);
 
    if (state)
      ecore_event_add(ECORE_EVENT_KEY_DOWN, e, NULL, NULL);
@@ -471,7 +444,6 @@ _device_pointer_motion(Ecore_Drm_Evdev *edev, struct libinput_event_pointer *eve
    ev->multi.y = ev->y;
    ev->multi.root.x = ev->x;
    ev->multi.root.y = ev->y;
-   ev->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_MOUSE);
 
    ecore_event_add(ECORE_EVENT_MOUSE_MOVE, ev, NULL, NULL);
 }
@@ -571,7 +543,6 @@ _device_handle_button(struct libinput_device *device, struct libinput_event_poin
    ev->multi.y = ev->y;
    ev->multi.root.x = ev->x;
    ev->multi.root.y = ev->y;
-   ev->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_MOUSE);
 
    if (state)
      {
@@ -659,7 +630,6 @@ _device_handle_axis(struct libinput_device *device, struct libinput_event_pointe
    ev->y = edev->seat->ptr.iy;
    ev->root.x = ev->x;
    ev->root.y = ev->y;
-   ev->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_MOUSE);
 
 #if LIBINPUT_HIGHER_08
    axis = LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL;
@@ -795,7 +765,6 @@ _device_handle_touch_event_send(Ecore_Drm_Evdev *edev, struct libinput_event_tou
    ev->multi.y = ev->y;
    ev->multi.root.x = ev->x;
    ev->multi.root.y = ev->y;
-   ev->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_TOUCH);
 
    if (state == ECORE_EVENT_MOUSE_BUTTON_DOWN)
      {
@@ -870,7 +839,6 @@ _device_handle_touch_motion_send(Ecore_Drm_Evdev *edev, struct libinput_event_to
    ev->multi.y = ev->y;
    ev->multi.root.x = ev->x;
    ev->multi.root.y = ev->y;
-   ev->dev = ecore_drm_evdev_get_ecore_device(edev->path, ECORE_DEVICE_CLASS_TOUCH);
 
    ecore_event_add(ECORE_EVENT_MOUSE_MOVE, ev, NULL, NULL);
 }
