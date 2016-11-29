@@ -21,9 +21,6 @@
 # include <dlfcn.h>
 #endif
 
-#include <Ecore.h>
-#include <Eina.h>
-
 Evas_Native_Tbm_Surface_Image_Set_Call  glsym__evas_native_tbm_surface_image_set = NULL;
 Evas_Native_Tbm_Surface_Stride_Get_Call  glsym__evas_native_tbm_surface_stride_get = NULL;
 int _evas_engine_soft_x11_log_dom = -1;
@@ -46,18 +43,6 @@ struct _Render_Engine
    } egl;
 };
 
-typedef struct _Region_Push_Hook_Ctx {
-   X_Output_Buffer *changed_pixels;
-   Outbuf *buf;
-   Eina_Spinlock *lock;
-   struct {
-      void (*cb)(Evas *evas, int x, int y, int w, int h, const void *pixels);
-      Evas *evas;
-   } region_push_hook;
-   int x;
-   int y;
-} Region_Push_Hook_Ctx;
-
 /* prototypes we will use here */
 static void *_best_visual_get(int backend, void *connection, int screen);
 static unsigned int _best_colormap_get(int backend, void *connection, int screen);
@@ -71,47 +56,6 @@ static void eng_output_free(void *data);
 static Eina_List *_outbufs = NULL;
 
 /* internal engine routines */
-
-
-static void
-_evas_software_x11_region_push_hook_call(void *data)
-{
-   Region_Push_Hook_Ctx *ctx = data;
-
-   if (eina_list_data_find(_outbufs, ctx->buf))
-     {
-        ctx->region_push_hook.cb(ctx->region_push_hook.evas, ctx->x, ctx->y,
-                                 ctx->changed_pixels->xim->width,
-                                 ctx->changed_pixels->xim->height,
-                                 evas_software_xlib_x_output_buffer_data(ctx->changed_pixels, NULL));
-        eina_spinlock_take(ctx->lock);
-        evas_software_xlib_x_output_buffer_unref(ctx->changed_pixels, 0);
-        eina_spinlock_release(ctx->lock);
-     }
-   free(ctx);
-}
-
-void
-evas_software_x11_region_push_hook_call(Outbuf *buf, int x, int y, void *out_buf,
-                                        Eina_Spinlock *lock)
-{
-   Region_Push_Hook_Ctx *ctx;
-
-   if (!buf->region_push_hook.cb)
-     return;
-
-   ctx = malloc(sizeof(Region_Push_Hook_Ctx));
-   EINA_SAFETY_ON_NULL_RETURN(ctx);
-   ctx->x = x;
-   ctx->y = y;
-   ctx->region_push_hook.cb = buf->region_push_hook.cb;
-   ctx->region_push_hook.evas = buf->region_push_hook.evas;
-   ctx->changed_pixels = evas_software_xlib_x_output_buffer_ref(out_buf);
-   ctx->buf = buf;
-   ctx->lock = lock;
-   ecore_main_loop_thread_safe_call_async(_evas_software_x11_region_push_hook_call,
-                                          ctx);
-}
 
 static void
 _output_egl_shutdown(Render_Engine *re)
@@ -367,8 +311,6 @@ eng_setup(Evas *eo_e, void *in)
                                           info->info.destination_alpha);
                   re->outbuf_alpha_get = evas_software_xlib_outbuf_alpha_get;
                }
-             re->generic.ob->region_push_hook.cb = info->func.region_push_hook;
-             re->generic.ob->region_push_hook.evas = eo_e;
           }
         e->engine.data.output = re;
      }
@@ -423,8 +365,6 @@ eng_setup(Evas *eo_e, void *in)
         if (ob)
           {
              evas_render_engine_software_generic_update(&re->generic, ob, e->output.w, e->output.h);
-             ob->region_push_hook.cb = info->func.region_push_hook;
-             ob->region_push_hook.evas = eo_e;
           }
 
         /* if ((re) && (re->ob)) re->ob->onebuf = ponebuf; */

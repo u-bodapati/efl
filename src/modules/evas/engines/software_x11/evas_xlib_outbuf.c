@@ -822,13 +822,9 @@ evas_software_xlib_outbuf_flush(Outbuf *buf, Tilebuf_Rect *surface_damage EINA_U
         eina_array_clean(&buf->priv.onebuf_regions);
 	XSetRegion(buf->priv.x11.xlib.disp, buf->priv.x11.xlib.gc, tmpr);
         if (obr->xob)
-          {
-             evas_software_x11_region_push_hook_call(buf, 0, 0, obr->xob,
-                                                     &shmpool_lock);
-             evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
-                                                      buf->priv.x11.xlib.gc,
-                                                      0, 0, 0);
-          }
+           evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
+                                                    buf->priv.x11.xlib.gc,
+                                                    0, 0, 0);
 	if (obr->mxob)
 	  {
 	     XSetRegion(buf->priv.x11.xlib.disp, buf->priv.x11.xlib.gcm, tmpr);
@@ -851,13 +847,9 @@ evas_software_xlib_outbuf_flush(Outbuf *buf, Tilebuf_Rect *surface_damage EINA_U
 	       evas_software_xlib_outbuf_debug_show(buf, buf->priv.x11.xlib.win,
 						   obr->x, obr->y, obr->w, obr->h);
              if (obr->xob)
-               {
-                  evas_software_x11_region_push_hook_call(buf, obr->x, obr->y,
-                                                          obr->xob, &shmpool_lock);
-                  evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
-                                                           buf->priv.x11.xlib.gc,
-                                                           obr->x, obr->y, 0);
-               }
+                evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
+                                                         buf->priv.x11.xlib.gc,
+                                                         obr->x, obr->y, 0);
 	     if (obr->mxob)
 	       evas_software_xlib_x_output_buffer_paste(obr->mxob,
 						       buf->priv.x11.xlib.mask,
@@ -1146,13 +1138,9 @@ evas_software_xlib_outbuf_push_updated_region(Outbuf *buf, RGBA_Image *update, i
 	  evas_software_xlib_outbuf_debug_show(buf, buf->priv.x11.xlib.win,
                                                obr->x, obr->y, obr->w, obr->h);
         if (obr->xob)
-          {
-             evas_software_x11_region_push_hook_call(buf, obr->x, obr->y,
-                                                     obr->xob, &shmpool_lock);
-             evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
-                                                      buf->priv.x11.xlib.gc,
-                                                      obr->x, obr->y, 0);
-          }
+           evas_software_xlib_x_output_buffer_paste(obr->xob, buf->priv.x11.xlib.win,
+                                                    buf->priv.x11.xlib.gc,
+                                                    obr->x, obr->y, 0);
      }
 #endif
    if (obr->mxob)
