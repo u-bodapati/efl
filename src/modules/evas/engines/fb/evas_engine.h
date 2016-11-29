@@ -46,11 +46,6 @@ struct _Outbuf
       } mask;
       RGBA_Image  *back_buf;
    } priv;
-
-   struct {
-      void (*cb)(Evas *e, int x, int y, int w, int h, const void *pixels);
-      Evas *evas;
-   } region_push_hook;
 };
 
 /****/
@@ -72,7 +67,5 @@ Outbuf_Depth evas_fb_outbuf_fb_get_depth              (Outbuf *buf);
 int          evas_fb_outbuf_fb_get_rot                (Outbuf *buf);
 int          evas_fb_outbuf_fb_get_have_backbuf       (Outbuf *buf);
 void         evas_fb_outbuf_fb_set_have_backbuf       (Outbuf *buf, int have_backbuf);
-
-void evas_fb_region_push_hook_call(Outbuf *buf, int x, int y, int w, int h, const void *pixels);
 
 #endif
