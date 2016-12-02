@@ -540,40 +540,34 @@ evas_outbuf_unsurf(Outbuf *ob)
 void
 evas_outbuf_reconfigure(Outbuf *ob, int w, int h, int rot, Outbuf_Depth depth)
 {
-   Evas_Public_Data *epd;
    Evas_Engine_Info_GL_Drm *einfo;
    Render_Engine *re;
-   Outbuf *nob;
+   /* Outbuf *nob; */
 
    if (depth == OUTBUF_DEPTH_INHERIT) depth = ob->depth;
 
-   epd = efl_data_scope_get(ob->evas, EVAS_CANVAS_CLASS);
-   EINA_SAFETY_ON_NULL_RETURN(epd);
-
-   re = epd->engine.data.output;
-   EINA_SAFETY_ON_NULL_RETURN(re);
-
    einfo = ob->info;
 
-   if ((ob->rotation == 0) || (ob->rotation == 180))
-     nob = evas_outbuf_new(einfo, w, h, ob->swap_mode);
-   else
-     nob = evas_outbuf_new(einfo, h, w, ob->swap_mode);
+   // FIXME: this should properly resize and not destroy and hack reference around the existing ob
+   /* if ((ob->rotation == 0) || (ob->rotation == 180)) */
+   /*   nob = evas_outbuf_new(einfo, w, h, ob->swap_mode); */
+   /* else */
+   /*   nob = evas_outbuf_new(einfo, h, w, ob->swap_mode); */
 
-   if (!nob)
-     {
-        ERR("Could not create new Outbuf");
-        return;
-     }
+   /* if (!nob) */
+   /*   { */
+   /*      ERR("Could not create new Outbuf"); */
+   /*      return; */
+   /*   } */
 
-   re->generic.software.ob->gl_context->references++;
+   /* re->generic.software.ob->gl_context->references++; */
 
-   evas_outbuf_free(ob);
-   re->generic.software.ob = NULL;
+   /* evas_outbuf_free(ob); */
+   /* re->generic.software.ob = NULL; */
 
-   evas_outbuf_use(nob);
+   /* evas_outbuf_use(nob); */
 
-   evas_render_engine_software_generic_update(&re->generic.software, nob, w, h);
+   evas_render_engine_software_generic_update(&re->generic.software, ob, w, h);
 
    re->generic.software.ob->gl_context->references--;
 
