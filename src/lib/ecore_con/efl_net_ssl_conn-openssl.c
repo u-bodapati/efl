@@ -129,7 +129,7 @@ efl_net_socket_bio_puts(BIO *b, const char *str)
    return efl_net_socket_bio_write(b, str, strlen(str));
 }
 
-static BIO_METHOD efl_net_socket_bio = {
+static BIO_METHOD efl_net_socket_bio_struct = {
   0x400, /* 0x400 means source & sink */
   "efl_net_socket wrapper",
   efl_net_socket_bio_write,
@@ -140,6 +140,25 @@ static BIO_METHOD efl_net_socket_bio = {
   efl_net_socket_bio_create,
   efl_net_socket_bio_destroy
 };
+
+static BIO_METHOD *efl_net_socket_bio;
+
+static void
+bio_method_init(void)
+{
+#if 1
+   efl_net_socket_bio = &efl_net_socket_bio_struct;
+#else
+   efl_net_socket_bio = BIO_meth_new(0x400,"efl_net_socket wrapper");
+   BIO_meth_set_write(efl_net_socket_bio, efl_net_socket_bio_write);
+   BIO_meth_set_read(efl_net_socket_bio, efl_net_socket_bio_read);
+   BIO_meth_set_puts(efl_net_socket_bio, efl_net_socket_bio_puts);
+   //BIO_meth_set_gets
+   BIO_meth_set_ctrl(efl_net_socket_bio, efl_net_socket_bio_ctrl);
+   BIO_meth_set_create(efl_net_socket_bio, efl_net_socket_bio_create);
+   BIO_meth_set_destroy(efl_net_socket_bio, efl_net_socket_bio_destroy);
+#endif
+}
 
 struct _Efl_Net_Ssl_Conn
 {
@@ -314,7 +333,8 @@ efl_net_ssl_conn_setup(Efl_Net_Ssl_Conn *conn, Eina_Bool is_dialer, Efl_Net_Sock
    conn->ssl = efl_net_ssl_context_connection_new(context);
    EINA_SAFETY_ON_NULL_RETURN_VAL(conn->ssl, ENOSYS);
 
-   conn->bio = BIO_new(&efl_net_socket_bio);
+   bio_method_init();
+   conn->bio = BIO_new(efl_net_socket_bio);
    EINA_SAFETY_ON_NULL_GOTO(conn->bio, error_bio);
 
    conn->bio->ptr = sock;
