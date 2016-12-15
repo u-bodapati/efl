@@ -1,0 +1,13 @@
+class Edje.Global (Efl.Object, Efl.Gfx.Color_Class, Efl.Gfx.Text_Class, Efl.Gfx.Size_Class)
+{
+   data: null;
+   eo_prefix: edje_global;
+   implements {
+      Efl.Gfx.Color_Class.color_class;
+      Efl.Gfx.Color_Class.color_class_del;
+      Efl.Gfx.Text_Class.text_class;
+      Efl.Gfx.Text_Class.text_class_del;
+      Efl.Gfx.Size_Class.size_class;
+      Efl.Gfx.Size_Class.size_class_del;
+   }
+}

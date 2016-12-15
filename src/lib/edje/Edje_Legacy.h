@@ -732,7 +732,7 @@ EAPI void edje_object_size_class_del(Evas_Object *obj, const char *size_class);
  *
  * @ingroup Edje_Object
  */
-EAPI void edje_object_part_text_select_allow_set(const Edje_Object *obj, const char *part, Eina_Bool allow);
+EAPI void edje_object_part_text_select_allow_set(const Evas_Object *obj, const char *part, Eina_Bool allow);
 
 #include "edje_object.eo.legacy.h"
 #include "edje_edit.eo.legacy.h"
