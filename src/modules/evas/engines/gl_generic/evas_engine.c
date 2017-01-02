@@ -3,7 +3,7 @@
 
 #include "software/Ector_Software.h"
 #include "cairo/Ector_Cairo.h"
-#include "gl/Ector_GL.h"
+#include "gl/Ector_Gl.h"
 #include "evas_ector_buffer.eo.h"
 #include "evas_ector_gl_buffer.eo.h"
 #include "evas_ector_gl_image_buffer.eo.h"
@@ -85,7 +85,7 @@ _context_store(void *data, void *surface, void *context)
         if (rsc->id == evgl_engine->main_tid)
           {
              _need_context_restore = EINA_FALSE;
-    
+
              rsc->stored.data = data;
              rsc->stored.surface = surface;
              rsc->stored.context = context;
@@ -2515,7 +2515,7 @@ eng_ector_create(void *data EINA_UNUSED)
      {
         ector = efl_add(ECTOR_SOFTWARE_SURFACE_CLASS, NULL);
      }
-   else if (ector_backend && !strcasecmp(ector_backend, "experimental"))
+   else if (ector_backend && !strcasecmp(ector_backend, "gl"))
      {
         ector = efl_add(ECTOR_GL_SURFACE_CLASS, NULL);
         use_gl = EINA_TRUE;
@@ -2700,7 +2700,8 @@ struct _Evas_GL_Ector
 {
    Evas_GL_Image *gl;
    DATA32 *software;
-
+   int x;
+   int y;
    Eina_Bool tofree;
 };
 
@@ -2725,8 +2726,7 @@ eng_ector_free(void *engine_data)
 
 static void
 eng_ector_begin(void *data, void *context EINA_UNUSED, Ector_Surface *ector,
-                void *surface, void *engine_data,
-                int x, int y, Eina_Bool do_async EINA_UNUSED)
+                void *surface, void *engine_data, Eina_Rectangle *geom, Eina_Bool do_async EINA_UNUSED)
 {
    Evas_Engine_GL_Context *gl_context;
    Render_Engine_GL_Generic *re = data;
@@ -2766,13 +2766,59 @@ eng_ector_begin(void *data, void *context EINA_UNUSED, Ector_Surface *ector,
           }
         memset(buffer->software, 0, sizeof (unsigned int) * w * h);
         ector_buffer_pixels_set(ector, buffer->software, w, h, 0, EFL_GFX_COLORSPACE_ARGB8888, EINA_TRUE, 0, 0, 0, 0);
-        ector_surface_reference_point_set(ector, x, y);
+        ector_surface_reference_point_set(ector, geom->x, geom->y);
      }
-   else
+   else if (use_gl)
      {
-        evas_gl_common_context_flush(gl_context);
+        RGBA_Draw_Context *dc;
+        Eina_Rectangle clip;
+        Eina_Bool surface_clear = EINA_TRUE;
+        int mul_color = 0xffffffff;
+        if (!buffer->gl || buffer->gl->w != geom->w || buffer->gl->h != geom->h)
+          {
+              if (buffer->gl) evas_gl_common_image_free(buffer->gl);
+              buffer->gl = evas_gl_common_image_surface_new(gl_context, geom->w, geom->h, EINA_TRUE, EINA_FALSE);
+          }
+        evas_gl_common_context_target_surface_set(gl_context, buffer->gl);
 
-        ector_surface_reference_point_set(ector, x, y);
+        // handle clip
+        dc = gl_context->dc;
+        if (surface_clear)
+          {
+             clip.x = 0;
+             clip.y = 0;
+             clip.w = geom->w;
+             clip.h = geom->h;
+          }
+        else
+          {
+             if (dc->clip.use)
+               {
+                  clip.x = dc->clip.x;
+                  clip.y = dc->clip.y;
+                  clip.w = dc->clip.w;
+                  clip.h = dc->clip.h;
+                  // clip the clip rect to surface boundary.
+                  RECTS_CLIP_TO_RECT(clip.x, clip.y, clip.w, clip.h, 0, 0, buffer->gl->w, buffer->gl->h);
+               }
+             else
+               {
+                  clip.x = 0;
+                  clip.y = 0;
+                  clip.w = buffer->gl->w;
+                  clip.h = buffer->gl->h;
+               }
+
+             mul_color = ector_color_multiply(dc->mul.use ? dc->mul.col : 0xffffffff, dc->col.col);
+
+          }
+        buffer->x = geom->x;
+        buffer->y = geom->y;
+        geom->x = 0;
+        geom->y = 0;
+        ector_gl_surface_context_info_set(ector, buffer->gl->w, buffer->gl->h, 0, &clip, EINA_TRUE);
+        ector_gl_surface_vg_info_set(ector, geom, mul_color);
+        ector_gl_surface_draw_begin(ector);
      }
 }
 
@@ -2787,9 +2833,10 @@ eng_ector_end(void *data, void *context EINA_UNUSED, Ector_Surface *ector,
    int w, h;
    Eina_Bool mul_use;
 
+   re->window_use(re->software.ob);
+   gl_context = re->window_gl_context_get(re->software.ob);
    if (use_cairo || !use_gl)
      {
-        gl_context = re->window_gl_context_get(re->software.ob);
         w = gl_context->w; h = gl_context->h;
         mul_use = gl_context->dc->mul.use;
 
@@ -2816,8 +2863,21 @@ eng_ector_end(void *data, void *context EINA_UNUSED, Ector_Surface *ector,
      }
    else if (use_gl)
      {
-        // FIXME: Need to find a cleaner way to do so (maybe have a reset in evas_gl_context)
-        // Force a full pipe reinitialization for now
+        mul_use = gl_context->dc->mul.use;
+        ector_gl_surface_draw_end(ector);
+        if (!mul_use)
+          {
+             // @hack as image_draw uses below fields to do colour multiplication.
+             gl_context->dc->mul.col = ector_color_multiply(0xffffffff, gl_context->dc->col.col);
+             gl_context->dc->mul.use = EINA_TRUE;
+          }
+
+        eng_image_draw(data, context, surface, buffer->gl,
+                       0, 0, buffer->gl->w, buffer->gl->h,
+                       buffer->x, buffer->y, buffer->gl->w, buffer->gl->h,
+                       0, do_async);
+        // restore gl state
+        gl_context->dc->mul.use = mul_use;
      }
 }
 

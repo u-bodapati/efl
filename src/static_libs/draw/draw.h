@@ -24,6 +24,8 @@ Draw_Func_ARGB_Mix3  efl_draw_func_argb_mix3_get    (Efl_Gfx_Render_Op op, uint3
 Alpha_Gfx_Func       efl_draw_alpha_func_get        (Efl_Gfx_Render_Op op, Eina_Bool has_mask);
 Cspace_Convert_Func  efl_draw_convert_func_get      (Efl_Gfx_Colorspace origcs, Efl_Gfx_Colorspace dstcs, Eina_Bool *region_can);
 
+Eina_Bool efl_draw_generate_gradient_color_table(Efl_Gfx_Gradient_Stop *gradient_stops, int stop_count, uint32_t *color_table, int size);
+
 
 /* common sw draw helpers */
 

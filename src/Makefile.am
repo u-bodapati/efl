@@ -111,20 +111,8 @@ benchmark: all
 	done
 
 EXAMPLES_SUBDIRS = \
-examples/eina \
-examples/eet \
 examples/evas \
-examples/ecore \
-examples/ecore_avahi \
-examples/eio \
-examples/eldbus \
-examples/ephysics \
-examples/edje \
-examples/emotion \
-examples/emile \
-examples/elocation \
-examples/ethumb_client \
-examples/elementary
+examples/edje
 
 if HAVE_ELUA
 EXAMPLES_SUBDIRS += examples/elua

@@ -2,7 +2,7 @@
 # include "config.h"
 #endif
 
-#include <gl/Ector_GL.h>
+#include <gl/Ector_Gl.h>
 #include "gl/ector_gl_private.h"
 #include "evas_common_private.h"
 #include "ector_buffer.h"

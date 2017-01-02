@@ -66,7 +66,7 @@ main(int argc EINA_UNUSED, char *argv[] EINA_UNUSED)
 
    /* this will give you a window with an Evas canvas under the first
     * engine available */
-   ee = ecore_evas_new(NULL, 0, 0, WIDTH, HEIGHT, NULL);
+   ee = ecore_evas_new("opengl_x11", 0, 0, WIDTH, HEIGHT, NULL);
    if (!ee) goto shutdown_edje;
 
    ecore_evas_callback_destroy_set(ee, _on_destroy);

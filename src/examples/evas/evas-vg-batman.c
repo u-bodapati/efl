@@ -79,7 +79,7 @@ _animator(void *data EINA_UNUSED, double pos)
 {
    int next = (animation_position + 1) % (sizeof (batmans_path) / sizeof (batmans_path[0]));
 
-   evas_vg_shape_interpolate(batman,   
+   evas_vg_shape_interpolate(batman,
                                    batmans_vg[animation_position],
                                    batmans_vg[next],
                                    ecore_animator_pos_map(pos, ECORE_POS_MAP_SINUSOIDAL, 0.0, 0.0));
@@ -105,7 +105,7 @@ main(void)
    if (!ecore_evas_init())
      return -1;
    //setenv("ECORE_EVAS_ENGINE", "opengl_x11", 1);
-   ee = ecore_evas_new(NULL, 0, 0, WIDTH, HEIGHT, NULL);
+   ee = ecore_evas_new("opengl_x11", 0, 0, WIDTH, HEIGHT, NULL);
    if (!ee) return -1;
 
    ecore_evas_callback_delete_request_set(ee, _on_delete);

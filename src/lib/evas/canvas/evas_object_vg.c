@@ -182,6 +182,7 @@ evas_object_vg_render(Evas_Object *eo_obj EINA_UNUSED,
                       void *output, void *context, void *surface,
                       int x, int y, Eina_Bool do_async)
 {
+   Eina_Rectangle geom;
    Evas_VG_Data *vd = type_private_data;
    Efl_VG *root = NULL;
    Ector_Surface *ector = evas_ector_get(obj->layer->evas);
@@ -223,10 +224,15 @@ evas_object_vg_render(Evas_Object *eo_obj EINA_UNUSED,
      {
         root = vd->root;
      }
+
+   EINA_RECTANGLE_SET(&geom,
+                      obj->cur->geometry.x + x, obj->cur->geometry.y + y,
+                      obj->cur->geometry.w, obj->cur->geometry.h);
+
    obj->layer->evas->engine.func->ector_begin(output, context,
                                               ector, surface,
                                               vd->engine_data,
-                                              obj->cur->geometry.x + x, obj->cur->geometry.y + y,
+                                              &geom,
                                               do_async);
    _evas_vg_render(obj, vd,
                    output, context, surface,
@@ -460,8 +466,8 @@ _evas_vg_efl_gfx_fill_fill_get(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
 
 // file set and save api implementation
 
-static Eina_Bool 
-_evas_vg_morphing_file_set(Eo *obj, Evas_VG_Data *pd, 
+static Eina_Bool
+_evas_vg_morphing_file_set(Eo *obj, Evas_VG_Data *pd,
                            const char *src_file, const char *src_key,
                            const char *dest_file, const char *dest_key,
                            float key_frame)
@@ -508,7 +514,7 @@ _evas_vg_morphing_file_get(Eo *obj EINA_UNUSED, Evas_VG_Data *pd,
    if (key_frame) *key_frame = frame;
 }
 
-static Eina_Bool 
+static Eina_Bool
 _evas_vg_efl_file_file_set(Eo *obj, Evas_VG_Data *pd, const char *file, const char *key)
 {
    return _evas_vg_morphing_file_set(obj, pd, file, key, NULL, NULL, 0);

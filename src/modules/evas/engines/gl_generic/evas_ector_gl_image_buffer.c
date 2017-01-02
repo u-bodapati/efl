@@ -4,7 +4,7 @@
 
 #define ECTOR_GL_BUFFER_BASE_PROTECTED
 
-#include <gl/Ector_GL.h>
+#include <gl/Ector_Gl.h>
 #include "gl/ector_gl_private.h"
 #include "evas_common_private.h"
 #include "../gl_common/evas_gl_common.h"
