@@ -509,7 +509,7 @@ evas_common_font_glyph_draw(RGBA_Font_Glyph *fg,
         // This is not pretty :)
 
         DATA8 *dst8 = dst_image->image.data8 + x + (y * dst_pitch);
-        Alpha_Gfx_Func func;
+        Draw_Func_Alpha func;
         DATA8 *src8;
         int row;
 
@@ -521,7 +521,7 @@ evas_common_font_glyph_draw(RGBA_Font_Glyph *fg,
           {
              DATA8 *d = dst8 + ((row - y1) * dst_pitch);
              DATA8 *s = src8 + (row * w) + x1;
-             func(s, d, x2 - x1);
+             func(d, s, x2 - x1);
           }
         free(src8);
      }
