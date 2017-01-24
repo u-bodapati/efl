@@ -74,9 +74,27 @@ varying vec2 masktex_s[4];
 # endif
 #endif
 
+#ifdef SHD_FILTER_DISPLACE
+uniform sampler2D tex_filter;
+varying vec2 displace_vector;
+varying vec2 displace_min;
+varying vec2 displace_max;
+#endif
+
 void main()
 {
+#if defined(SHD_EXTERNAL) || defined(SHD_TEX)
+   vec2 coord = tex_c;
+#endif
+
    vec4 c;
+
+#ifdef SHD_FILTER_DISPLACE
+   // FIXME THIS DOES NOT WORK BECAUSE FUCK OPENGL
+   vec2 dxy = texture2D(tex_filter, tex_c).rg * displace_vector;
+   float fa = texture2D(tex_filter, tex_c).a;
+   coord = clamp(tex_c + dxy, displace_min, displace_max);
+#endif
 
 #if defined(SHD_YUV) || defined(SHD_NV12) || defined(SHD_YUY2)
    float r, g, b, y, u, v, vmu;
@@ -113,19 +131,19 @@ void main()
    c = vec4(r, g, b, 1.0);
 
 #elif defined(SHD_SAM12) || defined(SHD_SAM21)
-   vec4 col00 = texture2D(tex, tex_c + tex_s[0]).SWZ;
-   vec4 col01 = texture2D(tex, tex_c + tex_s[1]).SWZ;
+   vec4 col00 = texture2D(tex, coord + tex_s[0]).SWZ;
+   vec4 col01 = texture2D(tex, coord + tex_s[1]).SWZ;
    c = (col00 + col01) / div_s;
 
 #elif defined(SHD_SAM22)
-   vec4 col00 = texture2D(tex, tex_c + tex_s[0]).SWZ;
-   vec4 col01 = texture2D(tex, tex_c + tex_s[1]).SWZ;
-   vec4 col10 = texture2D(tex, tex_c + tex_s[2]).SWZ;
-   vec4 col11 = texture2D(tex, tex_c + tex_s[3]).SWZ;
+   vec4 col00 = texture2D(tex, coord + tex_s[0]).SWZ;
+   vec4 col01 = texture2D(tex, coord + tex_s[1]).SWZ;
+   vec4 col10 = texture2D(tex, coord + tex_s[2]).SWZ;
+   vec4 col11 = texture2D(tex, coord + tex_s[3]).SWZ;
    c = (col00 + col01 + col10 + col11) / div_s;
 
 #elif defined(SHD_TEX) || defined(SHD_EXTERNAL)
-   c = texture2D(tex, tex_c).SWZ;
+   c = texture2D(tex, coord).SWZ;
 
 #else
    c = vec4(1, 1, 1, 1);
@@ -181,6 +199,9 @@ void main()
 #endif
 #ifdef SHD_TEXA
      * texture2D(texa, tex_a).r
+#endif
+#ifdef SHD_FILTER_DISPLACE
+     * fa
 #endif
    ;
 }

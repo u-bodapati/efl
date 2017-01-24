@@ -433,6 +433,10 @@ _command_new(Evas_Filter_Context *ctx, Evas_Filter_Mode mode,
    cmd->input = input;
    cmd->mask = mask;
    cmd->output = output;
+   cmd->draw.R = 255;
+   cmd->draw.G = 255;
+   cmd->draw.B = 255;
+   cmd->draw.A = 255;
    if (output) output->dirty = EINA_TRUE;
 
    ctx->commands = eina_inlist_append(ctx->commands, EINA_INLIST_GET(cmd));
