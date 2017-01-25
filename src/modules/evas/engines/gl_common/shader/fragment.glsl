@@ -81,6 +81,10 @@ varying vec2 displace_min;
 varying vec2 displace_max;
 #endif
 
+#ifdef SHD_FILTER_CURVE
+uniform sampler2D tex_filter;
+#endif
+
 void main()
 {
 #if defined(SHD_EXTERNAL) || defined(SHD_TEX)
@@ -90,7 +94,6 @@ void main()
    vec4 c;
 
 #ifdef SHD_FILTER_DISPLACE
-   // FIXME THIS DOES NOT WORK BECAUSE FUCK OPENGL
    vec2 dxy = texture2D(tex_filter, tex_c).rg * displace_vector;
    float fa = texture2D(tex_filter, tex_c).a;
    coord = clamp(tex_c + dxy, displace_min, displace_max);
@@ -189,6 +192,19 @@ void main()
    c.a = 1.0;
 #endif
 
+#ifdef SHD_TEXA
+   c *= texture2D(texa, tex_a).r;
+#endif
+
+#if defined(SHD_FILTER_CURVE)
+   float old_alpha = max(c.a, 0.00001);
+   float new_alpha = texture2D(tex_filter, vec2(old_alpha, 0.0)).a;
+   c = vec4(texture2D(tex_filter, vec2(c.r / old_alpha, 0.0)).r * new_alpha,
+            texture2D(tex_filter, vec2(c.g / old_alpha, 0.0)).g * new_alpha,
+            texture2D(tex_filter, vec2(c.b / old_alpha, 0.0)).b * new_alpha,
+            new_alpha);
+#endif
+
    gl_FragColor =
        c
 #ifndef SHD_NOMUL
@@ -196,9 +212,6 @@ void main()
 #endif
 #ifdef SHD_MASK
      * ma
-#endif
-#ifdef SHD_TEXA
-     * texture2D(texa, tex_a).r
 #endif
 #ifdef SHD_FILTER_DISPLACE
      * fa

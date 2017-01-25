@@ -244,6 +244,7 @@ enum _Shader_Type {
    SHD_RGB_A_PAIR,
    SHD_MAP,
    SHD_FILTER_DISPLACE,
+   SHD_FILTER_CURVE,
    SHD_TYPE_LAST
 };
 
@@ -309,6 +310,7 @@ struct _Evas_Engine_GL_Context
          struct {
             GLuint        map_tex;
             Eina_Bool     map_nearest : 1;
+            Eina_Bool     map_delete  : 1;
          } filter;
       } shader;
       struct {
@@ -646,6 +648,8 @@ void             evas_gl_common_context_image_map_push(Evas_Engine_GL_Context *g
 // Gfx Filters
 void              evas_gl_common_filter_displace_push(Evas_Engine_GL_Context *gc, Evas_GL_Texture *tex, Evas_GL_Texture *map_tex,
                                                       int x, int y, int w, int h, double dx, double dy, Eina_Bool nearest);
+void              evas_gl_common_filter_curve_push(Evas_Engine_GL_Context *gc, Evas_GL_Texture *tex,
+                                                   int x, int y, int w, int h, const uint8_t *points, int channel);
 
 int               evas_gl_common_shader_program_init(Evas_GL_Shared *shared);
 void              evas_gl_common_shader_program_shutdown(Evas_GL_Shared *shared);

@@ -41,8 +41,9 @@ typedef enum {
    SHADER_FLAG_ALPHA             = (1 << 19),
    SHADER_FLAG_RGB_A_PAIR        = (1 << 20),
    SHADER_FLAG_FILTER_DISPLACE   = (1 << 21),
+   SHADER_FLAG_FILTER_CURVE      = (1 << 22),
 } Shader_Flag;
-#define SHADER_FLAG_COUNT 22
+#define SHADER_FLAG_COUNT 23
 
 static const char *_shader_flags[SHADER_FLAG_COUNT] = {
    "TEX",
@@ -66,7 +67,8 @@ static const char *_shader_flags[SHADER_FLAG_COUNT] = {
    "NOMUL",
    "ALPHA",
    "RGB_A_PAIR",
-   "FILTER_DISPLACE"
+   "FILTER_DISPLACE",
+   "FILTER_CURVE"
 };
 
 static Eina_Bool compiler_released = EINA_FALSE;
@@ -780,6 +782,9 @@ evas_gl_common_shader_flags_get(Evas_GL_Shared *shared, Shader_Type type,
       case SHD_FILTER_DISPLACE:
         flags |= SHADER_FLAG_FILTER_DISPLACE;
         break;
+      case SHD_FILTER_CURVE:
+        flags |= SHADER_FLAG_FILTER_CURVE;
+        break;
       default:
         CRI("Impossible shader type.");
         return 0;
@@ -886,7 +891,8 @@ evas_gl_common_shader_textures_bind(Evas_GL_Program *p)
         textures[5].enabled = 1;
         hastex = 1;
      }
-   if (p->flags & SHADER_FLAG_FILTER_DISPLACE)
+   if ((p->flags & SHADER_FLAG_FILTER_DISPLACE) ||
+       (p->flags & SHADER_FLAG_FILTER_CURVE))
      {
         textures[6].enabled = 1;
         hastex = 1;
