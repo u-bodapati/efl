@@ -76,9 +76,8 @@ struct _Efl_Loop_Future_Data
    Efl_Promise_Msg  *message;
    Efl_Promise_Data *promise;
 
-#ifndef NDEBUG
-   int wref;
-#endif
+   Eina_Inarray *wref;
+
    unsigned char propagating;
 
    Eina_Bool fulfilled : 1;
@@ -129,6 +128,19 @@ _efl_loop_future_failure(Efl_Event *ev, Efl_Loop_Future_Data *pd, Eina_Error err
 {
    Efl_Loop_Future_Callback *cb;
    Efl_Future_Event_Failure chain_fail;
+
+   // There is no way around, we need to cleanup wref before doing anything.
+   // This means we can't rely on Eo wref for Efl_Future at all.
+   if (pd->wref)
+     {
+        Eo **wref;
+
+        EINA_INARRAY_FOREACH(pd->wref, wref)
+          *wref = NULL;
+
+        eina_inarray_free(pd->wref);
+        pd->wref = NULL;
+     }
 
    ev->info = &chain_fail;
    ev->desc = EFL_FUTURE_EVENT_FAILURE;
@@ -348,12 +360,10 @@ _efl_loop_future_cancel(Eo *obj, Efl_Loop_Future_Data *pd)
         return;
      }
 
-#ifndef NDEBUG
    if (!pd->wref)
      {
         WRN("Calling cancel should be only done on a weak reference. Look at efl_future_use.");
      }
-#endif
 
    pd->fulfilled = EINA_TRUE;
 
@@ -414,6 +424,17 @@ _efl_loop_future_efl_object_destructor(Eo *obj, Efl_Loop_Future_Data *pd)
 {
    Eo *promise = NULL;
 
+   if (pd->wref)
+     {
+        Eo **wref;
+
+        EINA_INARRAY_FOREACH(pd->wref, wref)
+          *wref = NULL;
+
+        eina_inarray_free(pd->wref);
+        pd->wref = NULL;
+     }
+
    if (!pd->fulfilled)
      {
         ERR("Lost reference to a future without fulfilling it. Forcefully cancelling it.");
@@ -454,23 +475,26 @@ _efl_loop_future_efl_object_destructor(Eo *obj, Efl_Loop_Future_Data *pd)
    efl_unref(pd->loop);
 }
 
-#ifndef NDEBUG
 static void
-_efl_future_wref_add(Eo *obj, Efl_Loop_Future_Data *pd, Eo **wref)
+_efl_future_wref_add(Eo *obj EINA_UNUSED, Efl_Loop_Future_Data *pd, Eo **wref)
 {
-   efl_wref_add(efl_super(obj, EFL_LOOP_FUTURE_CLASS), wref);
+   if (!pd->wref) pd->wref = eina_inarray_new(sizeof (Eo *), 2);
 
-   pd->wref++;
+   eina_inarray_push(pd->wref, wref);
 }
 
 static void
-_efl_future_wref_del(Eo *obj, Efl_Loop_Future_Data *pd, Eo **wref)
+_efl_future_wref_del(Eo *obj EINA_UNUSED, Efl_Loop_Future_Data *pd, Eo **wref)
 {
-   efl_wref_del(efl_super(obj, EFL_LOOP_FUTURE_CLASS), wref);
+   if (!pd->wref) return ;
+   eina_inarray_remove(pd->wref, wref);
 
-   pd->wref--;
+   if (eina_inarray_count(pd->wref) == 0)
+     {
+        eina_inarray_free(pd->wref);
+        pd->wref = NULL;
+     }
 }
-#endif
 
 static Efl_Object *
 _efl_loop_future_efl_object_provider_find(Eo *obj EINA_UNUSED, Efl_Loop_Future_Data *pd, const Efl_Object *klass)
@@ -487,10 +511,8 @@ static Eina_Bool
 _efl_loop_future_class_initializer(Efl_Class *klass)
 {
    EFL_OPS_DEFINE(ops,
-#ifndef NDEBUG
                   EFL_OBJECT_OP_FUNC(efl_wref_add, _efl_future_wref_add),
                   EFL_OBJECT_OP_FUNC(efl_wref_del, _efl_future_wref_del),
-#endif
                   EFL_OBJECT_OP_FUNC(efl_provider_find, _efl_loop_future_efl_object_provider_find),
                   EFL_OBJECT_OP_FUNC(efl_future_then, _efl_loop_future_then),
                   EFL_OBJECT_OP_FUNC(efl_future_cancel, _efl_loop_future_cancel),
