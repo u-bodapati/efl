@@ -153,6 +153,22 @@ group { name: "e/widgets/border/default/border";
             rel2.to: "e.swallow.client";
          }
       }
+      snapshot { "snap";
+         desc {
+            rel1.to: "top";
+            rel1.offset: 0 -6;
+            rel2.to: "e.event.resize.br";
+            //rel2.offset: 9 9;
+            filter.code: "padding_set { 0 } blur { 10, color = '#bbf' }";
+         }
+         clip_to: "snap_clip";
+      }
+      rect { "snap_clip";
+         desc {
+            rel1.to: "top";
+            rel2.to: "e.event.resize.br";
+         }
+      }
       part { name: "client_clip"; type: RECT; mouse_events: 0;
          description { state: "default" 0.0;
             rel1.to_y: "e.swallow.client";
@@ -190,6 +206,7 @@ group { name: "e/widgets/border/default/border";
             fill.smooth: 0;
             TILED_HORIZ(120)
             color_class: "border_frame";
+            color: 255 255 255 64;
          }
          description { state: "focused" 0.0;
             inherit: "default" 0.0;
@@ -205,6 +222,7 @@ group { name: "e/widgets/border/default/border";
             rel1.to: "top";
             rel2.to: "top";
             fill.smooth: 0;
+            color: 255 255 255 64;
          }
       }
 
@@ -527,7 +545,7 @@ group { name: "e/widgets/border/default/border";
       part { name: "bottom"; type: RECT; mouse_events: 0;
          description { state: "default" 0.0;
             color_class: "border_bottom";
-            color: 64 64 64 255;
+            color: 16 16 16 64;
             rel1.relative: 0.0 1.0;
             rel1.offset: 0 -5;
             rel2.relative: 1.0 1.0;
@@ -553,6 +571,7 @@ group { name: "e/widgets/border/default/border";
             rel1.to: "bottom";
             rel2.to: "bottom";
             fill.smooth: 0;
+            color: 255 255 255 64;
          }
          description { state: "shaded" 0.0;
             inherit: "default" 0.0;
