@@ -163,6 +163,26 @@ _eo_signals_efl_del_cb(void *_data EINA_UNUSED, const Efl_Event *event EINA_UNUS
    _eo_signals_cb_flag |= 0x4;
 }
 
+static unsigned int track_count = 0;
+
+static void
+_efl_object_event_callback_track_registered(Eo *obj EINA_UNUSED, void *pd EINA_UNUSED, const Efl_Event_Description *desc)
+{
+   fail_if(desc != EV_A_CHANGED);
+   fail_if(track_count != 0);
+
+   track_count++;
+}
+
+static void
+_efl_object_event_callback_track_unregistered(Eo *obj EINA_UNUSED, void *pd EINA_UNUSED, const Efl_Event_Description *desc)
+{
+   fail_if(desc != EV_A_CHANGED);
+   fail_if(track_count != 1);
+
+   track_count--;
+}
+
 void
 _eo_signals_cb_added_deled(void *data, const Efl_Event *event)
 {
@@ -181,10 +201,20 @@ EFL_CALLBACKS_ARRAY_DEFINE(_eo_signals_callbacks,
 
 START_TEST(eo_signals)
 {
+   Eo *obj;
+   Eina_Bool r;
+
    efl_object_init();
 
-   Eo *obj = efl_add(SIMPLE_CLASS, NULL);
-   Eina_Bool r;
+   EFL_OPS_DEFINE(overrides,
+                  EFL_OBJECT_OP_FUNC(efl_event_callback_track_registered, _efl_object_event_callback_track_registered),
+                  EFL_OBJECT_OP_FUNC(efl_event_callback_track_unregistered, _efl_object_event_callback_track_unregistered));
+
+   efl_event_callback_track(SIMPLE_CLASS, EV_A_CHANGED, EINA_FALSE);
+
+   obj = efl_add(SIMPLE_CLASS, NULL);
+
+   fail_if(!efl_object_override(obj, &overrides));
 
    efl_event_callback_add(obj, EFL_EVENT_CALLBACK_ADD, _eo_signals_cb_added_deled, &_eo_signals_callbacks);
    r = efl_event_callback_add(obj, EFL_EVENT_CALLBACK_DEL, _eo_signals_cb_added_deled, &_eo_signals_callbacks);
