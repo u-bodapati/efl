@@ -162,6 +162,10 @@ struct _Efl_Class
 
    const _Efl_Class **mro;
 
+   /* Which event we are tracking on this class */
+   Eina_Array *track;
+   Eina_Array *track_light;
+
    /* cached object for faster allocation */
    struct {
       Eina_Trash  *trash;
@@ -347,6 +351,8 @@ _efl_unref_internal(_Eo_Object *obj, const char *func_name, const char *file, in
           _efl_ref(obj); /* If we manual free, we keep a phantom ref. */
      }
 }
+
+const _Efl_Class *_efl_class_get(const Efl_Class *eo_id);
 
 Eina_Bool efl_future_init(void);
 Eina_Bool efl_future_shutdown(void);

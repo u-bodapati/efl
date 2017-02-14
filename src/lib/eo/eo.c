@@ -1022,8 +1022,8 @@ err_obj:
    return NULL;
 }
 
-EAPI const char *
-efl_class_name_get(const Efl_Class *eo_id)
+const _Efl_Class *
+_efl_class_get(const Efl_Class *eo_id)
 {
    const _Efl_Class *klass;
 
@@ -1038,12 +1038,22 @@ efl_class_name_get(const Efl_Class *eo_id)
         klass = obj->klass;
         EO_OBJ_DONE(eo_id);
      }
-   return klass->desc->name;
+   return klass;
 
-err_klass:
+ err_klass:
    _EO_POINTER_ERR(eo_id, "Class (%p) is an invalid ref.", eo_id);
 err_obj:
    return NULL;
+}
+
+EAPI const char *
+efl_class_name_get(const Efl_Class *eo_id)
+{
+   const _Efl_Class *klass;
+
+   klass = _efl_class_get(eo_id);
+   if (EINA_UNLIKELY(!klass)) return NULL;
+   return klass->desc->name;
 }
 
 static void

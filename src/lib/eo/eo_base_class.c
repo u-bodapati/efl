@@ -44,8 +44,10 @@ typedef struct
    Eina_Inlist               *current;
 
    Efl_Event_Callback_Frame  *event_frame;
+   unsigned int              *track_counter;
    Eo_Callback_Description  **callbacks;
    unsigned int               callbacks_count;
+   unsigned int               track_counter_count;
 
    unsigned short             event_freeze_count;
 #ifdef EFL_EVENT_SPECIAL_SKIP
@@ -1163,6 +1165,88 @@ _efl_event_generation(Efl_Object_Data *pd)
    return ((Efl_Event_Callback_Frame*)pd->event_frame)->generation;
 }
 
+static void
+_efl_object_event_track_check_add(Eo *obj,
+                                  Efl_Object_Data *pd,
+                                  const Efl_Callback_Array_Item *array)
+{
+   _Efl_Class *klass = (_Efl_Class *) _efl_class_get(obj);
+   unsigned int i;
+
+   if (EINA_LIKELY(!klass || (!klass->track && !klass->track_light))) return ;
+
+   for (i = 0; array[i].desc != NULL; i++)
+     {
+        const Efl_Event_Description *desc;
+        Eina_Array_Iterator iterator;
+        unsigned int        j;
+
+        EINA_ARRAY_ITER_NEXT(klass->track, j, desc, iterator)
+          if (array[i].desc == desc)
+            {
+               if (pd->track_counter_count <= j)
+                 {
+                    pd->track_counter = realloc(pd->track_counter,
+                                                sizeof (unsigned int) * (eina_array_count(klass->track)));
+                    bzero(pd->track_counter + pd->track_counter_count,
+                          sizeof (unsigned int) * (eina_array_count(klass->track) - pd->track_counter_count));
+                    pd->track_counter_count = eina_array_count(klass->track);
+                 }
+               if (pd->track_counter[j] == 0)
+                 efl_event_callback_track_registered(obj, desc);
+               pd->track_counter[j]++;
+               break ;
+            }
+
+        EINA_ARRAY_ITER_NEXT(klass->track_light, j, desc, iterator)
+          if (array[i].desc == desc)
+            {
+               efl_event_callback_track_registered(obj, desc);
+               break ;
+            }
+     }
+}
+
+static void
+_efl_object_event_track_check_del(Eo *obj,
+                                  Efl_Object_Data *pd,
+                                  const Efl_Callback_Array_Item *array)
+{
+   _Efl_Class *klass = (_Efl_Class *) _efl_class_get(obj);
+   unsigned int i;
+
+   if (EINA_LIKELY(!klass || !klass->track)) return ;
+
+   for (i = 0; array[i].desc != NULL; i++)
+     {
+        const Efl_Event_Description *desc;
+        Eina_Array_Iterator iterator;
+        unsigned int        j;
+
+        EINA_ARRAY_ITER_NEXT(klass->track, j, desc, iterator)
+          if (array[i].desc == desc)
+            {
+               if (pd->track_counter_count <= j) break ;
+               pd->track_counter[j]--;
+               if (pd->track_counter[j] == 0)
+                 efl_event_callback_track_unregistered(obj, desc);
+
+               for (j = 0; j < pd->track_counter_count; j++)
+                 if (pd->track_counter[j] != 0)
+                   break ;
+
+               if (j == pd->track_counter_count)
+                 {
+                    free(pd->track_counter);
+                    pd->track_counter = NULL;
+                    pd->track_counter_count = 0;
+                 }
+
+               break ;
+            }
+     }
+}
+
 EOLIAN static Eina_Bool
 _efl_object_event_callback_priority_add(Eo *obj, Efl_Object_Data *pd,
                                         const Efl_Event_Description *desc,
@@ -1187,6 +1271,8 @@ _efl_object_event_callback_priority_add(Eo *obj, Efl_Object_Data *pd,
    _special_event_count_inc(pd, &(cb->items.item));
 #endif
 
+   _efl_object_event_track_check_add(obj, pd, arr);
+
    efl_event_callback_call(obj, EFL_EVENT_CALLBACK_ADD, (void *)arr);
 
    return EINA_TRUE;
@@ -1207,6 +1293,8 @@ _efl_object_event_callback_clean(Eo *obj, Efl_Object_Data *pd,
      pd->need_cleaning = EINA_TRUE;
    else
      _eo_callback_remove(pd, cb);
+
+   _efl_object_event_track_check_del(obj, pd, array);
 
    efl_event_callback_call(obj, EFL_EVENT_CALLBACK_DEL, (void *)array);
 }
@@ -1281,6 +1369,8 @@ _efl_object_event_callback_array_priority_add(Eo *obj, Efl_Object_Data *pd,
    for (it = cb->items.item_array; it->func; it++)
      _special_event_count_inc(pd, it);
 #endif
+
+   _efl_object_event_track_check_add(obj, pd, array);
 
    efl_event_callback_call(obj, EFL_EVENT_CALLBACK_ADD, (void *)array);
 
@@ -1900,6 +1990,33 @@ _efl_object_future_link(Eo *obj EINA_UNUSED, Efl_Object_Data *pd, Efl_Future *li
 
    ext->futures = eina_list_append(ext->futures, link);
    return !!efl_future_then(link, _efl_object_future_link_tracking_end, _efl_object_future_link_tracking_end, NULL, obj);
+}
+
+static void
+_efl_object_event_callback_track(Eo *klass, void *pd EINA_UNUSED, const Efl_Event_Description *desc, Eina_Bool light)
+{
+   _Efl_Class *kd = (_Efl_Class *) _efl_class_get(klass);
+   const Efl_Event_Description *d;
+   Eina_Array *tracks;
+   Eina_Array_Iterator iterator;
+   unsigned int i;
+
+   if (!light)
+     {
+        if (!kd->track) kd->track = eina_array_new(2);
+        tracks = kd->track;
+     }
+   else
+     {
+        if (!kd->track_light) kd->track_light = eina_array_new(2);
+        tracks = kd->track_light;
+     }
+   if (!tracks) return ;
+
+   EINA_ARRAY_ITER_NEXT(tracks, i, d, iterator)
+     if (desc == d) return ;
+
+   eina_array_push(tracks, desc);
 }
 
 #include "efl_object.eo.c"

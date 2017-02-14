@@ -418,6 +418,28 @@ abstract Efl.Object ()
             @in new_obj: Efl.Object; [[The object to emit events from]]
          }
       }
+      event_callback_track @class {
+         [[Track and trigger @.event_callback_track_registered and @.event_callback_track_unregistered
+         when there is at least one callback registered.]]
+         params {
+            @in desc: ptr(const(Efl.Event.Description)); [[The description of the event to track]]
+	    @in light: bool; [[When $true will only notify when there is a registration of desc.]]
+         }
+      }
+      event_callback_track_registered {
+         [[Function called when the first callback of desc is registered as tracked by
+         @.event_callback_track]]
+         params {
+            @in desc: ptr(const(Efl.Event.Description)); [[The description of the tracked event]]
+         }
+      }
+      event_callback_track_unregistered {
+         [[Function called when the last callback of desc is unregistered as tracked by
+         @.event_callback_track]]
+         params {
+            @in desc: ptr(const(Efl.Event.Description)); [[The description of the tracked event]]
+         }
+      }
       dbg_info_get {
          [[Get debug information from the object.]]
          params {
@@ -472,6 +494,8 @@ abstract Efl.Object ()
    implements {
         class.constructor;
         class.destructor;
+        @empty .event_callback_track_registered;
+        @empty .event_callback_track_unregistered;
    }
    events {
       callback,add @hot; [[A callback was added.]]
