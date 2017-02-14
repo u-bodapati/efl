@@ -187,7 +187,10 @@ _efl_canvas_object_efl_object_constructor(Eo *eo_obj, Evas_Object_Protected_Data
    obj->mask = eina_cow_alloc(evas_object_mask_cow);
 
    evas_object_inject(eo_obj, obj, evas);
-   evas_object_callback_init(eo_obj, obj);
+
+   // Ideally this should be called by inheritance during the children class creation
+   // Sadly Eo doesn't seems to provide this for class constructor.
+   evas_object_callback_init(eo_obj);
 
    return eo_obj;
 }

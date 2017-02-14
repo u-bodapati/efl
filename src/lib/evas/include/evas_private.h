@@ -1173,7 +1173,6 @@ struct _Evas_Object_Protected_Data
 
    unsigned int                ref;
 
-   unsigned int                animator_ref;
    uint64_t                    callback_mask;
 
    unsigned char               no_change_render;
@@ -1631,7 +1630,7 @@ void evas_object_clip_across_check(Evas_Object *obj, Evas_Object_Protected_Data 
 void evas_object_clip_across_clippees_check(Evas_Object *obj, Evas_Object_Protected_Data *pd);
 void evas_object_mapped_clip_across_mark(Evas_Object *obj, Evas_Object_Protected_Data *pd);
 void evas_event_callback_call(Evas *e, Evas_Callback_Type type, void *event_info);
-void evas_object_callback_init(Efl_Canvas_Object *eo_obj, Evas_Object_Protected_Data *obj);
+void evas_object_callback_init(Efl_Class *klass);
 void evas_object_event_callback_call(Evas_Object *obj, Evas_Object_Protected_Data *pd, Evas_Callback_Type type, void *event_info, int event_id, const Efl_Event_Description *efl_event_desc);
 Eina_List *evas_event_objects_event_list(Evas *e, Evas_Object *stop, int x, int y);
 int evas_mem_free(int mem_required);

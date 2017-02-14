@@ -627,6 +627,8 @@ abstract Efl.Canvas.Object (Efl.Object, Efl.Gfx, Efl.Gfx.Stack, Efl.Animator,
       Efl.Object.event_callback_legacy_call;
       Efl.Object.event_callback_call;
       Efl.Object.provider_find;
+      Efl.Object.event_callback_track_registered;
+      Efl.Object.event_callback_track_unregistered;
       Efl.Gfx.visible { get; set; }
       Efl.Gfx.color { get; set; }
       Efl.Gfx.color_part { get; set; }
