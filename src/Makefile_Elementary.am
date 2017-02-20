@@ -118,6 +118,7 @@ elm_public_eolian_files = \
 	lib/elementary/efl_config_global.eo \
 	lib/elementary/efl_ui_clock.eo \
 	lib/elementary/efl_ui_image_factory.eo \
+	lib/elementary/elm_scrollpager.eo \
 	$(NULL)
 
 # Private classes (not exposed or shipped)
@@ -280,7 +281,9 @@ includesunstable_HEADERS = \
 	lib/elementary/elm_code_indent.h \
 	lib/elementary/elm_code_file.h \
 	lib/elementary/elm_code_parse.h \
-	lib/elementary/elm_code_syntax.h
+	lib/elementary/elm_code_syntax.h \
+	lib/elementary/elm_widget_scrollpager.h
+
 includesunstabledir = $(includedir)/elementary-@VMAJ@
 
 nodist_includesunstable_HEADERS = \
@@ -523,6 +526,8 @@ includesub_HEADERS = \
 	lib/elementary/elm_win_standard.h \
 	lib/elementary/elm_helper.h \
 	lib/elementary/elm_part_helper.h \
+	lib/elementary/elm_scrollpager.h \
+	lib/elementary/elm_scrollpager_eo.h \
 	$(NULL)
 
 includesubdir = $(includedir)/elementary-@VMAJ@/
@@ -669,6 +674,7 @@ lib_elementary_libelementary_la_SOURCES = \
 	lib/elementary/efl_ui_clock.c \
 	lib/elementary/efl_ui_clock_private.h \
 	lib/elementary/efl_ui_image_factory.c \
+	lib/elementary/elm_scrollpager.c \
 	$(NULL)
 
 

@@ -1,0 +1,32 @@
+group { name: "elm/scrollpager/base/default";
+   parts {
+      rect { "bg";
+         desc { "default";
+            visible: 0;
+         }
+      }
+      swallow { "elm.swallow.content";
+         desc { "default";
+         }
+      }
+      swallow { "indicator";
+         desc { "default";
+            rel1.relative: 0.5 0.05;
+            rel2.relative: 0.5 0.05;
+         }
+      }
+   }
+}
+
+group { name: "elm/scrollpager/page/default";
+   parts {
+      swallow { "rect";
+         desc { "default";
+         }
+      }
+      swallow { "elm.swallow.content";
+         desc { "default";
+         }
+      }
+   }
+}

@@ -1,0 +1,19 @@
+class Elm.Scrollpager (Elm.Layout)
+{
+   [[Elementary scrollpager class]]
+   event_prefix: elm_scrollpager;
+   methods {
+      item_append {
+         [[Append item to the scrollpager]]
+         legacy: null;
+         params {
+            @in item: Efl.Canvas.Object; [[The item]]
+         }
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Canvas.Group.group_add;
+      Efl.Gfx.size { set; }
+   }
+}
