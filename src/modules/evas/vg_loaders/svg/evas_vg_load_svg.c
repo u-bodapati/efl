@@ -147,11 +147,18 @@ _gradient_to_double(const char *str, SVG_Parser_Length_Type type)
         return parsed_value;
      }
 
+   /**
+    * That is according to Units in here
+    *
+    * https://www.w3.org/TR/2015/WD-SVG2-20150915/coords.html
+    */
    if (type == SVG_PARSER_LENGTH_VERTICAL)
      max = svg_parse.global.height;
    else if (type == SVG_PARSER_LENGTH_HORIZONTAL)
      max = svg_parse.global.width;
-   //TODO: what about radial?
+   else if (type == SVG_PARSER_LENGTH_OTHER)
+     max = sqrt(pow(svg_parse.global.height, 2) +
+                pow(svg_parse.global.width, 2)) / sqrt(2.0);
 
    if (strstr(str, "cm"))
      parsed_value = parsed_value * 35.43307;
@@ -171,7 +178,7 @@ _gradient_to_double(const char *str, SVG_Parser_Length_Type type)
    return parsed_value;
 }
 
-static inline int
+static inline double
 _to_offset(const char *str)
 {
    char *end = NULL;
@@ -1147,7 +1154,7 @@ _create_circle_node(Svg_Node *parent, const char *buf, unsigned buflen)
 }
 
 #define ELLIPSE_DEF(Name, Field, Type)       \
-  { #Name, Type, sizeof (#Name) + sizeof (Type), offsetof(Svg_Ellipse_Node, Field)}
+  { #Name, Type, sizeof (#Name), offsetof(Svg_Ellipse_Node, Field)}
 
 static const struct {
    const char *tag;
@@ -1292,7 +1299,7 @@ _create_polyline_node(Svg_Node *parent, const char *buf, unsigned buflen)
 }
 
 #define RECT_DEF(Name, Field, Type)       \
-  { #Name, Type, sizeof (#Name) + sizeof(Type), offsetof(Svg_Rect_Node, Field)}
+  { #Name, Type, sizeof (#Name), offsetof(Svg_Rect_Node, Field)}
 
 static const struct {
    const char *tag;
@@ -1358,7 +1365,7 @@ _create_rect_node(Svg_Node *parent, const char *buf, unsigned buflen)
 }
 
 #define LINE_DEF(Name, Field, Type)       \
-  { #Name, Type, sizeof (#Name) + sizeof (Type), offsetof(Svg_Line_Node, Field)}
+  { #Name, Type, sizeof (#Name), offsetof(Svg_Line_Node, Field)}
 
 static const struct {
    const char *tag;
@@ -1680,7 +1687,7 @@ _parse_spread_value(const char *value)
 static void
 _handle_radial_cx_attr(Svg_Radial_Gradient* radial, const char *value)
 {
-   radial->cx = _to_double(value, SVG_PARSER_LENGTH_HORIZONTAL);
+   radial->cx = _gradient_to_double(value, SVG_PARSER_LENGTH_HORIZONTAL);
    if (!svg_parse.gradient.fx_parsed)
      radial->fx = radial->cx;
 }
@@ -1688,7 +1695,7 @@ _handle_radial_cx_attr(Svg_Radial_Gradient* radial, const char *value)
 static void
 _handle_radial_cy_attr(Svg_Radial_Gradient* radial, const char *value)
 {
-   radial->cy = _to_double(value, SVG_PARSER_LENGTH_VERTICAL);
+   radial->cy = _gradient_to_double(value, SVG_PARSER_LENGTH_VERTICAL);
    if (!svg_parse.gradient.fy_parsed)
      radial->fy = radial->cy;
 }
@@ -1696,23 +1703,22 @@ _handle_radial_cy_attr(Svg_Radial_Gradient* radial, const char *value)
 static void
 _handle_radial_fx_attr(Svg_Radial_Gradient* radial, const char *value)
 {
-   radial->fx = _to_double(value, SVG_PARSER_LENGTH_HORIZONTAL);
+   radial->fx = _gradient_to_double(value, SVG_PARSER_LENGTH_HORIZONTAL);
    svg_parse.gradient.fx_parsed = EINA_TRUE;
 }
 
 static void
 _handle_radial_fy_attr(Svg_Radial_Gradient* radial, const char *value)
 {
-   radial->fy = _to_double(value, SVG_PARSER_LENGTH_VERTICAL);
+   radial->fy = _gradient_to_double(value, SVG_PARSER_LENGTH_VERTICAL);
    svg_parse.gradient.fy_parsed = EINA_TRUE;
 }
 
 static void
 _handle_radial_r_attr(Svg_Radial_Gradient* radial, const char *value)
 {
-   radial->r = _to_double(value, SVG_PARSER_LENGTH_OTHER);
+   radial->r = _gradient_to_double(value, SVG_PARSER_LENGTH_OTHER);
 }
-
 
 typedef void (*Radial_Method)(Svg_Radial_Gradient *radial, const char *value);
 
@@ -1758,9 +1764,9 @@ _attr_parse_radial_gradient_node(void *data, const char *key, const char *value)
      {
         grad->ref = _id_from_href(value);
      }
-   else if (!strcmp(key, "gradientUnits") && !strcmp(value, "userSpaceOnUse"))
+   else if (!strcmp(key, "gradientUnits") && !strcmp(value, "objectBoundingBox"))
      {
-        grad->user_space = EINA_TRUE;
+        grad->user_space = EINA_FALSE;
      }
 
    return EINA_TRUE;
@@ -1772,6 +1778,7 @@ _create_radialGradient(const char *buf, unsigned buflen)
    Svg_Style_Gradient *grad = calloc(1, sizeof(Svg_Style_Gradient));
 
    grad->type = SVG_RADIAL_GRADIENT;
+   grad->user_space = EINA_TRUE;
    grad->radial = calloc(1, sizeof(Svg_Radial_Gradient));
 
    svg_parse.gradient.fx_parsed = EINA_FALSE;
@@ -1936,7 +1943,7 @@ _attr_parse_linear_gradient_node(void *data, const char *key, const char *value)
      {
         grad->ref = _id_from_href(value);
      }
-   else if (!strcmp(key, "gradientUnits") && !strcmp(value, "userSpaceOnUse"))
+   else if (!strcmp(key, "gradientUnits") && !strcmp(value, "objectBoundingBox"))
      {
         grad->user_space = EINA_TRUE;
      }
@@ -1951,6 +1958,7 @@ _create_linearGradient(const char *buf, unsigned buflen)
    unsigned int i;
 
    grad->type = SVG_LINEAR_GRADIENT;
+   grad->user_space = EINA_TRUE;
    grad->linear = calloc(1, sizeof(Svg_Linear_Gradient));
    /**
     * Default value of x2 is 100%
