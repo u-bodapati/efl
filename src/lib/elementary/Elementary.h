@@ -251,6 +251,7 @@ EAPI extern Elm_Version *elm_version;
 #include <elm_win.h>
 #include <elm_win_standard.h>
 #include <elm_scrollpager.h>
+#include <efl_ui_pagecontrol.h>
 
 #ifdef EFL_EO_API_SUPPORT
 # include <efl_config_global.eo.h>
