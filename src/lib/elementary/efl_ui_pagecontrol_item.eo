@@ -1,0 +1,5 @@
+class Efl.Ui.Pagecontrol.Item(Elm.Widget.Item)
+{
+   [[Elementary pagecontrol item class]]
+   event_prefix: efl_ui_pagecontrol_item;
+}

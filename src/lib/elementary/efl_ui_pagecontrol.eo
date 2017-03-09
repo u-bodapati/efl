@@ -21,6 +21,9 @@ class Efl.Ui.Pagecontrol (Elm.Widget, Efl.Pack.Linear)
             effect: Efl.Ui.Pagecontrol.Effect; [[Transition effect]]
          }
       }
+      done {
+         [[Temporary method: Show the pages]]
+      }
    }
    implements {
       Efl.Object.constructor;

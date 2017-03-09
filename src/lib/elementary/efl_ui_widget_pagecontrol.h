@@ -4,9 +4,28 @@
 
 #include "Elementary.h"
 
+
+typedef struct _Efl_Ui_Pagecontrol_Item_Data
+{
+   Evas_Object          *object;
+   int                   index;
+} Efl_Ui_Pagecontrol_Item_Data;
+
+typedef struct _Page_Info
+{
+   int                   id;           // Identifier
+   Evas_Coord            x, y, w, h;   // Geometry
+   Evas_Coord            px, py, pz;   // Map perspective
+   Evas_Coord            cx, cy, cz;   // Map rotation center
+   double                dx, dy, dz;   // Map rotation
+
+} Page_Info;
+
 typedef struct _Efl_Ui_Pagecontrol_Data
 {
    Eina_List            *content_list;
+   Eina_List		*items;
+   Eina_List            *page_info;
    Evas_Object          *event;
    Evas_Object          *foreclip, *backclip, *invis;
    Evas_Object          *mydata;
@@ -14,24 +33,40 @@ typedef struct _Efl_Ui_Pagecontrol_Data
    Ecore_Animator       *animator;
    Ecore_Job            *job;
 
-   void (*func[3])(Evas_Object *, Evas_Object *, Evas_Object *, double);
+   void                 (*func[3])(Evas_Object *, Evas_Object *, Evas_Object *, double);
 
    Evas_Coord            x, y, w, h;
    Evas_Coord            mouse_x, mouse_y;
    Evas_Coord            mouse_down_x, mouse_down_y;
 
+   struct {
+      Evas_Object       *clip;
+      Evas_Coord         x, y, w, h;
+   } viewport;
+
+   struct {
+      Evas_Coord         x, y;
+      int                page;
+      double             ratio;
+      Eina_Bool          enabled;
+   } mouse_down;
+
    Efl_Ui_Pagecontrol_Effect effect;
+   int                   num_of_pages;
    int                   cnt;
-   int                   cur_page;
    int                   dir;
-   double                t;
+   int                   page;
+   double                ratio;
 
    Eina_Bool             move_started : 1;
-   Eina_Bool             mouse_down : 1;
+   Eina_Bool             map_enabled : 1;
 
 } Efl_Ui_Pagecontrol_Data;
 
 #define EFL_UI_PAGECONTROL_DATA_GET(o, sd) \
    Efl_Ui_Pagecontrol_Data *sd = efl_data_scope_get(o, EFL_UI_PAGECONTROL_CLASS)
+
+#define EFL_UI_PAGECONTROL_ITEM_DATA_GET(o, sd) \
+   Efl_Ui_Pagecontrol_Item_Data *sd = efl_data_scope_get(o, EFL_UI_PAGECONTROL_ITEM_CLASS)
 
 #endif

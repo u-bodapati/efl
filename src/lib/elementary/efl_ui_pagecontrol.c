@@ -99,6 +99,7 @@ _cube_effect(Evas_Object *obj, Evas_Object *o1, Evas_Object *o2, double t)
    evas_map_util_3d_perspective(mf, px, py, 0, foc);
    evas_object_map_set(o1, mf);
    evas_object_map_enable_set(o1, EINA_TRUE);
+
    if (evas_map_util_clockwise_get(mf)) evas_object_show(sd->foreclip);
    else evas_object_hide(sd->foreclip);
 
@@ -106,6 +107,7 @@ _cube_effect(Evas_Object *obj, Evas_Object *o1, Evas_Object *o2, double t)
    evas_map_util_3d_perspective(mb, px, py, 0, foc);
    evas_object_map_set(o2, mb);
    evas_object_map_enable_set(o2, EINA_TRUE);
+
    if (evas_map_util_clockwise_get(mb)) evas_object_show(sd->backclip);
    else evas_object_hide(sd->backclip);
 
@@ -118,13 +120,13 @@ _page_update(Evas_Object *obj, int page, double t)
 {
    EFL_UI_PAGECONTROL_DATA_GET(obj, sd);
 
-   //1. pick two pages and put them into clippers
-   int p1 = page;
-   int p2 = (page + 1 + sd->cnt) % sd->cnt;
-   ERR("page %d %d", p1, p2);
-
    Evas_Object *o1, *o2, *tmp;
-   int i;
+   int p1, p2, i;
+
+   // pick two pages and put them into clippers
+   p1 = page;
+   p2 = (page + 1 + sd->cnt) % sd->cnt;
+
    for (i = 0; i < sd->cnt; i++)
      {
         if (i == p1)
@@ -153,28 +155,60 @@ _update_job(void *data)
    Evas_Object *obj = data;
    EFL_UI_PAGECONTROL_DATA_GET(obj, sd);
 
-   double t;
+   double t, ratio;
+   int page;
 
    sd->job = NULL;
 
-   //1. calculate rotation factor t based on mouse position
+   // calculate t based on mouse position
    if (sd->dir == 0 || sd->dir == 1)
-     t = ((double)sd->mouse_down_x - (double)sd->mouse_x) / (double)sd->w;
+     t = ((double)sd->mouse_down.x - (double)sd->mouse_x) / (double)sd->w;
    else if (sd->dir == 2 || sd->dir == 3)
-     t = ((double)sd->mouse_down_y - (double)sd->mouse_y) / (double)sd->h;
+     t = ((double)sd->mouse_down.y - (double)sd->mouse_y) / (double)sd->h;
 
    if (t > 1.0) t = 1.0;
    if (t < -1.0) t = -1.0;
 
-   double rel = sd->t + t;
-   rel += (double) sd->cnt;
-   int page = (int) rel;
-   double ratio = rel - (double) page;
+   t += sd->mouse_down.ratio;
+   t += (double) sd->cnt;
+   page = (int) t;
+   ratio = t - (double) page;
    page = page % sd->cnt;
 
-   ERR("page %d ratio %lf", page, ratio);
+   sd->page = (sd->mouse_down.page + page) % sd->cnt;
+   sd->ratio = ratio;
 
-   _page_update(obj, page, ratio);
+   ERR("%d %lf", sd->page, sd->ratio);
+   _page_update(obj, sd->page, sd->ratio);
+}
+
+static Eina_Bool
+_anim(void *data, double pos)
+{
+   Evas_Object *obj = data;
+   EFL_UI_PAGECONTROL_DATA_GET(obj, sd);
+   double p;
+
+   p = ecore_animator_pos_map(pos, ECORE_POS_MAP_ACCELERATE, 0.0, 0.0);
+
+   if (sd->ratio < 0.5)
+     sd->ratio = sd->ratio * (1 - p);
+   else
+     sd->ratio = 1 - (1 - sd->ratio) * (1 - p);
+
+   ERR("%d %.2lf", sd->page, sd->ratio);
+   _page_update(obj, sd->page, sd->ratio);
+
+   if (pos < 1.0) return ECORE_CALLBACK_RENEW;
+
+   if (sd->ratio == 1.0)
+     {
+        sd->page += 1;
+        sd->ratio = 0.0;
+     }
+
+   sd->animator = NULL;
+   return ECORE_CALLBACK_CANCEL;
 }
 
 static void
@@ -193,12 +227,16 @@ _mouse_down_cb(void *data,
    ELM_SAFE_FREE(sd->animator, ecore_animator_del);
 
    sd->move_started = EINA_FALSE;
-   sd->mouse_down = EINA_TRUE;
+   sd->mouse_down.enabled = EINA_TRUE;
 
    sd->mouse_x = ev->canvas.x - sd->x;
    sd->mouse_y = ev->canvas.y - sd->y;
-   sd->mouse_down_x = sd->mouse_x;
-   sd->mouse_down_y = sd->mouse_y;
+   sd->mouse_down.x = sd->mouse_x;
+   sd->mouse_down.y = sd->mouse_y;
+
+   sd->mouse_down.page = sd->page;
+   sd->mouse_down.ratio = sd->ratio;
+   //ERR("%d %.2lf", sd->mouse_down.page, sd->mouse_down.ratio);
 }
 
 static void
@@ -211,35 +249,26 @@ _mouse_up_cb(void *data,
    Evas_Object *pc = data;
    EFL_UI_PAGECONTROL_DATA_GET(pc, sd);
 
-   double t;
-
    if (ev->event_flags & EVAS_EVENT_FLAG_ON_HOLD) return;
-   if (!sd->mouse_down) return;
+   if (!sd->mouse_down.enabled) return;
 
-   sd->mouse_down = EINA_FALSE;
-   if (!sd->move_started) return;
+   sd->mouse_down.enabled = EINA_FALSE;
+   //if (!sd->move_started) return;
 
    ELM_SAFE_FREE(sd->job, ecore_job_del);
 
-   sd->mouse_x = ev->canvas.x - sd->x;
-   sd->mouse_y = ev->canvas.y - sd->y;
+   double time;
+   if (sd->ratio < 0.5) //target = first;
+      time = sd->ratio;
+   else //target = second;
+      time = 1 - sd->ratio;
 
-   //1. calculate rotation factor t based on mouse position
-   if (sd->dir == 0 || sd->dir == 1)
-     t = ((double)sd->mouse_down_x - (double)sd->mouse_x) / (double)sd->w;
-   else if (sd->dir == 2 || sd->dir == 3)
-     t = ((double)sd->mouse_down_y - (double)sd->mouse_y) / (double)sd->h;
-
-   if (t > 1.0) t = 1.0;
-   if (t < -1.0) t = -1.0;
-
-   sd->t += t;
-
-   if (sd->t < 0) sd->t += (double) sd->cnt;
-
-   //condition check
+   if (time < 0.01) time = 0.01;
+   else if (time > 0.99) time = 0.99;
 
    //animation
+   ecore_animator_del(sd->animator);
+   sd->animator = ecore_animator_timeline_add(time, _anim, pc);
 }
 
 static void
@@ -253,7 +282,7 @@ _mouse_move_cb(void *data,
    EFL_UI_PAGECONTROL_DATA_GET(pc, sd);
 
    if (ev->event_flags & EVAS_EVENT_FLAG_ON_HOLD) return;
-   if (!sd->mouse_down) return;
+   if (!sd->mouse_down.enabled) return;
 
    sd->mouse_x = ev->cur.canvas.x - sd->x;
    sd->mouse_y = ev->cur.canvas.y - sd->y;
@@ -262,8 +291,8 @@ _mouse_move_cb(void *data,
      {
         //direction decision
         Evas_Coord dx, dy;
-        dx = sd->mouse_x - sd->mouse_down_x;
-        dy = sd->mouse_y - sd->mouse_down_y;
+        dx = sd->mouse_x - sd->mouse_down.x;
+        dy = sd->mouse_y - sd->mouse_down.y;
 
         if (((dx * dx) + (dy * dy)) <=
             (_elm_config->finger_size * _elm_config->finger_size / 4))
@@ -299,6 +328,43 @@ _event_handler_create(Eo *obj, Efl_Ui_Pagecontrol_Data *sd)
    evas_object_event_callback_add(sd->event, EVAS_CALLBACK_MOUSE_MOVE, _mouse_move_cb, obj);
 }
 
+static void
+_page_info_set(Page_Info *p,
+               double dx, double dy, double dz,
+               Evas_Coord cx, Evas_Coord cy, Evas_Coord cz,
+               Evas_Coord px, Evas_Coord py, Evas_Coord pz)
+{
+   p->cx = cx;
+   p->cy = cy;
+   p->cz = cz;
+
+   p->dx = dx;
+   p->dy = dy;
+   p->dz = dz;
+
+   p->px = px;
+   p->py = py;
+   p->pz = pz;
+}
+
+static void
+_page_info_init(Efl_Ui_Pagecontrol_Data *sd)
+{
+   Page_Info *p;
+   int i;
+
+   //
+   sd->num_of_pages = 5;
+   sd->map_enabled = EINA_TRUE;
+   //
+
+   for(i = 0; i < sd->num_of_pages; i++)
+     {
+        p = malloc(sizeof(Page_Info));
+        sd->page_info = eina_list_append(sd->page_info, p);
+     }
+}
+
 EOLIAN static void
 _efl_ui_pagecontrol_efl_canvas_group_group_add(Eo *obj,
                                                Efl_Ui_Pagecontrol_Data *sd)
@@ -308,6 +374,7 @@ _efl_ui_pagecontrol_efl_canvas_group_group_add(Eo *obj,
    efl_canvas_group_add(efl_super(obj, MY_CLASS));
    elm_widget_sub_object_parent_add(obj);
 
+   //FIXME start
    sd->foreclip = evas_object_rectangle_add(evas_object_evas_get(obj));
    evas_object_static_clip_set(sd->foreclip, EINA_TRUE);
    efl_gfx_visible_set(sd->foreclip, EINA_TRUE);
@@ -317,14 +384,21 @@ _efl_ui_pagecontrol_efl_canvas_group_group_add(Eo *obj,
 
    sd->invis = evas_object_rectangle_add(evas_object_evas_get(obj));
    evas_object_static_clip_set(sd->invis, EINA_TRUE);
+   //FIXME finish
+
+   sd->viewport.clip = evas_object_rectangle_add(evas_object_evas_get(obj));
+   evas_object_static_clip_set(sd->viewport.clip, EINA_TRUE);
 
    _event_handler_create(obj, sd);
 
+   _page_info_init(sd);
+
    sd->cnt = 0;
-   sd->cur_page = -1;
-   sd->t = 0;
+   sd->page = -1;
+   sd->ratio = 0.0;
 
    sd->effect = 0;
+   //sd->effect = 1;
 
    //function initialization
    sd->func[0] = _scroll_effect;
@@ -348,6 +422,7 @@ _efl_ui_pagecontrol_efl_gfx_size_set(Eo *obj,
 {
    Eina_List *l;
    Evas_Object *subobj;
+   Page_Info *p;
 
    efl_gfx_size_set(efl_super(obj, MY_CLASS), w, h);
 
@@ -359,10 +434,23 @@ _efl_ui_pagecontrol_efl_gfx_size_set(Eo *obj,
    efl_gfx_size_set(sd->invis, w, h);
    efl_gfx_size_set(sd->event, w, h);
 
+   // Set viewport size
+   efl_gfx_size_set(sd->viewport.clip, w, h);
+   //
+
    EINA_LIST_FOREACH(sd->content_list, l, subobj)
      {
         efl_gfx_size_set(subobj, w, h);
      }
+
+   // Page Info Setting
+   // 1. center
+   p = eina_list_nth(sd->page_info, 2);
+   _page_info_set(p, 0, 60, 0, w/2, h/2, 0, w/2, h/2, 0);
+
+   p = eina_list_nth(sd->page_info, 1);
+   //p->cx = 
+
 }
 
 EOLIAN static void
@@ -380,6 +468,10 @@ _efl_ui_pagecontrol_efl_gfx_position_set(Eo *obj,
    efl_gfx_position_set(sd->backclip, x, y);
    efl_gfx_position_set(sd->invis, x, y);
    efl_gfx_position_set(sd->event, x, y);
+
+   // Set viewport size
+   efl_gfx_position_set(sd->viewport.clip, x, y);
+   //
 }
 
 EOLIAN static int
@@ -398,16 +490,25 @@ _efl_ui_pagecontrol_efl_pack_linear_pack_end(Eo *obj,
    if (pd->cnt == 0)
      {
         evas_object_clip_set(subobj, pd->foreclip);
-        pd->cur_page = 0;
+        pd->page = 0;
      }
    else
      evas_object_clip_set(subobj, pd->invis);
 
    pd->cnt += 1;
 
+   // FIXME
    pd->content_list = eina_list_append(pd->content_list, subobj);
    efl_gfx_size_set(subobj, pd->w, pd->h);
    efl_gfx_stack_raise(pd->event);
+   //
+
+   Eo *eo_it = efl_add(ELM_GENLIST_ITEM_CLASS, obj);
+   EFL_UI_PAGECONTROL_ITEM_DATA_GET(eo_it, it);
+   it->index = pd->cnt;
+   it->object = subobj;
+   
+   pd->items = eina_list_append(pd->items, eo_it);
 
    return EINA_TRUE;
 }
@@ -442,4 +543,12 @@ _efl_ui_pagecontrol_transition_effect_get(Eo *obj,
    return 0;
 }
 
+EOLIAN static void
+_efl_ui_pagecontrol_done(Eo *obj,
+                         Efl_Ui_Pagecontrol_Data *pd)
+{
+}
+
 #include "efl_ui_pagecontrol.eo.c"
+#include "efl_ui_pagecontrol_item.eo.c"
+
