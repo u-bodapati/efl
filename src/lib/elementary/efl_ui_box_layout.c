@@ -4,6 +4,7 @@
 
 // FIXME: Aspect support is not implemented
 // FIXME: handle RTL? just invert the horizontal order?
+// FIXME: Homogenous mode? (for performance and convenience)
 
 typedef struct _Item_Calc Item_Calc;
 

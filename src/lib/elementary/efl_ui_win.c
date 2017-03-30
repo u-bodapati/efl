@@ -1801,88 +1801,86 @@ EFL_CALLBACKS_ARRAY_DEFINE(_elm_win_evas_feed_fake_callbacks,
 { EFL_EVENT_KEY_UP, _evas_event_key_feed_fake_cb })
 
 static void
-_elm_win_evas_render_post(void *data,
-                          Evas *e EINA_UNUSED,
-                          Evas_Object *obj EINA_UNUSED,
-                          void *event_info)
+_elm_win_evas_render_post(void *data, Evas *e EINA_UNUSED, void *event_info)
 {
    Efl_Gfx_Event_Render_Post *ev = event_info;
    Eo *win = data;
 
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_RENDER_POST, ev);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_RENDER_POST, ev);
 }
 
 static void
-_elm_win_evas_render_pre(void *data,
-                          Evas *e EINA_UNUSED,
-                          Evas_Object *obj EINA_UNUSED,
-                          void *event_info EINA_UNUSED)
+_elm_win_evas_render_pre(void *data, Evas *e EINA_UNUSED, void *event_info EINA_UNUSED)
 {
    Eo *win = data;
 
    _elm_win_throttle_ok = EINA_TRUE;
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_RENDER_PRE, NULL);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_RENDER_PRE, NULL);
 }
 
 static void
-_elm_win_evas_focus_in(void *data,
-                       Evas *e EINA_UNUSED,
-                       Evas_Object *obj EINA_UNUSED,
-                       void *event_info EINA_UNUSED)
+_elm_win_evas_focus_in(void *data, Evas *e EINA_UNUSED, void *event_info EINA_UNUSED)
 {
    Eo *win = data;
 
    _elm_win_throttle_ok = EINA_TRUE;
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_FOCUS_IN, NULL);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_FOCUS_IN, NULL);
 }
 
 static void
-_elm_win_evas_focus_out(void *data,
-                        Evas *e EINA_UNUSED,
-                        Evas_Object *obj EINA_UNUSED,
-                        void *event_info EINA_UNUSED)
+_elm_win_evas_focus_out(void *data, Evas *e EINA_UNUSED, void *event_info EINA_UNUSED)
 {
    Eo *win = data;
 
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_FOCUS_OUT, NULL);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_FOCUS_OUT, NULL);
 }
 
 static void
-_elm_win_evas_object_focus_in(void *data,
-                              Evas *e EINA_UNUSED,
-                              Evas_Object *obj EINA_UNUSED,
-                              void *event_info)
+_elm_win_evas_object_focus_in(void *data, Evas *e EINA_UNUSED, void *event_info)
 {
    Eo *object = event_info;
    Eo *win = data;
 
    _elm_win_throttle_ok = EINA_TRUE;
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_OBJECT_FOCUS_IN, object);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_OBJECT_FOCUS_IN, object);
 }
 
 static void
-_elm_win_evas_object_focus_out(void *data,
-                               Evas *e EINA_UNUSED,
-                               Evas_Object *obj EINA_UNUSED,
-                               void *event_info)
+_elm_win_evas_object_focus_out(void *data, Evas *e EINA_UNUSED, void *event_info)
 {
    Eo *object = event_info;
    Eo *win = data;
 
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_OBJECT_FOCUS_OUT, object);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_OBJECT_FOCUS_OUT, object);
 }
 
 static void
-_elm_win_evas_device_changed(void *data,
-                             Evas *e EINA_UNUSED,
-                             Evas_Object *obj EINA_UNUSED,
-                             void *event_info)
+_elm_win_evas_device_changed(void *data, Evas *e EINA_UNUSED, void *event_info)
 {
    Eo *device = event_info;
    Eo *win = data;
 
-   efl_event_callback_legacy_call(win, EFL_CANVAS_EVENT_DEVICE_CHANGED, device);
+   efl_event_callback_call(win, EFL_CANVAS_EVENT_DEVICE_CHANGED, device);
 }
+
+static inline short
+short_safe_increment(short *val)
+{
+   short v = *val;
+   if (EINA_LIKELY(v < INT16_MAX)) *val = v + 1;
+   return v;
+}
+
+static inline short
+short_safe_decrement(short *val)
+{
+   short v = *val;
+   if (EINA_LIKELY(v < INT16_MAX)) *val = v - 1;
+   return v;
+}
+
+#define INCCNT(x) short_safe_increment(&x)
+#define DECCNT(x) short_safe_decrement(&x)
 
 static void
 _win_event_add_cb(void *data, const Efl_Event *ev)
@@ -1896,117 +1894,117 @@ _win_event_add_cb(void *data, const Efl_Event *ev)
      {
         if (array[i].desc == EFL_EVENT_POINTER_MOVE)
           {
-             if (!(sd->event_forward.pointer_move++))
+             if (!(INCCNT(sd->event_forward.pointer_move)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_DOWN)
           {
-             if (!(sd->event_forward.pointer_down++))
+             if (!(INCCNT(sd->event_forward.pointer_down)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_UP)
           {
-             if (!(sd->event_forward.pointer_up++))
+             if (!(INCCNT(sd->event_forward.pointer_up)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_IN)
           {
-             if (!(sd->event_forward.pointer_in++))
+             if (!(INCCNT(sd->event_forward.pointer_in)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_OUT)
           {
-             if (!(sd->event_forward.pointer_out++))
+             if (!(INCCNT(sd->event_forward.pointer_out)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_CANCEL)
           {
-             if (!(sd->event_forward.pointer_cancel++))
+             if (!(INCCNT(sd->event_forward.pointer_cancel)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_WHEEL)
           {
-             if (!(sd->event_forward.pointer_wheel++))
+             if (!(INCCNT(sd->event_forward.pointer_wheel)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_MOVE)
           {
-             if (!(sd->event_forward.finger_move++))
+             if (!(INCCNT(sd->event_forward.finger_move)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_DOWN)
           {
-             if (!(sd->event_forward.finger_down++))
+             if (!(INCCNT(sd->event_forward.finger_down)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_UP)
           {
-             if (!(sd->event_forward.finger_up++))
+             if (!(INCCNT(sd->event_forward.finger_up)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_KEY_DOWN)
           {
-             if (!(sd->event_forward.key_down++))
+             if (!(INCCNT(sd->event_forward.key_down)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_key_cb, win);
+                                      _evas_event_key_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_KEY_UP)
           {
-             if (!(sd->event_forward.key_up++))
+             if (!(INCCNT(sd->event_forward.key_up)))
                efl_event_callback_add(sd->evas, array[i].desc,
-                                     _evas_event_key_cb, win);
+                                      _evas_event_key_cb, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_RENDER_POST)
           {
-             if (!(sd->event_forward.render_post++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_RENDER_POST,
-                                              _elm_win_evas_render_post, win);
+             if (!(INCCNT(sd->event_forward.render_post)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_RENDER_POST,
+                                       _elm_win_evas_render_post, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_RENDER_PRE)
           {
-             if (!(sd->event_forward.render_pre++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_RENDER_PRE,
-                                              _elm_win_evas_render_pre, win);
+             if (!(INCCNT(sd->event_forward.render_pre)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_RENDER_PRE,
+                                       _elm_win_evas_render_pre, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_FOCUS_IN)
           {
-             if (!(sd->event_forward.focus_in++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_FOCUS_IN,
-                                              _elm_win_evas_focus_in, win);
+             if (!(INCCNT(sd->event_forward.focus_in)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_FOCUS_IN,
+                                       _elm_win_evas_focus_in, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_FOCUS_OUT)
           {
-             if (!(sd->event_forward.focus_out++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_FOCUS_OUT,
-                                              _elm_win_evas_focus_out, win);
+             if (!(INCCNT(sd->event_forward.focus_out)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_FOCUS_OUT,
+                                       _elm_win_evas_focus_out, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_OBJECT_FOCUS_IN)
           {
-             if (!(sd->event_forward.object_focus_in++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_IN,
-                                              _elm_win_evas_object_focus_in, win);
+             if (!(INCCNT(sd->event_forward.object_focus_in)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_IN,
+                                       _elm_win_evas_object_focus_in, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_OBJECT_FOCUS_OUT)
           {
-             if (!(sd->event_forward.object_focus_out++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_OUT,
-                                              _elm_win_evas_object_focus_out, win);
+             if (!(INCCNT(sd->event_forward.object_focus_out)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_OUT,
+                                       _elm_win_evas_object_focus_out, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_DEVICE_CHANGED)
           {
-             if (!(sd->event_forward.device_changed++))
-               evas_object_event_callback_add(sd->evas, EVAS_CALLBACK_DEVICE_CHANGED,
-                                              _elm_win_evas_device_changed, win);
+             if (!(INCCNT(sd->event_forward.device_changed)))
+               evas_event_callback_add(sd->evas, EVAS_CALLBACK_DEVICE_CHANGED,
+                                       _elm_win_evas_device_changed, win);
           }
      }
 }
@@ -2023,117 +2021,117 @@ _win_event_del_cb(void *data, const Efl_Event *ev)
      {
         if (array[i].desc == EFL_EVENT_POINTER_MOVE)
           {
-             if (!(--sd->event_forward.pointer_move))
+             if (!(DECCNT(sd->event_forward.pointer_move)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_DOWN)
           {
-             if (!(--sd->event_forward.pointer_down))
+             if (!(DECCNT(sd->event_forward.pointer_down)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_UP)
           {
-             if (!(--sd->event_forward.pointer_up))
+             if (!(DECCNT(sd->event_forward.pointer_up)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_IN)
           {
-             if (!(--sd->event_forward.pointer_in))
+             if (!(DECCNT(sd->event_forward.pointer_in)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_OUT)
           {
-             if (!(--sd->event_forward.pointer_out))
+             if (!(DECCNT(sd->event_forward.pointer_out)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_CANCEL)
           {
-             if (!(--sd->event_forward.pointer_cancel))
+             if (!(DECCNT(sd->event_forward.pointer_cancel)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_POINTER_WHEEL)
           {
-             if (!(--sd->event_forward.pointer_wheel))
+             if (!(DECCNT(sd->event_forward.pointer_wheel)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_MOVE)
           {
-             if (!(--sd->event_forward.finger_move))
+             if (!(DECCNT(sd->event_forward.finger_move)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_DOWN)
           {
-             if (!(--sd->event_forward.finger_down))
+             if (!(DECCNT(sd->event_forward.finger_down)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_FINGER_UP)
           {
-             if (!(--sd->event_forward.finger_up))
+             if (!(DECCNT(sd->event_forward.finger_up)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_pointer_cb, win);
+                                      _evas_event_pointer_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_KEY_DOWN)
           {
-             if (!(--sd->event_forward.key_down))
+             if (!(DECCNT(sd->event_forward.key_down)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_key_cb, win);
+                                      _evas_event_key_cb, win);
           }
         else if (array[i].desc == EFL_EVENT_KEY_UP)
           {
-             if (!(--sd->event_forward.key_up))
+             if (!(DECCNT(sd->event_forward.key_up)))
                efl_event_callback_del(sd->evas, array[i].desc,
-                                     _evas_event_key_cb, win);
+                                      _evas_event_key_cb, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_RENDER_POST)
           {
-             if (!(--sd->event_forward.render_post))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_RENDER_POST,
-                                              _elm_win_evas_render_post, win);
+             if (!(DECCNT(sd->event_forward.render_post)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_RENDER_POST,
+                                            _elm_win_evas_render_post, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_RENDER_PRE)
           {
-             if (!(--sd->event_forward.render_pre))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_RENDER_PRE,
-                                              _elm_win_evas_render_pre, win);
+             if (!(DECCNT(sd->event_forward.render_pre)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_RENDER_PRE,
+                                            _elm_win_evas_render_pre, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_FOCUS_IN)
           {
-             if (!(--sd->event_forward.focus_in))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_FOCUS_IN,
-                                              _elm_win_evas_focus_in, win);
+             if (!(DECCNT(sd->event_forward.focus_in)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_FOCUS_IN,
+                                            _elm_win_evas_focus_in, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_FOCUS_OUT)
           {
-             if (!(--sd->event_forward.focus_out))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_FOCUS_OUT,
-                                              _elm_win_evas_focus_out, win);
+             if (!(DECCNT(sd->event_forward.focus_out)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_FOCUS_OUT,
+                                            _elm_win_evas_focus_out, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_OBJECT_FOCUS_IN)
           {
-             if (!(--sd->event_forward.object_focus_in))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_IN,
-                                              _elm_win_evas_object_focus_in, win);
+             if (!(DECCNT(sd->event_forward.object_focus_in)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_IN,
+                                            _elm_win_evas_object_focus_in, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_OBJECT_FOCUS_OUT)
           {
-             if (!(--sd->event_forward.object_focus_out))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_OUT,
-                                              _elm_win_evas_object_focus_out, win);
+             if (!(DECCNT(sd->event_forward.object_focus_out)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_CANVAS_OBJECT_FOCUS_OUT,
+                                            _elm_win_evas_object_focus_out, win);
           }
         else if (array[i].desc == EFL_CANVAS_EVENT_DEVICE_CHANGED)
           {
-             if (!(--sd->event_forward.device_changed))
-               evas_object_event_callback_del_full(sd->evas, EVAS_CALLBACK_DEVICE_CHANGED,
-                                              _elm_win_evas_device_changed, win);
+             if (!(DECCNT(sd->event_forward.device_changed)))
+               evas_event_callback_del_full(sd->evas, EVAS_CALLBACK_DEVICE_CHANGED,
+                                            _elm_win_evas_device_changed, win);
           }
      }
 }
