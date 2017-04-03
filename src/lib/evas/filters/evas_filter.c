@@ -684,6 +684,27 @@ evas_filter_command_fill_add(Evas_Filter_Context *ctx, void *draw_context,
    return cmd;
 }
 
+static int
+_blur_support_gl(Evas_Filter_Context *ctx, Evas_Filter_Buffer *in, Evas_Filter_Buffer *out,
+                 Evas_Filter_Blur_Type type, int count, int dx, int dy)
+{
+   Evas_Filter_Command cmd = {};
+
+   cmd.input = in;
+   cmd.output = out;
+   cmd.mode = EVAS_FILTER_MODE_BLUR;
+   cmd.ctx = ctx;
+   cmd.blur.count = count;
+   cmd.blur.type = type;
+   cmd.blur.dx = dx;
+   cmd.blur.dy = dy;
+
+   if (cmd.ENFN->gfx_filter_supports(cmd.ENDT, &cmd) != EVAS_FILTER_SUPPORT_GL)
+     return 0;
+
+   return cmd.draw.need_temp_buffer ? 2 : 1;
+}
+
 static Evas_Filter_Command *
 evas_filter_command_blur_add_gl(Evas_Filter_Context *ctx,
                                 Evas_Filter_Buffer *in, Evas_Filter_Buffer *out,
@@ -694,6 +715,7 @@ evas_filter_command_blur_add_gl(Evas_Filter_Context *ctx,
    Evas_Filter_Command *cmd;
    Evas_Filter_Buffer *dx_in, *dx_out, *dy_in, *dy_out, *tmp = NULL;
    double dx, dy;
+   int passes;
 
    /* GL blur implementation:
     * - Create intermediate buffer T (variable size)
@@ -712,15 +734,15 @@ evas_filter_command_blur_add_gl(Evas_Filter_Context *ctx,
    dy_out = out;
 
 #if 0
-   if (type == EVAS_FILTER_BLUR_DEFAULT)
+   if ((type == EVAS_FILTER_BLUR_DEFAULT) && (rx == ry) && (rx >= 8))
      {
         int down_x = 1, down_y = 1;
 
         /* For now, disable scaling - testing perfect gaussian blur until it's
          * ready: */
-        down_x = MAX((1 << evas_filter_smallest_pow2_larger_than(dx / 2) / 2), 1);
-        down_y = MAX((1 << evas_filter_smallest_pow2_larger_than(dy / 2) / 2), 1);
-
+        //down_x = MAX((1 << evas_filter_smallest_pow2_larger_than(dx / 2) / 2), 1);
+        //down_y = MAX((1 << evas_filter_smallest_pow2_larger_than(dy / 2) / 2), 1);
+        down_x = down_y = 4;
 
         tmp = evas_filter_temporary_buffer_get(ctx, ctx->w / down_x, ctx->h / down_y,
                                                in->alpha_only, EINA_TRUE);
@@ -743,7 +765,19 @@ evas_filter_command_blur_add_gl(Evas_Filter_Context *ctx,
      }
 #endif
 
-   if (dx && dy)
+   passes = _blur_support_gl(ctx, in, out, type, count, dx, dy);
+   if (passes == 1)
+     {
+        XDBG("Add GL blur %d -> %d (%.2fx%.2f px)", dx_in->id, dy_out->id, dx, dy);
+        cmd = _command_new(ctx, EVAS_FILTER_MODE_BLUR, dx_in, NULL, dy_out);
+        if (!cmd) goto fail;
+        cmd->blur.type = type;
+        cmd->blur.dx = dx;
+        cmd->blur.dy = dy;
+        cmd->blur.count = count;
+        dx = dy = 0;
+     }
+   else if (dx && dy)
      {
         tmp = evas_filter_temporary_buffer_get(ctx, dx_in->w, dx_in->h, in->alpha_only, 1);
         if (!tmp) goto fail;
@@ -798,21 +832,6 @@ fail:
    return NULL;
 }
 
-static Eina_Bool
-_blur_support_gl(Evas_Filter_Context *ctx, Evas_Filter_Buffer *in, Evas_Filter_Buffer *out)
-{
-   Evas_Filter_Command cmd = {};
-
-   cmd.input = in;
-   cmd.output = out;
-   cmd.mode = EVAS_FILTER_MODE_BLUR;
-   cmd.ctx = ctx;
-   cmd.blur.type = EVAS_FILTER_BLUR_GAUSSIAN;
-   cmd.blur.dx = 5;
-
-   return cmd.ENFN->gfx_filter_supports(cmd.ENDT, &cmd) == EVAS_FILTER_SUPPORT_GL;
-}
-
 Evas_Filter_Command *
 evas_filter_command_blur_add(Evas_Filter_Context *ctx, void *drawctx,
                              int inbuf, int outbuf, Evas_Filter_Blur_Type type,
@@ -851,7 +870,7 @@ evas_filter_command_blur_add(Evas_Filter_Context *ctx, void *drawctx,
         return _command_new(ctx, EVAS_FILTER_MODE_SKIP, NULL, NULL, NULL);
      }
 
-   if (_blur_support_gl(ctx, in, out))
+   if (_blur_support_gl(ctx, in, out, type, count, dx, dy))
      return evas_filter_command_blur_add_gl(ctx, in, out, type, dx, dy, ox, oy, count, R, G, B, A);
 
    // Note (SW engine):

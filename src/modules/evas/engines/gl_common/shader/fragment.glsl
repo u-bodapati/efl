@@ -97,20 +97,11 @@ uniform float blur_div;
 
 // ----------------------------------------------------------------------------
 
-#ifndef SHD_FILTER_BLUR
-void main()
-{
-#if defined(SHD_EXTERNAL) || defined(SHD_TEX)
-   vec2 coord = tex_c;
-#endif
-
-#else // SHD_FILTER_BLUR
-
 vec4 fetch_pixel(float ox, float oy)
 {
+#if defined(SHD_EXTERNAL) || defined(SHD_TEX)
    vec2 coord = tex_c + vec2(ox, oy);
-
-#endif // SHD_FILTER_BLUR
+#endif
 
    vec4 c;
 
@@ -226,9 +217,7 @@ vec4 fetch_pixel(float ox, float oy)
             new_alpha);
 #endif
 
-#ifndef SHD_FILTER_BLUR
-
-   gl_FragColor =
+   return
        c
 #ifndef SHD_NOMUL
      * col
@@ -242,10 +231,21 @@ vec4 fetch_pixel(float ox, float oy)
    ;
 }
 
-#else // SHD_FILTER_BLUR
 
-   return c;
+#if defined(FRAGMENT_MAIN)
+
+FRAGMENT_MAIN
+
+#elif !defined(SHD_FILTER_BLUR)
+
+void main()
+{
+   gl_FragColor = fetch_pixel(0.0, 0.0);
 }
+
+
+// ----------------------------------------------------------------------------
+#else
 
 #ifndef SHD_FILTER_DIR_Y
 # define FETCH_PIXEL(x) fetch_pixel((x), 0.0)

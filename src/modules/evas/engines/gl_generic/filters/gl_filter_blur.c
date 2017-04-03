@@ -246,15 +246,139 @@ _gl_filter_blur(Render_Engine_GL_Generic *re, Evas_Filter_Command *cmd)
    return EINA_TRUE;
 }
 
+static Eina_Bool
+_gl_filter_blur_2d_radius_2(Render_Engine_GL_Generic *re, Evas_Filter_Command *cmd)
+{
+   Evas_Engine_GL_Context *gc;
+   Evas_GL_Image *image, *surface;
+   RGBA_Draw_Context *dc_save;
+   double sx, sy, sw, sh, ssx, ssy, ssw, ssh, dx, dy, dw, dh;
+   double s_w, s_h, d_w, d_h;
+   Eina_Rectangle s_region[4], d_region[4];
+   int nx, ny, nw, nh, regions;
+   const char *fragment_main;
+   Eina_Strbuf *str;
+
+   static char *base_code = NULL;
+
+   if (!base_code)
+     {
+        const char *code;
+
+        code = "const float wei = 1.0;\n"
+               "const float off = 1.0/3.0;\n"
+               "\n"
+               "void main ()\n"
+               "{\n"
+               "   vec4 px1, px2, px3, px4;\n"
+               "   px1 = fetch_pixel(-off / W, -off / H);\n"
+               "   px2 = fetch_pixel(-off / W,  off / H);\n"
+               "   px3 = fetch_pixel( off / W, -off / H);\n"
+               "   px4 = fetch_pixel( off / W,  off / H);\n"
+               "   gl_FragColor = (px1 + px2 + px3 + px4) / 4.0;\n"
+               "}\n";
+
+        str = eina_strbuf_new();
+        eina_strbuf_append(str, "#define FRAGMENT_MAIN\n");
+        eina_strbuf_append(str, code);
+        eina_strbuf_replace_all(str, "\n", " \\\n");
+        base_code = eina_strbuf_string_steal(str);
+        eina_strbuf_free(str);
+     }
+
+   DEBUG_TIME_BEGIN();
+
+   s_w = cmd->input->w;
+   s_h = cmd->input->h;
+   d_w = cmd->output->w;
+   d_h = cmd->output->h;
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(s_w && s_h && d_w && d_h, EINA_FALSE);
+
+   re->window_use(re->software.ob);
+   gc = re->window_gl_context_get(re->software.ob);
+
+   image = evas_ector_buffer_drawable_image_get(cmd->input->buffer);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(image, EINA_FALSE);
+
+   surface = evas_ector_buffer_render_image_get(cmd->output->buffer);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(surface, EINA_FALSE);
+
+   evas_gl_common_context_target_surface_set(gc, surface);
+
+   DBG("blur %d @%p -> %d @%p (custom 2D)",
+       cmd->input->id, cmd->input->buffer,
+       cmd->output->id, cmd->output->buffer);
+
+   dc_save = gc->dc;
+   gc->dc = evas_common_draw_context_new();
+   gc->dc->render_op = _gfx_to_evas_render_op(cmd->draw.rop);
+
+   // Set constants in shader code
+   str = eina_strbuf_new();
+   eina_strbuf_append_printf(str, "const float W = %f;\n", (float) image->tex->pt->w);
+   eina_strbuf_append_printf(str, "const float H = %f;\n", (float) image->tex->pt->h);
+   eina_strbuf_append(str, base_code);
+   fragment_main = eina_strbuf_string_get(str);
+
+   // FIXME: Implement region support! (note: can't separate perfectly in 2d)
+   regions = 1;
+   s_region[0] = S_RECT(0, 0, s_w, s_h);
+   d_region[0] = D_RECT(0, 0, d_w, d_h);
+
+   for (int k = 0; k < regions; k++)
+     {
+        sx = s_region[k].x;
+        sy = s_region[k].y;
+        sw = s_region[k].w;
+        sh = s_region[k].h;
+
+        dx = d_region[k].x + cmd->draw.ox;
+        dy = d_region[k].y + cmd->draw.oy;
+        dw = d_region[k].w;
+        dh = d_region[k].h;
+
+        nx = dx; ny = dy; nw = dw; nh = dh;
+        RECTS_CLIP_TO_RECT(nx, ny, nw, nh, 0, 0, d_w, d_h);
+        ssx = (double)sx + ((double)(sw * (nx - dx)) / (double)(dw));
+        ssy = (double)sy + ((double)(sh * (ny - dy)) / (double)(dh));
+        ssw = ((double)sw * (double)(nw)) / (double)(dw);
+        ssh = ((double)sh * (double)(nh)) / (double)(dh);
+
+        evas_gl_common_filter_custom_push(gc, image->tex, ssx, ssy, ssw, ssh,
+                                          dx, dy, dw, dh, fragment_main);
+     }
+   eina_strbuf_free(str);
+
+   evas_common_draw_context_free(gc->dc);
+   gc->dc = dc_save;
+
+   evas_ector_buffer_engine_image_release(cmd->input->buffer, image);
+   evas_ector_buffer_engine_image_release(cmd->output->buffer, surface);
+
+   DEBUG_TIME_END();
+
+   return EINA_TRUE;
+}
+
 GL_Filter_Apply_Func
 gl_filter_blur_func_get(Render_Engine_GL_Generic *re EINA_UNUSED, Evas_Filter_Command *cmd)
 {
    EINA_SAFETY_ON_NULL_RETURN_VAL(cmd, NULL);
    EINA_SAFETY_ON_NULL_RETURN_VAL(cmd->output, NULL);
    EINA_SAFETY_ON_NULL_RETURN_VAL(cmd->input, NULL);
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(!cmd->blur.dx && !cmd->blur.dy, NULL);
 
-   // 1D blurs only, radius != 0
-   EINA_SAFETY_ON_FALSE_RETURN_VAL((!cmd->blur.dx) ^ (!cmd->blur.dy), NULL);
+   // FIXME: Handle box blur, perfect gaussian, scaling and other special cases
 
+   if ((EINA_FLT_EQ(cmd->blur.dx, cmd->blur.dy)) && (cmd->output != cmd->input))
+     {
+        // Special cases for very fast blurs
+        double r = cmd->blur.dx;
+
+        if (EINA_FLT_EQ(r, 2.0))
+          return _gl_filter_blur_2d_radius_2;
+     }
+
+   cmd->draw.need_temp_buffer = EINA_TRUE;
    return _gl_filter_blur;
 }

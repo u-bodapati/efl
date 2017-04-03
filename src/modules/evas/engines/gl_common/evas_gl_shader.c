@@ -417,13 +417,16 @@ _shaders_hash_free_cb(void *data)
 }
 
 static char *
-evas_gl_common_shader_glsl_get(unsigned int flags, const char *base)
+evas_gl_common_shader_glsl_get(unsigned int flags, const char *base,
+                               const char *custom_header)
 {
    Eina_Strbuf *s = eina_strbuf_new();
    unsigned int k;
    char *str;
 
-   //eina_strbuf_append_printf(s, "#version 300 es\n");
+   if (custom_header)
+     eina_strbuf_append_printf(s, "%s\n", custom_header);
+
    for (k = 0; k < SHADER_FLAG_COUNT; k++)
      {
         if (flags & (1 << k))
@@ -576,8 +579,8 @@ evas_gl_common_shader_generate_and_compile(Evas_GL_Shared *shared, unsigned int 
    if (eina_hash_find(shared->shaders_hash, &flags))
      return NULL;
 
-   vertex = evas_gl_common_shader_glsl_get(flags, vertex_glsl);
-   fragment = evas_gl_common_shader_glsl_get(flags, fragment_glsl);
+   vertex = evas_gl_common_shader_glsl_get(flags, vertex_glsl, NULL);
+   fragment = evas_gl_common_shader_glsl_get(flags, fragment_glsl, NULL);
 
    p = evas_gl_common_shader_compile(flags, vertex, fragment);
    if (p)
@@ -974,5 +977,42 @@ evas_gl_common_shader_program_get(Evas_Engine_GL_Context *gc,
 end:
    if (p->hitcount < PROGRAM_HITCOUNT_MAX)
      p->hitcount++;
+   return p;
+}
+
+Evas_GL_Program *
+evas_gl_common_shader_program_custom_get(Evas_Engine_GL_Context *gc,
+                                         const char *fragment_main)
+{
+   char *vertex, *fragment;
+   unsigned int flags;
+   Evas_GL_Program *p;
+
+   // FIXME
+   static Eina_Hash *hash = 0;
+   if (!hash) hash = eina_hash_string_superfast_new(NULL);
+
+   p = eina_hash_find(hash, fragment_main);
+   if (p) return p;
+
+   flags = SHADER_FLAG_TEX | SHADER_FLAG_IMG | SHADER_FLAG_NOMUL;
+   if (gc->shared->info.bgra) flags |= SHADER_FLAG_BGRA;
+
+   vertex = evas_gl_common_shader_glsl_get(flags, vertex_glsl, NULL);
+   fragment = evas_gl_common_shader_glsl_get(flags, fragment_glsl, fragment_main);
+
+   p = evas_gl_common_shader_compile(flags, vertex, fragment);
+   if (p)
+     {
+        p->uniform.mvp = glGetUniformLocation(p->prog, "mvp");
+        p->uniform.rotation_id = glGetUniformLocation(p->prog, "rotation_id");
+        evas_gl_common_shader_textures_bind(p);
+        eina_hash_add(hash, fragment_main, p);
+     }
+   else WRN("Failed to compile custom shader (flags: %08x):\n%s", flags, fragment_main);
+
+   free(vertex);
+   free(fragment);
+
    return p;
 }

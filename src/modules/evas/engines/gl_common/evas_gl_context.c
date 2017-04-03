@@ -3616,6 +3616,84 @@ evas_gl_common_filter_blur_push(Evas_Engine_GL_Context *gc,
      PUSH_6_COLORS(pn, r, g, b, a);
 }
 
+void
+evas_gl_common_filter_custom_push(Evas_Engine_GL_Context *gc, Evas_GL_Texture *tex,
+                                  double sx, double sy, double sw, double sh,
+                                  double dx, double dy, double dw, double dh,
+                                  const char *fragment_main)
+{
+   double ox1, oy1, ox2, oy2, ox3, oy3, ox4, oy4, pw, ph;
+   GLfloat tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4;
+   GLfloat offsetx, offsety;
+   Evas_GL_Program *prog;
+   Eina_Bool blend = EINA_TRUE;
+   Eina_Bool smooth = EINA_TRUE;
+   Shader_Type type = SHD_FILTER_CUSTOM;
+   int pn;
+
+   if (gc->dc->render_op == EVAS_RENDER_COPY)
+     blend = EINA_FALSE;
+
+   prog = evas_gl_common_shader_program_custom_get(gc, fragment_main);
+
+   pw = tex->pt->w;
+   ph = tex->pt->h;
+   pn = _evas_gl_common_context_push(type, gc, tex, NULL, prog,
+                                     sx, sy, dw, dh, blend, smooth,
+                                     0, 0, 0, 0, 0, EINA_FALSE);
+
+   gc->pipe[pn].region.type = type;
+   gc->pipe[pn].shader.prog = prog;
+   gc->pipe[pn].shader.cur_tex = tex->pt->texture;
+   gc->pipe[pn].shader.cur_texm = 0;
+   gc->pipe[pn].shader.tex_target = GL_TEXTURE_2D;
+   gc->pipe[pn].shader.smooth = smooth;
+   gc->pipe[pn].shader.mask_smooth = 0;
+   gc->pipe[pn].shader.blend = blend;
+   gc->pipe[pn].shader.render_op = gc->dc->render_op;
+   gc->pipe[pn].shader.clip = 0;
+   gc->pipe[pn].shader.cx = 0;
+   gc->pipe[pn].shader.cy = 0;
+   gc->pipe[pn].shader.cw = 0;
+   gc->pipe[pn].shader.ch = 0;
+   gc->pipe[pn].array.line = 0;
+   gc->pipe[pn].array.use_vertex = 1;
+   gc->pipe[pn].array.use_color = 0;
+   gc->pipe[pn].array.use_texuv = 1;
+   gc->pipe[pn].array.use_texuv2 = 0;
+   gc->pipe[pn].array.use_texuv3 = 0;
+   gc->pipe[pn].array.use_texsam = 0;
+   gc->pipe[pn].array.use_mask = 0;
+   gc->pipe[pn].array.use_masksam = 0;
+
+   pipe_region_expand(gc, pn, dx, dy, dw, dh);
+   PIPE_GROW(gc, pn, 6);
+
+   ox1 = sx;
+   oy1 = sy;
+   ox2 = sx + sw;
+   oy2 = sy;
+   ox3 = sx + sw;
+   oy3 = sy + sh;
+   ox4 = sx;
+   oy4 = sy + sh;
+
+   offsetx = tex->x;
+   offsety = tex->y;
+
+   tx1 = ((double)(offsetx) + ox1) / pw;
+   ty1 = ((double)(offsety) + oy1) / ph;
+   tx2 = ((double)(offsetx) + ox2) / pw;
+   ty2 = ((double)(offsety) + oy2) / ph;
+   tx3 = ((double)(offsetx) + ox3) / pw;
+   ty3 = ((double)(offsety) + oy3) / ph;
+   tx4 = ((double)(offsetx) + ox4) / pw;
+   ty4 = ((double)(offsety) + oy4) / ph;
+
+   PUSH_6_VERTICES(pn, dx, dy, dw, dh);
+   PUSH_6_QUAD(pn, tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4);
+}
+
 // ----------------------------------------------------------------------------
 
 EAPI void
