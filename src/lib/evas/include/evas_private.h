@@ -105,6 +105,17 @@ typedef struct _Evas_Pointer_Data           Evas_Pointer_Data;
 typedef struct _Evas_Filter_Command         Evas_Filter_Command;
 typedef enum _Evas_Filter_Support           Evas_Filter_Support;
 
+typedef struct _Evas_Object_Animation_Alpha_Data  Evas_Object_Animation_Alpha_Data;
+typedef struct _Evas_Object_Animation_Rotate_Data  Evas_Object_Animation_Rotate_Data;
+typedef struct _Evas_Object_Animation_Scale_Data  Evas_Object_Animation_Scale_Data;
+typedef struct _Evas_Object_Animation_Translate_Data  Evas_Object_Animation_Translate_Data;
+typedef struct _Evas_Object_Animation_Data  Evas_Object_Animation_Data;
+
+//These macros are matched to Efl_Animation_Event_Type enum values.
+#define EFL_ANIMATION_EVENT_TYPE_SHOW_STR    "show"
+#define EFL_ANIMATION_EVENT_TYPE_HIDE_STR    "hide"
+#define EFL_ANIMATION_EVENT_TYPE_CLICKED_STR "clicked"
+
 // 3D stuff
 
 #define EVAS_CANVAS3D_VERTEX_ATTRIB_COUNT    5
@@ -1190,6 +1201,8 @@ struct _Evas_Object_Protected_Data
 
    unsigned char               no_change_render;
    unsigned char               delete_me;
+
+   Eina_Array                 *event_anims; //Array of Efl_Animation
 
    Eina_Bool                   render_pre : 1;
    Eina_Bool                   rect_del : 1;
