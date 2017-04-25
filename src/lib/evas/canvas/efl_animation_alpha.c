@@ -49,6 +49,12 @@ _efl_animation_alpha_alpha_get(Eo *eo_obj EINA_UNUSED, Evas_Object_Animation_Alp
      *to_alpha = pd->to.alpha;
 }
 
+static void
+_animate_cb(void *data, const Efl_Event *event)
+{
+   Efl_Animation_Animate_Event_Info *event_info = event->info;
+}
+
 EOLIAN static Efl_Object *
 _efl_animation_alpha_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Alpha_Data *pd)
 {
@@ -56,6 +62,8 @@ _efl_animation_alpha_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Al
 
    pd->from.alpha = 1.0;
    pd->to.alpha = 1.0;
+
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, _animate_cb, NULL);
 
    return eo_obj;
 }

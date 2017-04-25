@@ -10,3 +10,14 @@ enum Efl.Animation.Event_Type
    clicked,  [["clicked" event type]]
    count     [[total count of event type]]
 }
+
+enum Efl.Animation.State
+{
+   [[Animation state]]
+
+   running = 0, [[running state]]
+   stopped,     [[stopped state]]
+   deleted      [[deleted state]]
+}
+
+struct Efl.Animation.Animate_Event_Info; [[Information of animate event]]
