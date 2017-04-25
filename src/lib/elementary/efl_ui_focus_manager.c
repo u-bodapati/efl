@@ -150,6 +150,21 @@ node_get(Efl_Ui_Focus_Manager *obj, Efl_Ui_Focus_Manager_Data *pd, Efl_Ui_Focus_
    return NULL;
 }
 
+static void
+_set_debug(const char *b, Node *p)
+{
+   Eina_List *n;
+   Node *n2;
+
+   if (!p) return;
+
+   printf("%s DEBUG %p\n", b, p->focusable);
+
+   EINA_LIST_FOREACH(T(p).children, n, n2) {
+      printf("  CONTAINING %p %s\n", n2->focusable, efl_class_name_get(n2->focusable));
+   }
+}
+
 /**
  * Free a node item and unlink this item from all direction
  */
@@ -180,6 +195,7 @@ node_item_free(Node *item)
              n->tree.parent = item->tree.parent;
           }
         parent->tree.children = eina_list_merge(parent->tree.children , item->tree.children);
+        _set_debug(__FUNCTION__, parent);
      }
 
    if (item->tree.parent)
@@ -188,6 +204,7 @@ node_item_free(Node *item)
 
         parent = item->tree.parent;
         T(parent).children = eina_list_remove(T(parent).children, item);
+        _set_debug(__FUNCTION__, parent);
      }
 
    free(item);
@@ -505,7 +522,7 @@ _register(Eo *obj, Efl_Ui_Focus_Manager_Data *pd, Efl_Ui_Focus_Object *child, No
         T(node).parent = parent;
         T(parent).children = eina_list_append(T(parent).children, node);
      }
-
+   _set_debug(__FUNCTION__, parent);
    return node;
 }
 EOLIAN static Eina_Bool
@@ -628,7 +645,7 @@ _efl_ui_focus_manager_update_parent(Eo *obj EINA_UNUSED, Efl_Ui_Focus_Manager_Da
      {
         T(parent).children = eina_list_append(T(parent).children, node);
      }
-
+   _set_debug(__FUNCTION__, parent);
    return EINA_TRUE;
 }
 
@@ -702,6 +719,8 @@ _efl_ui_focus_manager_update_order(Eo *obj, Efl_Ui_Focus_Manager_Data *pd, Efl_U
    eina_list_free(trash);
 
    T(pnode).children = eina_list_merge(node_order_clean, not_ordered);
+
+   _set_debug(__FUNCTION__, pnode);
 
    return;
 }
