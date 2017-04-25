@@ -36,9 +36,17 @@ abstract Efl.Animation (Efl.Object)
          [[Cancel animation.]]
          return: bool; [[$true on success, $false otherwise]]
       }
+      state_get {
+         [[Get the state of animation]]
+         return: Efl.Animation.State; [[Animation state]]
+      }
    }
    implements {
       Efl.Object.constructor;
       Efl.Object.destructor;
+   }
+   events {
+      animate; [[Animation is animated.]]
+      end; [[Animation ended]]
    }
 }

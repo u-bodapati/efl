@@ -119,6 +119,12 @@ _efl_animation_rotate_absolute_pivot_get(Eo *eo_obj, Evas_Object_Animation_Rotat
      *pivot_z = pd->abs_pivot.z;
 }
 
+static void
+_animate_cb(void *data, const Efl_Event *event)
+{
+   Efl_Animation_Animate_Event_Info *event_info = event->info;
+}
+
 EOLIAN static Efl_Object *
 _efl_animation_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Rotate_Data *pd)
 {
@@ -136,6 +142,8 @@ _efl_animation_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_R
    pd->abs_pivot.z = 0;
 
    pd->use_rel_pivot = EINA_TRUE;
+
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, _animate_cb, NULL);
 
    return eo_obj;
 }
