@@ -18,6 +18,9 @@
       } \
    } while (0)
 
+#define EFL_ANIMATION_ALPHA_DATA_GET(o, pd) \
+   Evas_Object_Animation_Alpha_Data *pd = efl_data_scope_get(o, EFL_ANIMATION_ALPHA_CLASS)
+
 typedef struct _Evas_Object_Animation_Alpha_Property
 {
    double alpha;
@@ -50,9 +53,20 @@ _efl_animation_alpha_alpha_get(Eo *eo_obj EINA_UNUSED, Evas_Object_Animation_Alp
 }
 
 static void
-_animate_cb(void *data, const Efl_Event *event)
+_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
 {
+   EFL_ANIMATION_ALPHA_DATA_GET(event->object, pd);
    Efl_Animation_Animate_Event_Info *event_info = event->info;
+
+   double progress = event_info->progress;
+
+   double alpha
+      = (pd->from.alpha * (1.0 - progress)) + (pd->to.alpha * progress);
+
+   //FIXME: The below code is temporary test code
+   int color = (int)(alpha * 255);
+   Evas_Object *target = efl_animation_target_get(event->object);
+   evas_object_color_set(target, color, color, color, color);
 }
 
 EOLIAN static Efl_Object *
