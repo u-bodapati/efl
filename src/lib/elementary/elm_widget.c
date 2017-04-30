@@ -4181,7 +4181,7 @@ _elm_widget_efl_object_dbg_info_get(Eo *eo_obj, Elm_Widget_Smart_Data *_pd EINA_
 #undef ADD_PTR_LIST
 
      }
-
+   efl_ui_focus_relations_free(rel);
    //if thats a focus manager, give usefull informations like the border elements
    if (efl_isa(eo_obj, EFL_UI_FOCUS_MANAGER_CLASS))
      {

@@ -13,7 +13,7 @@ enum Efl.Ui.Focus.Direction {
     last = 6 [[Last value for this enum, do not use]]
 }
 
-struct Efl.Ui.Focus.Relations {
+struct @free(efl_ui_focus_relations_free) Efl.Ui.Focus.Relations {
     [[Structure holding the graph of relations between focussable objects.
 
       @since 1.20

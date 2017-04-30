@@ -1447,3 +1447,16 @@ _efl_ui_focus_manager_logical_end(Eo *obj EINA_UNUSED, Efl_Ui_Focus_Manager_Data
 }
 
 #include "efl_ui_focus_manager.eo.c"
+
+
+EAPI void
+efl_ui_focus_relations_free(Efl_Ui_Focus_Relations *rel)
+{
+    if (!rel) return;
+
+    eina_list_free(rel->left);
+    eina_list_free(rel->right);
+    eina_list_free(rel->down);
+    eina_list_free(rel->top);
+    free(rel);
+}
