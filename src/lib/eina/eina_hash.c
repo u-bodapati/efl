@@ -158,7 +158,12 @@ _eina_hash_hash_rbtree_cmp_hash(const Eina_Hash_Head *hash_head,
                                 EINA_UNUSED int key_length,
                                 EINA_UNUSED void *data)
 {
-   return hash_head->hash - *hash;
+   if (hash_head->hash < *hash)
+     return -1;
+   else if (hash_head->hash == *hash)
+     return 0;
+   else
+     return 1;
 }
 
 static Eina_Rbtree_Direction
@@ -166,7 +171,7 @@ _eina_hash_hash_rbtree_cmp_node(const Eina_Hash_Head *left,
                                 const Eina_Hash_Head *right,
                                 EINA_UNUSED void *data)
 {
-   if (left->hash - right->hash < 0)
+   if (left->hash < right->hash)
      return EINA_RBTREE_LEFT;
 
    return EINA_RBTREE_RIGHT;
