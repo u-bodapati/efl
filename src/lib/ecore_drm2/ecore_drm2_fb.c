@@ -146,7 +146,7 @@ static void
 _ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb)
 {
    EINA_SAFETY_ON_NULL_RETURN(fb);
-
+ERR("DESTROY");
    if (!fb->dead) ERR("Destroying an fb that hasn't been discarded");
 
    if (fb->mmap) munmap(fb->mmap, fb->sizes[0]);
@@ -165,16 +165,22 @@ _ecore_drm2_fb_destroy(Ecore_Drm2_Fb *fb)
    free(fb);
 }
 
+#include <sys/syscall.h>
+
 void
 _ecore_drm2_fb_ref(Ecore_Drm2_Fb *fb)
 {
+long tid = syscall(SYS_gettid);
    fb->ref++;
+ERR("REF TO %d FROM THREAD %ld ON %p", fb->ref, tid, fb);
 }
 
 void
 _ecore_drm2_fb_deref(Ecore_Drm2_Fb *fb)
 {
    fb->ref--;
+long tid = syscall(SYS_gettid);
+ERR("DEREF TO %d FROM THREAD %ld ON %p", fb->ref, tid, fb);
    if (fb->ref) return;
 
    _ecore_drm2_fb_destroy(fb);
