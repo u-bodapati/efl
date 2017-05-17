@@ -15,6 +15,15 @@ abstract Efl.Animation (Efl.Object)
             target: Efl.Canvas.Object; [[Target object which is applied animation]]
          }
       }
+      @property final_state_keep {
+         set {
+         }
+         get {
+         }
+         values {
+            state_keep: bool; [[$true to keep final state, $false otherwise]]
+         }
+      }
       @property duration {
          set {
          }
