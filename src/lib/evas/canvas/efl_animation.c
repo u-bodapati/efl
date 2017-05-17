@@ -22,6 +22,11 @@
 #define EFL_ANIMATION_DATA_GET(o, pd) \
    Evas_Object_Animation_Data *pd = efl_data_scope_get(o, EFL_ANIMATION_CLASS)
 
+typedef struct _Target_State
+{
+   int r, g, b, a;
+} Target_State;
+
 struct _Evas_Object_Animation_Data
 {
    /*
@@ -42,7 +47,8 @@ struct _Evas_Object_Animation_Data
         double current;
      } time;
 
-   Eo       *target;
+   Eo           *target;
+   Target_State *target_state;
 
    double    progress;
    double    duration;
@@ -50,6 +56,7 @@ struct _Evas_Object_Animation_Data
    Eina_Bool deleted : 1;
    Eina_Bool cancelled : 1;
    Eina_Bool ended : 1;
+   Eina_Bool state_keep : 1;
 };
 
 static void
@@ -109,6 +116,52 @@ _efl_animation_is_deleted(Eo *eo_obj, Evas_Object_Animation_Data *pd)
    return pd->deleted;
 }
 
+EOLIAN static void
+_efl_animation_final_state_keep_set(Eo *eo_obj, Evas_Object_Animation_Data *pd, Eina_Bool state_keep)
+{
+   EFL_ANIMATION_CHECK_OR_RETURN(eo_obj);
+
+   if (pd->state_keep == state_keep) return;
+
+   pd->state_keep = !!state_keep;
+}
+
+EOLIAN static Eina_Bool
+_efl_animation_final_state_keep_get(Eo *eo_obj, Evas_Object_Animation_Data *pd)
+{
+   EFL_ANIMATION_CHECK_OR_RETURN(eo_obj, EINA_FALSE);
+
+   return pd->state_keep;
+}
+
+static void
+_target_state_save(Eo *target, Target_State *target_state)
+{
+   if (!target || !target_state) return;
+
+   int r, g, b, a;
+   evas_object_color_get(target, &r, &g, &b, &a);
+
+   target_state->r = r;
+   target_state->g = g;
+   target_state->b = b;
+   target_state->a = a;
+}
+
+static void
+_target_state_restore(Eo *target, Target_State *target_state)
+{
+   if (!target || !target_state) return;
+
+   int r, g, b, a;
+   r = target_state->r;
+   g = target_state->g;
+   b = target_state->b;
+   a = target_state->a;
+
+   evas_object_color_set(target, r, g, b, a);
+}
+
 static Eina_Bool
 _animator_cb(void *data)
 {
@@ -141,6 +194,10 @@ end:
    pd->ended = EINA_TRUE;
    pd->animator = NULL;
 
+   //Restore initial state of target object
+   if (!pd->state_keep)
+     _target_state_restore(pd->target, pd->target_state);
+
    efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
 
    //FIXME: Delete animation here
@@ -154,6 +211,9 @@ _efl_animation_start(Eo *eo_obj, Evas_Object_Animation_Data *pd)
 
    if (pd->duration <= 0.0)
      return EINA_FALSE;
+
+   //Save current state of target object
+   _target_state_save(pd->target, pd->target_state);
 
    pd->cancelled = EINA_FALSE;
    pd->ended = EINA_FALSE;
@@ -183,6 +243,10 @@ _efl_animation_cancel(Eo *eo_obj, Evas_Object_Animation_Data *pd)
         ecore_animator_del(pd->animator);
         pd->animator = NULL;
 
+        //Restore initial state of target object
+        if (!pd->state_keep)
+          _target_state_restore(pd->target, pd->target_state);
+
         efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
      }
 
@@ -209,6 +273,7 @@ _efl_animation_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Data *pd
    pd->time.current = 0.0;
 
    pd->target = NULL;
+   pd->target_state = (Target_State *) calloc(1, sizeof(Target_State));
 
    pd->progress = 0.0;
    pd->duration = 0.0;
@@ -216,6 +281,7 @@ _efl_animation_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Data *pd
    pd->deleted = EINA_FALSE;
    pd->cancelled = EINA_FALSE;
    pd->ended = EINA_FALSE;
+   pd->state_keep = EINA_FALSE;
 
    return eo_obj;
 }
@@ -231,11 +297,18 @@ _efl_animation_efl_object_destructor(Eo *eo_obj, Evas_Object_Animation_Data *pd)
         pd->animator = NULL;
         pd->ended = EINA_TRUE;
 
+        //Restore initial state of target object
+        if (!pd->state_keep)
+          _target_state_restore(pd->target, pd->target_state);
+
         efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
      }
 
    if (pd->target)
      efl_event_callback_del(pd->target, EFL_EVENT_DEL, _target_del_cb, eo_obj);
+
+   free(pd->target_state);
+   pd->target_state = NULL;
 
    efl_destructor(efl_super(eo_obj, MY_CLASS));
 }
