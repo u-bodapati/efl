@@ -57,5 +57,6 @@ abstract Efl.Animation (Efl.Object)
    events {
       animate; [[Animation is animated.]]
       end; [[Animation ended]]
+      pre_animate @protected; /* @internal */ [[Animate is animated, but this event happens before animate event. To remove duplicate event calls with outside of class, pre_animate event is used instead of animate event within class.]]
    }
 }

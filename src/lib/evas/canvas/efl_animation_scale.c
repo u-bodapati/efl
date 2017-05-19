@@ -122,7 +122,7 @@ _efl_animation_scale_scale_z_get(Eo *eo_obj, Evas_Object_Animation_Scale_Data *p
 }
 
 static void
-_animate_cb(void *data, const Efl_Event *event)
+_pre_animate_cb(void *data, const Efl_Event *event)
 {
    Efl_Animation_Animate_Event_Info *event_info = event->info;
 }
@@ -136,7 +136,8 @@ _efl_animation_scale_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Sc
    pd->from.scale_y = 1.0;
    pd->from.scale_z = 1.0;
 
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, _animate_cb, NULL);
+   //pre animate event is supported within class only (protected event)
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE, _pre_animate_cb, NULL);
 
    return eo_obj;
 }

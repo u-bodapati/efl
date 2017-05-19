@@ -53,7 +53,7 @@ _efl_animation_alpha_alpha_get(Eo *eo_obj EINA_UNUSED, Evas_Object_Animation_Alp
 }
 
 static void
-_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
+_pre_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
 {
    EFL_ANIMATION_ALPHA_DATA_GET(event->object, pd);
    Efl_Animation_Animate_Event_Info *event_info = event->info;
@@ -77,7 +77,9 @@ _efl_animation_alpha_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Al
    pd->from.alpha = 1.0;
    pd->to.alpha = 1.0;
 
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, _animate_cb, NULL);
+   //pre animate event is supported within class only (protected event)
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE,
+                          _pre_animate_cb, NULL);
 
    return eo_obj;
 }
