@@ -18,6 +18,9 @@
       } \
    } while (0)
 
+#define EFL_ANIMATION_ROTATE_DATA_GET(o, pd) \
+   Evas_Object_Animation_Rotate_Data *pd = efl_data_scope_get(o, EFL_ANIMATION_ROTATE_CLASS)
+
 typedef struct _Evas_Object_Animation_Rotate_Property
 {
    double angle;
@@ -117,6 +120,40 @@ _efl_animation_rotate_absolute_pivot_get(Eo *eo_obj, Evas_Object_Animation_Rotat
 
    if (pivot_z)
      *pivot_z = pd->abs_pivot.z;
+}
+
+EOLIAN static Efl_Animation *
+_efl_animation_rotate_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Rotate_Data *pd)
+{
+   EFL_ANIMATION_ROTATE_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Rotate *animation = efl_add(MY_CLASS, NULL);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_duration_set(animation, duration);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_target_set(animation, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_final_state_keep_set(animation, state_keep);
+
+   EFL_ANIMATION_ROTATE_DATA_GET(animation, new_pd);
+
+   new_pd->from.angle = pd->from.angle;
+   new_pd->to.angle = pd->to.angle;
+
+   new_pd->rel_pivot.x = pd->rel_pivot.x;
+   new_pd->rel_pivot.y = pd->rel_pivot.y;
+   new_pd->rel_pivot.z = pd->rel_pivot.z;
+
+   new_pd->abs_pivot.x = pd->rel_pivot.x;
+   new_pd->abs_pivot.y = pd->rel_pivot.y;
+   new_pd->abs_pivot.z = pd->rel_pivot.z;
+
+   new_pd->use_rel_pivot = pd->use_rel_pivot;
+
+   return animation;
 }
 
 static void

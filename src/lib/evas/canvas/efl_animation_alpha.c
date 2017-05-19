@@ -52,6 +52,30 @@ _efl_animation_alpha_alpha_get(Eo *eo_obj EINA_UNUSED, Evas_Object_Animation_Alp
      *to_alpha = pd->to.alpha;
 }
 
+EOLIAN static Efl_Animation *
+_efl_animation_alpha_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Alpha_Data *pd)
+{
+   EFL_ANIMATION_ALPHA_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Alpha *animation = efl_add(MY_CLASS, NULL);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_duration_set(animation, duration);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_target_set(animation, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_final_state_keep_set(animation, state_keep);
+
+   EFL_ANIMATION_ALPHA_DATA_GET(animation, new_pd);
+
+   new_pd->from.alpha = pd->from.alpha;
+   new_pd->to.alpha = pd->to.alpha;
+
+   return animation;
+}
+
 static void
 _pre_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
 {

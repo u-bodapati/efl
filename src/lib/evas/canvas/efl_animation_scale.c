@@ -18,6 +18,9 @@
       } \
    } while (0)
 
+#define EFL_ANIMATION_SCALE_DATA_GET(o, pd) \
+   Evas_Object_Animation_Scale_Data *pd = efl_data_scope_get(o, EFL_ANIMATION_SCALE_CLASS)
+
 typedef struct _Evas_Object_Animation_Scale_Property
 {
    double scale_x, scale_y, scale_z;
@@ -119,6 +122,35 @@ _efl_animation_scale_scale_z_get(Eo *eo_obj, Evas_Object_Animation_Scale_Data *p
 
    if (to_z)
      *to_z = pd->to.scale_z;
+}
+
+EOLIAN static Efl_Animation *
+_efl_animation_scale_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Scale_Data *pd)
+{
+   EFL_ANIMATION_SCALE_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Scale *animation = efl_add(MY_CLASS, NULL);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_duration_set(animation, duration);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_target_set(animation, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_final_state_keep_set(animation, state_keep);
+
+   EFL_ANIMATION_SCALE_DATA_GET(animation, new_pd);
+
+   new_pd->from.scale_x = pd->from.scale_x;
+   new_pd->from.scale_y = pd->from.scale_y;
+   new_pd->from.scale_z = pd->from.scale_z;
+
+   new_pd->to.scale_x = pd->to.scale_x;
+   new_pd->to.scale_y = pd->to.scale_y;
+   new_pd->to.scale_z = pd->to.scale_z;
+
+   return animation;
 }
 
 static void

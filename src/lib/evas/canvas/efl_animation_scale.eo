@@ -50,5 +50,6 @@ class Efl.Animation.Scale (Efl.Animation)
    implements {
       Efl.Object.constructor;
       Efl.Object.destructor;
+      Efl.Animation.dup;
    }
 }

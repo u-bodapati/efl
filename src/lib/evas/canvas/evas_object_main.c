@@ -2783,7 +2783,8 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
    if (!event_anim) return;
 
    Efl_Animation *cur_anim = event_anim->anim;
-   Efl_Animation *new_anim = animation;
+   Efl_Animation *new_anim = NULL;
+   if (animation) new_anim = efl_animation_dup(animation);
 
    //Unset for current event animation
    if (cur_anim)

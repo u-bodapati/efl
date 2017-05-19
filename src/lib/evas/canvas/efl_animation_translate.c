@@ -18,6 +18,9 @@
       } \
    } while (0)
 
+#define EFL_ANIMATION_TRANSLATE_DATA_GET(o, pd) \
+   Evas_Object_Animation_Translate_Data *pd = efl_data_scope_get(o, EFL_ANIMATION_TRANSLATE_CLASS)
+
 typedef struct _Evas_Object_Animation_Translate_Property
 {
    Evas_Coord move_x, move_y, move_z;
@@ -228,6 +231,43 @@ _efl_animation_translate_coordinate_z_get(Eo *eo_obj, Evas_Object_Animation_Tran
 
    if (to_z)
      *to_z = pd->to.z;
+}
+
+EOLIAN static Efl_Animation *
+_efl_animation_translate_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Translate_Data *pd)
+{
+   EFL_ANIMATION_TRANSLATE_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Translate *animation = efl_add(MY_CLASS, NULL);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_duration_set(animation, duration);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_target_set(animation, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_final_state_keep_set(animation, state_keep);
+
+   EFL_ANIMATION_TRANSLATE_DATA_GET(animation, new_pd);
+
+   new_pd->from.move_x = pd->from.move_x;
+   new_pd->from.move_y = pd->from.move_y;
+   new_pd->from.move_z = pd->from.move_z;
+
+   new_pd->from.x = pd->from.x;
+   new_pd->from.y = pd->from.y;
+   new_pd->from.z = pd->from.z;
+
+   new_pd->to.move_x = pd->to.move_x;
+   new_pd->to.move_y = pd->to.move_y;
+   new_pd->to.move_z = pd->to.move_z;
+
+   new_pd->to.x = pd->to.x;
+   new_pd->to.y = pd->to.y;
+   new_pd->to.z = pd->to.z;
+
+   return animation;
 }
 
 static void
