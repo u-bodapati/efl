@@ -49,10 +49,15 @@ abstract Efl.Animation (Efl.Object)
          [[Get the state of animation]]
          return: Efl.Animation.State; [[Animation state]]
       }
+      dup {
+         [[Duplicate animation]]
+         return: Efl.Animation; [[Duplicated animation]]
+      }
    }
    implements {
       Efl.Object.constructor;
       Efl.Object.destructor;
+      @empty .dup;
    }
    events {
       animate; [[Animation is animated.]]
