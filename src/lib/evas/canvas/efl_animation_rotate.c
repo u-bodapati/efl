@@ -120,7 +120,7 @@ _efl_animation_rotate_absolute_pivot_get(Eo *eo_obj, Evas_Object_Animation_Rotat
 }
 
 static void
-_animate_cb(void *data, const Efl_Event *event)
+_pre_animate_cb(void *data, const Efl_Event *event)
 {
    Efl_Animation_Animate_Event_Info *event_info = event->info;
 }
@@ -143,7 +143,8 @@ _efl_animation_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_R
 
    pd->use_rel_pivot = EINA_TRUE;
 
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, _animate_cb, NULL);
+   //pre animate event is supported within class only (protected event)
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE, _pre_animate_cb, NULL);
 
    return eo_obj;
 }
