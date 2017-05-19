@@ -201,6 +201,8 @@ end:
    if (!pd->state_keep)
      _target_state_restore(pd->target, pd->target_state);
 
+   //pre end event is supported within class only (protected event)
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_PRE_END, NULL);
    efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
 
    //FIXME: Delete animation here
@@ -250,6 +252,8 @@ _efl_animation_cancel(Eo *eo_obj, Evas_Object_Animation_Data *pd)
         if (!pd->state_keep)
           _target_state_restore(pd->target, pd->target_state);
 
+        //pre end event is supported within class only (protected event)
+        efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_PRE_END, NULL);
         efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
      }
 
@@ -304,6 +308,8 @@ _efl_animation_efl_object_destructor(Eo *eo_obj, Evas_Object_Animation_Data *pd)
         if (!pd->state_keep)
           _target_state_restore(pd->target, pd->target_state);
 
+        //pre end event is supported within class only (protected event)
+        efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_PRE_END, NULL);
         efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_END, NULL);
      }
 
