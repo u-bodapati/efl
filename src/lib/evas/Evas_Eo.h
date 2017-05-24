@@ -72,6 +72,7 @@
 #include "canvas/efl_animation_scale.eo.h"
 #include "canvas/efl_animation_translate.eo.h"
 #include "canvas/efl_animation_group.eo.h"
+#include "canvas/efl_animation_group_sequential.eo.h"
 #endif /* EFL_EO_API_SUPPORT */
 
 #if defined(EFL_BETA_API_SUPPORT) && defined(EFL_EO_API_SUPPORT)

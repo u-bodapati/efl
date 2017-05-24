@@ -110,6 +110,7 @@ typedef struct _Evas_Object_Animation_Rotate_Data  Evas_Object_Animation_Rotate_
 typedef struct _Evas_Object_Animation_Scale_Data  Evas_Object_Animation_Scale_Data;
 typedef struct _Evas_Object_Animation_Translate_Data  Evas_Object_Animation_Translate_Data;
 typedef struct _Evas_Object_Animation_Group_Data  Evas_Object_Animation_Group_Data;
+typedef struct _Evas_Object_Animation_Group_Sequential_Data  Evas_Object_Animation_Group_Sequential_Data;
 typedef struct _Evas_Object_Animation_Data  Evas_Object_Animation_Data;
 
 //These macros are matched to Efl_Animation_Event_Type enum values.
