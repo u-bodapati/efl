@@ -189,6 +189,9 @@ _animator_cb(void *data)
    efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE,
                            &event_info);
    efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_ANIMATE, &event_info);
+   //post animate event is supported within class only (protected event)
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_POST_ANIMATE,
+                           &event_info);
 
   /* Not end. Keep going. */
    if (elapsed_time < duration) return ECORE_CALLBACK_RENEW;
