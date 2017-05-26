@@ -79,6 +79,8 @@ _efl_animation_group_sequential_efl_animation_start(Eo *eo_obj, Evas_Object_Anim
 
    pd->current_index = 0;
 
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_START, NULL);
+
    return _index_animation_start(eo_obj, pd->current_index);
 }
 

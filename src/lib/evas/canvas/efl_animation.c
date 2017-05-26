@@ -232,6 +232,13 @@ _efl_animation_start(Eo *eo_obj, Evas_Object_Animation_Data *pd)
    pd->animator = NULL;
 
    pd->time.begin = ecore_loop_time_get();
+
+   //pre start event is supported within class only (protected event)
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_PRE_START, NULL);
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_START, NULL);
+   //post start event is supported within class only (protected event)
+   efl_event_callback_call(eo_obj, EFL_ANIMATION_EVENT_POST_START, NULL);
+
    pd->animator = ecore_animator_add(_animator_cb, eo_obj);
 
    _animator_cb(eo_obj);
