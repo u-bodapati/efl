@@ -25,6 +25,10 @@
 typedef struct _Target_State
 {
    int r, g, b, a;
+
+   Evas_Map *map;
+
+   Eina_Bool map_enable : 1;
 } Target_State;
 
 struct _Evas_Object_Animation_Data
@@ -146,6 +150,12 @@ _target_state_save(Eo *target, Target_State *target_state)
    target_state->g = g;
    target_state->b = b;
    target_state->a = a;
+
+   if (target_state->map)
+     evas_map_free(target_state->map);
+
+   target_state->map = evas_map_dup(evas_object_map_get(target));
+   target_state->map_enable = evas_object_map_enable_get(target);
 }
 
 static void
@@ -160,6 +170,9 @@ _target_state_restore(Eo *target, Target_State *target_state)
    a = target_state->a;
 
    evas_object_color_set(target, r, g, b, a);
+
+   evas_object_map_set(target, target_state->map);
+   evas_object_map_enable_set(target, target_state->map_enable);
 }
 
 static Eina_Bool
