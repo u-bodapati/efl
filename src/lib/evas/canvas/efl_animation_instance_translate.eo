@@ -1,0 +1,102 @@
+import efl_animation_types;
+
+class Efl.Animation.Instance.Translate (Efl.Animation.Instance)
+{
+   [[Efl translate animation instance class]]
+   legacy_prefix: evas_object_animation_instance;
+   data: Evas_Object_Animation_Instance_Translate_Data;
+   methods {
+      @property translate @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: int; [[Distance moved along x axis when animation starts]]
+            from_y: int; [[Distance moved along y axis when animation starts]]
+            from_z: int; [[Distance moved along z axis when animation starts]]
+            to_x: int; [[Distance moved along x axis when animation ends]]
+            to_y: int; [[Distance moved along y axis when animation ends]]
+            to_z: int; [[Distance moved along z axis when animation ends]]
+         }
+      }
+      @property translate_x @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: int; [[Distance moved along x axis when animation starts]]
+            to_x: int; [[Distance moved along x axis when animation ends]]
+         }
+      }
+      @property translate_y @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_y: int; [[Distance moved along y axis when animation starts]]
+            to_y: int; [[Distance moved along y axis when animation ends]]
+         }
+      }
+      @property translate_z @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_z: int; [[Distance moved along z axis when animation starts]]
+            to_z: int; [[Distance moved along z axis when animation ends]]
+         }
+      }
+      @property coordinate @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: int; [[X coordinate when animation starts]]
+            from_y: int; [[Y coordinate when animation starts]]
+            from_z: int; [[Z coordinate when animation starts]]
+            to_x: int; [[X coordinate when animation ends]]
+            to_y: int; [[Y coordinate when animation ends]]
+            to_z: int; [[Z coordinate when animation ends]]
+         }
+      }
+      @property coordinate_x @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: int; [[X coordinate when animation starts]]
+            to_x: int; [[X coordinate when animation ends]]
+         }
+      }
+      @property coordinate_y @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_y: int; [[Y coordinate when animation starts]]
+            to_y: int; [[Y coordinate when animation ends]]
+         }
+      }
+      @property coordinate_z @protected /* @internal */ {
+         set {
+         }
+         get {
+         }
+         values {
+            from_z: int; [[Z coordinate when animation starts]]
+            to_z: int; [[Z coordinate when animation ends]]
+         }
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+}

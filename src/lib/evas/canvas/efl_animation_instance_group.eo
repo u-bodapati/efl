@@ -1,0 +1,30 @@
+import efl_animation_types;
+
+abstract Efl.Animation.Instance.Group (Efl.Animation.Instance)
+{
+   [[Efl group animation instance abstract class]]
+   legacy_prefix: evas_object_animation_instance;
+   data: Evas_Object_Animation_Instance_Group_Data;
+   methods {
+      instance_add @protected /* @internal */ {
+         [[Add the given instance to the animation group.]]
+         params {
+            @in animation: Efl.Animation.Instance; [[The instance which needs to be added to the animation group instance]]
+         }
+      }
+      instance_del @protected /* @internal */ {
+         [[Delete the given instance from the animation group.]]
+         params {
+            @in animation: Efl.Animation.Instance; [[The instance which needs to be deleted from the animation group instance]]
+         }
+      }
+      instances_get @protected /* @internal */ {
+         [[Get the instances of the animation group instance.]]
+         return: list<Efl.Animation.Instance>; [[The instances of the animation group instance]]
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+}

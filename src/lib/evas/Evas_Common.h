@@ -3323,6 +3323,104 @@ EAPI const Eina_List        *evas_font_path_global_list(void) EINA_WARN_UNUSED_R
  */
 EAPI void                    evas_font_reinit(void);
 
+#ifndef _EFL_ANIMATION_EO_CLASS_TYPE
+#define _EFL_ANIMATION_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation;
+
+#endif
+
+#ifndef _EFL_ANIMATION_ALPHA_EO_CLASS_TYPE
+#define _EFL_ANIMATION_ALPHA_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Alpha;
+
+#endif
+
+#ifndef _EFL_ANIMATION_ROTATE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_ROTATE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Rotate;
+
+#endif
+
+#ifndef _EFL_ANIMATION_SCALE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_SCALE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Scale;
+
+#endif
+
+#ifndef _EFL_ANIMATION_TRANSLATE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_TRANSLATE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Translate;
+
+#endif
+
+#ifndef _EFL_ANIMATION_GROUP_EO_CLASS_TYPE
+#define _EFL_ANIMATION_GROUP_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Group;
+
+#endif
+
+#ifndef _EFL_ANIMATION_GROUP_SEQUENTIAL_EO_CLASS_TYPE
+#define _EFL_ANIMATION_GROUP_SEQUENTIAL_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Group_Sequential;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_ALPHA_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_ALPHA_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Alpha;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_ROTATE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_ROTATE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Rotate;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_SCALE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_SCALE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Scale;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_TRANSLATE_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_TRANSLATE_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Translate;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_GROUP_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_GROUP_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Group;
+
+#endif
+
+#ifndef _EFL_ANIMATION_INSTANCE_GROUP_SEQUENTIAL_EO_CLASS_TYPE
+#define _EFL_ANIMATION_INSTANCE_GROUP_SEQUENTIAL_EO_CLASS_TYPE
+
+typedef Eo Efl_Animation_Instance_Group_Sequential;
+
+#endif
+
 struct _Efl_Animation_Animate_Event_Info
 {
    double progress;
