@@ -105,13 +105,20 @@ typedef struct _Evas_Pointer_Data           Evas_Pointer_Data;
 typedef struct _Evas_Filter_Command         Evas_Filter_Command;
 typedef enum _Evas_Filter_Support           Evas_Filter_Support;
 
-typedef struct _Evas_Object_Animation_Alpha_Data  Evas_Object_Animation_Alpha_Data;
-typedef struct _Evas_Object_Animation_Rotate_Data  Evas_Object_Animation_Rotate_Data;
-typedef struct _Evas_Object_Animation_Scale_Data  Evas_Object_Animation_Scale_Data;
-typedef struct _Evas_Object_Animation_Translate_Data  Evas_Object_Animation_Translate_Data;
-typedef struct _Evas_Object_Animation_Group_Data  Evas_Object_Animation_Group_Data;
-typedef struct _Evas_Object_Animation_Group_Sequential_Data  Evas_Object_Animation_Group_Sequential_Data;
-typedef struct _Evas_Object_Animation_Data  Evas_Object_Animation_Data;
+typedef struct _Evas_Object_Animation_Alpha_Data                      Evas_Object_Animation_Alpha_Data;
+typedef struct _Evas_Object_Animation_Rotate_Data                     Evas_Object_Animation_Rotate_Data;
+typedef struct _Evas_Object_Animation_Scale_Data                      Evas_Object_Animation_Scale_Data;
+typedef struct _Evas_Object_Animation_Translate_Data                  Evas_Object_Animation_Translate_Data;
+typedef struct _Evas_Object_Animation_Group_Data                      Evas_Object_Animation_Group_Data;
+typedef struct _Evas_Object_Animation_Group_Sequential_Data           Evas_Object_Animation_Group_Sequential_Data;
+typedef struct _Evas_Object_Animation_Data                            Evas_Object_Animation_Data;
+typedef struct _Evas_Object_Animation_Instance_Alpha_Data             Evas_Object_Animation_Instance_Alpha_Data;
+typedef struct _Evas_Object_Animation_Instance_Rotate_Data            Evas_Object_Animation_Instance_Rotate_Data;
+typedef struct _Evas_Object_Animation_Instance_Scale_Data             Evas_Object_Animation_Instance_Scale_Data;
+typedef struct _Evas_Object_Animation_Instance_Translate_Data         Evas_Object_Animation_Instance_Translate_Data;
+typedef struct _Evas_Object_Animation_Instance_Group_Data             Evas_Object_Animation_Instance_Group_Data;
+typedef struct _Evas_Object_Animation_Instance_Group_Sequential_Data  Evas_Object_Animation_Instance_Group_Sequential_Data;
+typedef struct _Evas_Object_Animation_Instance_Data                   Evas_Object_Animation_Instance_Data;
 
 //These macros are matched to Efl_Animation_Event_Type enum values.
 #define EFL_ANIMATION_EVENT_TYPE_SHOW_STR    "show"
