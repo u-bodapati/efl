@@ -76,23 +76,6 @@ _efl_animation_alpha_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Alpha_D
    return animation;
 }
 
-static void
-_pre_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
-{
-   EFL_ANIMATION_ALPHA_DATA_GET(event->object, pd);
-   Efl_Animation_Animate_Event_Info *event_info = event->info;
-
-   double progress = event_info->progress;
-
-   double alpha
-      = (pd->from.alpha * (1.0 - progress)) + (pd->to.alpha * progress);
-
-   //FIXME: The below code is temporary test code
-   int color = (int)(alpha * 255);
-   Evas_Object *target = efl_animation_target_get(event->object);
-   evas_object_color_set(target, color, color, color, color);
-}
-
 EOLIAN static Efl_Object *
 _efl_animation_alpha_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Alpha_Data *pd)
 {
@@ -100,10 +83,6 @@ _efl_animation_alpha_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Al
 
    pd->from.alpha = 1.0;
    pd->to.alpha = 1.0;
-
-   //pre animate event is supported within class only (protected event)
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE,
-                          _pre_animate_cb, NULL);
 
    return eo_obj;
 }

@@ -270,12 +270,6 @@ _efl_animation_translate_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Tra
    return animation;
 }
 
-static void
-_pre_animate_cb(void *data, const Efl_Event *event)
-{
-   Efl_Animation_Animate_Event_Info *event_info = event->info;
-}
-
 EOLIAN static Efl_Object *
 _efl_animation_translate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Translate_Data *pd)
 {
@@ -296,9 +290,6 @@ _efl_animation_translate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animatio
    pd->to.x = 0;
    pd->to.y = 0;
    pd->to.z = 0;
-
-   //pre animate event is supported within class only (protected event)
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE, _pre_animate_cb, NULL);
 
    return eo_obj;
 }

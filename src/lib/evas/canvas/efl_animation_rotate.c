@@ -156,12 +156,6 @@ _efl_animation_rotate_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Rotate
    return animation;
 }
 
-static void
-_pre_animate_cb(void *data, const Efl_Event *event)
-{
-   Efl_Animation_Animate_Event_Info *event_info = event->info;
-}
-
 EOLIAN static Efl_Object *
 _efl_animation_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Rotate_Data *pd)
 {
@@ -179,9 +173,6 @@ _efl_animation_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_R
    pd->abs_pivot.z = 0;
 
    pd->use_rel_pivot = EINA_TRUE;
-
-   //pre animate event is supported within class only (protected event)
-   efl_event_callback_add(eo_obj, EFL_ANIMATION_EVENT_PRE_ANIMATE, _pre_animate_cb, NULL);
 
    return eo_obj;
 }
