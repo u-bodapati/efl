@@ -41,10 +41,15 @@ abstract Efl.Animation (Efl.Object)
          [[Duplicate animation]]
          return: Efl.Animation; [[Duplicated animation]]
       }
+      instance_create {
+         [[Create instance of the animation.]]
+         return: Efl.Animation.Instance; [[Created instance of the animation]]
+      }
    }
    implements {
       Efl.Object.constructor;
       Efl.Object.destructor;
       @empty .dup;
+      @empty .instance_create;
    }
 }

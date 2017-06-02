@@ -44,11 +44,13 @@ Eina_Cow *evas_object_mask_cow = NULL;
 
 typedef struct _Event_Animation
 {
-   Efl_Animation *anim;
+   Efl_Animation          *anim;
+   Efl_Animation_Instance *inst;
 } Event_Animation;
 
 typedef struct _Hide_Anim_Data
 {
+   Eo            *target;
    Eina_Bool      anim_started;
    Eina_Bool      anim_ended;
 } Hide_Anim_Data;
@@ -1042,17 +1044,44 @@ _efl_animation_event_type_get(const char *event_str)
    return -1;
 }
 
+static Eina_Bool
+_efl_animation_event_type_is_valid(Efl_Animation_Event_Type event)
+{
+   if ((event < 0) || (event >= EFL_ANIMATION_EVENT_TYPE_COUNT))
+     return EINA_FALSE;
+
+   return EINA_TRUE;
+}
+
+static Efl_Animation_Instance *
+_event_animation_instance_get(Eo *eo_obj,
+                              Efl_Animation_Event_Type event_type)
+{
+   Evas_Object_Protected_Data *pd = efl_data_scope_get(eo_obj, MY_CLASS);
+   if (!pd) return NULL;
+
+   if (!_efl_animation_event_type_is_valid(event_type))
+     return NULL;
+
+   Event_Animation *event_anim = eina_array_data_get(pd->event_anims,
+                                                     event_type);
+   if (event_anim && event_anim->inst)
+     return event_anim->inst;
+
+   return NULL;
+}
+
 static void
-_all_animations_cancel(Eo *eo_obj)
+_all_animation_instances_cancel(Eo *eo_obj)
 {
    Efl_Animation_Event_Type event_type;
    for (event_type = EFL_ANIMATION_EVENT_TYPE_SHOW;
         event_type < EFL_ANIMATION_EVENT_TYPE_COUNT; event_type++)
      {
-        Efl_Animation *anim = efl_canvas_object_event_animation_get(eo_obj,
-                                                                    event_type);
-        if (anim)
-          efl_animation_cancel(anim);
+        Efl_Animation_Instance *inst = _event_animation_instance_get(eo_obj,
+                                                                     event_type);
+        if (inst)
+          efl_animation_instance_cancel(inst);
      }
 }
 
@@ -1071,12 +1100,12 @@ _efl_canvas_object_efl_object_event_callback_call(Eo *eo_obj,
 
         if (!_efl_animation_event_type_is_inform_call(event_type))
           {
-             Efl_Animation *anim =
-                efl_canvas_object_event_animation_get(eo_obj, event_type);
-             if (anim)
+             Efl_Animation_Instance *inst =
+                _event_animation_instance_get(eo_obj, event_type);
+             if (inst)
                {
-                  _all_animations_cancel(eo_obj);
-                  efl_animation_start(anim);
+                  _all_animation_instances_cancel(eo_obj);
+                  efl_animation_instance_start(inst);
                }
           }
      }
@@ -1100,12 +1129,12 @@ _efl_canvas_object_efl_object_event_callback_legacy_call(Eo *eo_obj,
 
         if (!_efl_animation_event_type_is_inform_call(event_type))
           {
-             Efl_Animation *anim =
-                efl_canvas_object_event_animation_get(eo_obj, event_type);
-             if (anim)
+             Efl_Animation_Instance *inst =
+                _event_animation_instance_get(eo_obj, event_type);
+             if (inst)
                {
-                  _all_animations_cancel(eo_obj);
-                  efl_animation_start(anim);
+                  _all_animation_instances_cancel(eo_obj);
+                  efl_animation_instance_start(inst);
                }
           }
      }
@@ -1779,8 +1808,7 @@ _animation_hide_end_cb(void *data, const Efl_Event *event)
 
    hide_anim_data->anim_ended = EINA_TRUE;
 
-   Eo *eo_obj = efl_animation_target_get(event->object);
-   _animation_intercept_hide(hide_anim_data, eo_obj);
+   _animation_intercept_hide(hide_anim_data, hide_anim_data->target);
 
    hide_anim_data->anim_started = EINA_FALSE;
    hide_anim_data->anim_ended = EINA_FALSE;
@@ -1791,15 +1819,14 @@ _animation_intercept_hide(void *data, Evas_Object *eo_obj)
 {
    Hide_Anim_Data *hide_anim_data = data;
 
-   Efl_Animation *anim =
-      efl_canvas_object_event_animation_get(eo_obj,
-                                            EFL_ANIMATION_EVENT_TYPE_HIDE);
-   if (anim && !hide_anim_data->anim_started && !hide_anim_data->anim_ended)
+   Efl_Animation_Instance *inst =
+      _event_animation_instance_get(eo_obj, EFL_ANIMATION_EVENT_TYPE_HIDE);
+   if (inst && !hide_anim_data->anim_started && !hide_anim_data->anim_ended)
      {
         hide_anim_data->anim_started = EINA_TRUE;
 
-        _all_animations_cancel(eo_obj);
-        efl_animation_start(anim);
+        _all_animation_instances_cancel(eo_obj);
+        efl_animation_instance_start(inst);
      }
    else
      efl_gfx_visible_set(eo_obj, EINA_FALSE);
@@ -1847,13 +1874,12 @@ _show(Evas_Object *eo_obj, Evas_Object_Protected_Data *obj)
    evas_object_update_bounding_box(eo_obj, obj, NULL);
    evas_object_inform_call_show(eo_obj);
 
-   Efl_Animation *anim =
-      efl_canvas_object_event_animation_get(eo_obj,
-                                            EFL_ANIMATION_EVENT_TYPE_SHOW);
-   if (anim)
+   Efl_Animation_Instance *inst =
+      _event_animation_instance_get(eo_obj, EFL_ANIMATION_EVENT_TYPE_SHOW);
+   if (inst)
      {
-        _all_animations_cancel(eo_obj);
-        efl_animation_start(anim);
+        _all_animation_instances_cancel(eo_obj);
+        efl_animation_instance_start(inst);
      }
 }
 
@@ -2736,26 +2762,17 @@ EOAPI EFL_VOID_FUNC_BODYV(efl_canvas_object_type_set, EFL_FUNC_CALL(type), const
    EFL_OBJECT_OP_FUNC(efl_canvas_object_legacy_ctor, _efl_canvas_object_legacy_ctor), \
    EFL_OBJECT_OP_FUNC(efl_canvas_object_type_set, _efl_canvas_object_type_set)
 
-static Eina_Bool
-_efl_animation_event_type_is_valid(Efl_Animation_Event_Type event)
-{
-   if ((event < 0) || (event >= EFL_ANIMATION_EVENT_TYPE_COUNT))
-     return EINA_FALSE;
-
-   return EINA_TRUE;
-}
-
 static void
 _anim_del_cb(void *data, const Efl_Event *event)
 {
    Eo *eo_obj = data;
-   Efl_Animation *anim = event->object;
+   Efl_Animation_Instance *inst = event->object;
    Efl_Animation_Event_Type event_type;
 
    for (event_type = EFL_ANIMATION_EVENT_TYPE_SHOW;
         event_type < EFL_ANIMATION_EVENT_TYPE_COUNT; event_type++)
      {
-        if (anim == efl_canvas_object_event_animation_get(eo_obj, event_type))
+        if (inst == _event_animation_instance_get(eo_obj, event_type))
           efl_canvas_object_event_animation_set(eo_obj, event_type, NULL);
      }
 }
@@ -2773,14 +2790,12 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
    if (!event_anim) return;
 
    Efl_Animation *cur_anim = event_anim->anim;
-   Efl_Animation *new_anim = NULL;
-   if (animation) new_anim = efl_animation_dup(animation);
+   Efl_Animation_Instance *cur_inst = event_anim->inst;
 
    //Unset for current event animation
    if (cur_anim)
      {
-        Eo *prev_target =
-           efl_animation_target_get(cur_anim);
+        Eo *prev_target = efl_animation_target_get(cur_anim);
 
         //Deallocate memory and Unset callbacks for Hide event
         if (event_type == EFL_ANIMATION_EVENT_TYPE_HIDE)
@@ -2790,7 +2805,8 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
                                                           _animation_intercept_hide);
              if (hide_anim_data)
                {
-                  efl_event_callback_del(cur_anim, EFL_ANIMATION_EVENT_END,
+                  efl_event_callback_del(cur_inst,
+                                         EFL_ANIMATION_INSTANCE_EVENT_END,
                                          _animation_hide_end_cb,
                                          hide_anim_data);
 
@@ -2803,15 +2819,15 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
           }
 
         //Unset callback
-        efl_event_callback_del(cur_anim, EFL_EVENT_DEL,
+        efl_event_callback_del(cur_inst, EFL_EVENT_DEL,
                                _anim_del_cb, prev_target);
 
         //Stop animation
-        efl_animation_cancel(cur_anim);
+        efl_animation_instance_cancel(cur_inst);
      }
 
-   //Replace current event animation with new event animation
-   event_anim->anim = new_anim;
+   Efl_Animation *new_anim = animation;
+   Efl_Animation_Instance *new_inst = NULL;
 
    //Set for new event animation
    if (new_anim)
@@ -2822,10 +2838,13 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
           target = eo_obj;
         efl_animation_target_set(new_anim, target);
 
+        new_inst = efl_animation_instance_create(new_anim);
+
         //Allocate memory and Set callbacks for Hide event
         if (event_type == EFL_ANIMATION_EVENT_TYPE_HIDE)
           {
              Hide_Anim_Data *hide_anim_data = calloc(1, sizeof(Hide_Anim_Data));
+             hide_anim_data->target = target;
              hide_anim_data->anim_started = EINA_FALSE;
              hide_anim_data->anim_ended = EINA_FALSE;
 
@@ -2833,14 +2852,18 @@ _efl_canvas_object_event_animation_set(Eo *eo_obj,
                                                      _animation_intercept_hide,
                                                      hide_anim_data);
 
-             efl_event_callback_add(new_anim, EFL_ANIMATION_EVENT_END,
+             efl_event_callback_add(new_inst, EFL_ANIMATION_INSTANCE_EVENT_END,
                                     _animation_hide_end_cb,
                                     hide_anim_data);
           }
 
         //Set callback
-        efl_event_callback_add(new_anim, EFL_EVENT_DEL, _anim_del_cb, target);
+        efl_event_callback_add(new_inst, EFL_EVENT_DEL, _anim_del_cb, target);
      }
+
+   //Replace current event animation with new event animation
+   event_anim->anim = new_anim;
+   event_anim->inst = new_inst;
 }
 
 EOLIAN Efl_Animation *
