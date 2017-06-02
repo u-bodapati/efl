@@ -52,4 +52,38 @@ _efl_animation_group_sequential_efl_animation_dup(Eo *eo_obj, Evas_Object_Animat
    return animation;
 }
 
+EOLIAN static Efl_Animation_Instance *
+_efl_animation_group_sequential_efl_animation_instance_create(Eo *eo_obj, Evas_Object_Animation_Group_Sequential_Data *pd)
+{
+   EFL_ANIMATION_GROUP_SEQUENTIAL_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Instance_Group_Sequential *instance
+      = efl_add(EFL_ANIMATION_INSTANCE_GROUP_SEQUENTIAL_CLASS, NULL);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_instance_target_set(instance, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_instance_final_state_keep_set(instance, state_keep);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_instance_duration_set(instance, duration);
+
+   Efl_Animation_Instance_Group_Sequential *group_inst
+      = efl_add(EFL_ANIMATION_INSTANCE_GROUP_SEQUENTIAL_CLASS, NULL);
+
+   Eina_List *animations = efl_animation_group_animations_get(eo_obj);
+   Eina_List *l;
+   Efl_Animation *child_anim;
+   Efl_Animation_Instance *child_inst;
+
+   EINA_LIST_FOREACH(animations, l, child_anim)
+     {
+        child_inst = efl_animation_instance_create(child_anim);
+        efl_animation_instance_group_instance_add(group_inst, child_inst);
+     }
+
+   return group_inst;
+}
+
 #include "efl_animation_group_sequential.eo.c"

@@ -153,6 +153,35 @@ _efl_animation_scale_efl_animation_dup(Eo *eo_obj, Evas_Object_Animation_Scale_D
    return animation;
 }
 
+EOLIAN static Efl_Animation_Instance *
+_efl_animation_scale_efl_animation_instance_create(Eo *eo_obj, Evas_Object_Animation_Scale_Data *pd)
+{
+   EFL_ANIMATION_SCALE_CHECK_OR_RETURN(eo_obj, NULL);
+
+   Efl_Animation_Instance_Scale *instance
+      = efl_add(EFL_ANIMATION_INSTANCE_SCALE_CLASS, NULL);
+
+   Eo *target = efl_animation_target_get(eo_obj);
+   efl_animation_instance_target_set(instance, target);
+
+   Eina_Bool state_keep = efl_animation_final_state_keep_get(eo_obj);
+   efl_animation_instance_final_state_keep_set(instance, state_keep);
+
+   double duration = efl_animation_duration_get(eo_obj);
+   efl_animation_instance_duration_set(instance, duration);
+
+   efl_animation_instance_scale_x_set(instance,
+                                      pd->from.scale_x, pd->to.scale_x);
+
+   efl_animation_instance_scale_y_set(instance,
+                                      pd->from.scale_y, pd->from.scale_y);
+
+   efl_animation_instance_scale_z_set(instance,
+                                      pd->from.scale_z, pd->to.scale_z);
+
+   return instance;
+}
+
 EOLIAN static Efl_Object *
 _efl_animation_scale_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Scale_Data *pd)
 {

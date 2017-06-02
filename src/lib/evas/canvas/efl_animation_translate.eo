@@ -99,5 +99,6 @@ class Efl.Animation.Translate (Efl.Animation)
       Efl.Object.constructor;
       Efl.Object.destructor;
       Efl.Animation.dup;
+      Efl.Animation.instance_create;
    }
 }

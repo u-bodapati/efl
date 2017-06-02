@@ -9,5 +9,6 @@ class Efl.Animation.Group.Sequential (Efl.Animation.Group)
    }
    implements {
       Efl.Animation.dup;
+      Efl.Animation.instance_create;
    }
 }
