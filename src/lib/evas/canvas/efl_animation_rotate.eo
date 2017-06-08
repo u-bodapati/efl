@@ -6,36 +6,29 @@ class Efl.Animation.Rotate (Efl.Animation)
    legacy_prefix: evas_object_animation;
    data: Evas_Object_Animation_Rotate_Data;
    methods {
-      @property angle {
+      @property rotate {
          set {
          }
          get {
          }
          values {
-            from_angle: double; [[Rotation angle when animation starts]]
-            to_angle: double; [[Rotation angle when animation ends]]
+            from_degree: double; [[Rotation degree when animation starts]]
+            to_degree: double; [[Rotation degree when animation ends]]
+            pivot: Efl.Canvas.Object; [[Pivot object for the center point. If the pivot object is NULL, then the object is rotated on itself.]]
+            cx: double; [[X relative coordinate of the center point. The left end is 0.0 and the right end is 1.0 (the center is 0.5).]]
+            cy: double; [[Y relative coordinate of the center point. The top end is 0.0 and the bottom end is 1.0 (the center is 0.5).]]
          }
       }
-      @property relative_pivot {
+      @property rotate_absolute {
          set {
          }
          get {
          }
          values {
-            x: double; [[Relative pivot value along x axis. The left is 0.0 and the right is 1.0.]]
-            y: double; [[Relative pivot value along x axis. The top is 0.0 and the bottom is 1.0.]]
-            z: double; [[Relative pivot value along x axis. The front is 0.0 and the rear is 1.0.]]
-         }
-      }
-      @property absolute_pivot {
-         set {
-         }
-         get {
-         }
-         values {
-            x: int; [[Absolute pivot value along x axis]]
-            y: int; [[Absolute pivot value along x axis]]
-            z: int; [[Absolute pivot value along x axis]]
+            from_degree: double; [[Rotation degree when animation starts]]
+            to_degree: double; [[Rotation degree when animation ends]]
+            cx: int; [[X absolute coordinate of the center point.]]
+            cy: int; [[Y absolute coordinate of the center point.]]
          }
       }
    }
