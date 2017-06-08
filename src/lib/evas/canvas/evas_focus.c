@@ -167,7 +167,7 @@ _efl_canvas_object_seat_focus_add(Eo *eo_obj,
    if (!seat) seat = _default_seat_get(eo_obj);
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(seat, EINA_FALSE);
-   if (efl_input_device_type_get(seat) != EFL_INPUT_DEVICE_CLASS_SEAT)
+   if (efl_input_device_type_get(seat) != EFL_INPUT_DEVICE_TYPE_SEAT)
      return EINA_FALSE;
 
    if (!efl_input_seat_event_filter_get(eo_obj, seat))

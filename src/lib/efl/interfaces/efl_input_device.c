@@ -33,7 +33,7 @@ EOLIAN static void
 _efl_input_device_efl_object_destructor(Eo *obj, Efl_Input_Device_Data *pd)
 {
    pd->children = eina_list_free(pd->children);
-   if (pd->klass != EFL_INPUT_DEVICE_CLASS_SEAT)
+   if (pd->klass != EFL_INPUT_DEVICE_TYPE_SEAT)
      {
         Efl_Input_Device_Data *p;
         Eo *seat;
@@ -57,7 +57,7 @@ _efl_input_device_efl_object_parent_set(Eo *obj, Efl_Input_Device_Data *pd EINA_
         if (efl_isa(parent, MY_CLASS))
           {
              p = efl_data_scope_get(parent, MY_CLASS);
-             EINA_SAFETY_ON_FALSE_RETURN(p->klass == EFL_INPUT_DEVICE_CLASS_SEAT);
+             EINA_SAFETY_ON_FALSE_RETURN(p->klass == EFL_INPUT_DEVICE_TYPE_SEAT);
              if (!eina_list_data_find(p->children, obj))
                p->children = eina_list_append(p->children, obj);
           }
@@ -81,27 +81,15 @@ _efl_input_device_efl_object_parent_set(Eo *obj, Efl_Input_Device_Data *pd EINA_
 }
 
 EOLIAN static void
-_efl_input_device_device_type_set(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd, Efl_Input_Device_Class klass)
+_efl_input_device_device_type_set(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd, Efl_Input_Device_Type klass)
 {
    pd->klass= klass;
 }
 
-EOLIAN static Efl_Input_Device_Class
+EOLIAN static Efl_Input_Device_Type
 _efl_input_device_device_type_get(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd)
 {
    return pd->klass;
-}
-
-EOLIAN static void
-_efl_input_device_device_subtype_set(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd, Efl_Input_Device_Sub_Class klass)
-{
-   pd->subclass = klass;
-}
-
-EOLIAN static Efl_Input_Device_Sub_Class
-_efl_input_device_device_subtype_get(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd)
-{
-   return pd->subclass;
 }
 
 EOLIAN static void
@@ -121,14 +109,14 @@ _efl_input_device_source_get(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd)
 EOLIAN static void
 _efl_input_device_seat_id_set(Eo *obj EINA_UNUSED, Efl_Input_Device_Data *pd, unsigned int id)
 {
-   EINA_SAFETY_ON_TRUE_RETURN(pd->klass != EFL_INPUT_DEVICE_CLASS_SEAT);
+   EINA_SAFETY_ON_TRUE_RETURN(pd->klass != EFL_INPUT_DEVICE_TYPE_SEAT);
    pd->id = id;
 }
 
 EOLIAN static unsigned int
 _efl_input_device_seat_id_get(Eo *obj, Efl_Input_Device_Data *pd)
 {
-   if (pd->klass == EFL_INPUT_DEVICE_CLASS_SEAT)
+   if (pd->klass == EFL_INPUT_DEVICE_TYPE_SEAT)
      return pd->id;
    return efl_input_device_seat_id_get(efl_input_device_seat_get(obj));
 }
@@ -138,7 +126,7 @@ _efl_input_device_seat_get(Eo *obj, Efl_Input_Device_Data *pd)
 {
    for (; obj; obj = efl_parent_get(obj))
      {
-        if (pd->klass == EFL_INPUT_DEVICE_CLASS_SEAT)
+        if (pd->klass == EFL_INPUT_DEVICE_TYPE_SEAT)
           return pd->eo;
 
         if (!efl_isa(obj, MY_CLASS)) break;

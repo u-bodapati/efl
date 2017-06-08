@@ -93,8 +93,8 @@ struct _Efl_Input_Device_Data
    Efl_Input_Device *source;  /* ref */
    Eina_List        *children; /* ref'ed by efl_parent, not by this list */
    unsigned int      id;
-   Efl_Input_Device_Class klass;
-   Efl_Input_Device_Sub_Class subclass;
+   Efl_Input_Device_Type klass;
+   unsigned int      subclass; // Evas_Device_Subclass (unused)
 };
 
 struct _Efl_Input_Hold_Data
