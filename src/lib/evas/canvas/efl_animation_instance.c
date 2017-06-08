@@ -173,6 +173,9 @@ _target_state_restore(Eo *target, Target_State *target_state)
 
    evas_object_map_set(target, target_state->map);
    evas_object_map_enable_set(target, target_state->map_enable);
+
+   if (efl_gfx_map_has(target))
+     efl_gfx_map_reset(target);
 }
 
 static Eina_Bool

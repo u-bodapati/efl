@@ -203,7 +203,33 @@ _efl_animation_instance_rotate_rotate_absolute_get(Eo *eo_obj, Evas_Object_Anima
 static void
 _pre_animate_cb(void *data, const Efl_Event *event)
 {
+   EFL_ANIMATION_INSTANCE_ROTATE_DATA_GET(event->object, pd);
    Efl_Animation_Animate_Event_Info *event_info = event->info;
+
+   double progress = event_info->progress;
+
+   Eo *target = efl_animation_instance_target_get(event->object);
+   if (!target) return;
+
+   double degree =
+      (pd->from.degree * (1.0 - progress)) + (pd->to.degree * progress);
+
+   if (efl_gfx_map_has(target))
+     efl_gfx_map_reset(target);
+
+   if (pd->use_rel_pivot)
+     {
+        efl_gfx_map_rotate(target,
+                           degree,
+                           pd->rel_pivot.obj,
+                           pd->rel_pivot.cx, pd->rel_pivot.cy);
+     }
+   else
+     {
+        efl_gfx_map_rotate_absolute(target,
+                                    degree,
+                                    pd->abs_pivot.cx, pd->abs_pivot.cy);
+     }
 }
 
 EOLIAN static Efl_Object *
