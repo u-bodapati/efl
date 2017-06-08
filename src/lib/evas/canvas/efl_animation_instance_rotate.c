@@ -23,103 +23,181 @@
 
 typedef struct _Evas_Object_Animation_Instance_Rotate_Property
 {
-   double angle;
+   double degree;
 } Evas_Object_Animation_Instance_Rotate_Property;
 
 typedef struct _Evas_Object_Animation_Instance_Rotate_Absolute_Pivot
 {
-   Evas_Coord x, y, z;
+   Evas_Coord cx, cy;
 } Evas_Object_Animation_Instance_Rotate_Absolute_Pivot;
 
 typedef struct _Evas_Object_Animation_Instance_Rotate_Relative_Pivot
 {
-   double x, y, z;
+   Efl_Canvas_Object *obj;
+   double             cx, cy;
 } Evas_Object_Animation_Instance_Rotate_Relative_Pivot;
-
 
 struct _Evas_Object_Animation_Instance_Rotate_Data
 {
    Evas_Object_Animation_Instance_Rotate_Property       from;
    Evas_Object_Animation_Instance_Rotate_Property       to;
+
    Evas_Object_Animation_Instance_Rotate_Absolute_Pivot abs_pivot;
    Evas_Object_Animation_Instance_Rotate_Relative_Pivot rel_pivot;
+
    Eina_Bool use_rel_pivot;
 };
 
 EOLIAN static void
-_efl_animation_instance_rotate_angle_set(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double from_angle, double to_angle)
+_efl_animation_instance_rotate_rotate_set(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double from_degree, double to_degree, Efl_Canvas_Object *pivot, double cx, double cy)
 {
    EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
 
-   pd->from.angle = from_angle;
+   pd->from.degree = from_degree;
+   pd->to.degree = to_degree;
 
-   pd->to.angle = to_angle;
-}
+   pd->rel_pivot.obj = pivot;
+   pd->rel_pivot.cx = cx;
+   pd->rel_pivot.cy = cy;
 
-EOLIAN static void
-_efl_animation_instance_rotate_angle_get(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double *from_angle, double *to_angle)
-{
-   EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
+   //Update absolute pivot based on relative pivot
+   Evas_Coord x = 0;
+   Evas_Coord y = 0;
+   Evas_Coord w = 0;
+   Evas_Coord h = 0;
 
-   if (from_angle)
-     *from_angle = pd->from.angle;
+   if (pivot)
+     evas_object_geometry_get(pivot, &x, &y, &w, &h);
+   else
+     {
+        Eo *target = efl_animation_instance_target_get(eo_obj);
+        if (target)
+          evas_object_geometry_get(target, &x, &y, &w, &h);
+     }
 
-   if (to_angle)
-     *to_angle = pd->to.angle;
-}
-
-EOLIAN static void
-_efl_animation_instance_rotate_relative_pivot_set(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double pivot_x, double pivot_y, double pivot_z)
-{
-   EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
-
-   pd->rel_pivot.x = pivot_x;
-   pd->rel_pivot.y = pivot_y;
-   pd->rel_pivot.z = pivot_z;
+   pd->abs_pivot.cx = x + (w * cx);
+   pd->abs_pivot.cy = y + (h * cy);
 
    pd->use_rel_pivot = EINA_TRUE;
 }
 
 EOLIAN static void
-_efl_animation_instance_rotate_relative_pivot_get(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double *pivot_x, double *pivot_y, double *pivot_z)
+_efl_animation_instance_rotate_rotate_get(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double *from_degree, double *to_degree, Efl_Canvas_Object **pivot, double *cx, double *cy)
 {
    EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
 
-   if (pivot_x)
-     *pivot_x = pd->rel_pivot.x;
+   //Update relative pivot based on absolute pivot
+   if (!pd->use_rel_pivot)
+     {
+        Evas_Coord x = 0;
+        Evas_Coord y = 0;
+        Evas_Coord w = 0;
+        Evas_Coord h = 0;
 
-   if (pivot_y)
-     *pivot_y = pd->rel_pivot.y;
+        Eo *target = efl_animation_instance_target_get(eo_obj);
+        if (target)
+          evas_object_geometry_get(target, &x, &y, &w, &h);
 
-   if (pivot_z)
-     *pivot_z = pd->rel_pivot.z;
+        if (w != 0)
+          pd->rel_pivot.cx = (double)(pd->abs_pivot.cx - x) / w;
+        else
+          pd->rel_pivot.cx = 0.0;
+
+        if (h != 0)
+          pd->rel_pivot.cy = (double)(pd->abs_pivot.cy - y) / h;
+        else
+          pd->rel_pivot.cy = 0.0;
+     }
+
+   if (from_degree)
+     *from_degree = pd->from.degree;
+
+   if (to_degree)
+     *to_degree = pd->to.degree;
+
+   if (pivot)
+     *pivot = pd->rel_pivot.obj;
+
+   if (cx)
+     *cx = pd->rel_pivot.cx;
+
+   if (cy)
+     *cy = pd->rel_pivot.cy;
 }
 
 EOLIAN static void
-_efl_animation_instance_rotate_absolute_pivot_set(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, Evas_Coord pivot_x, Evas_Coord pivot_y, Evas_Coord pivot_z)
+_efl_animation_instance_rotate_rotate_absolute_set(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double from_degree, double to_degree, Evas_Coord cx, Evas_Coord cy)
 {
    EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
 
-   pd->abs_pivot.x = pivot_x;
-   pd->abs_pivot.y = pivot_y;
-   pd->abs_pivot.z = pivot_z;
+   pd->from.degree = from_degree;
+   pd->to.degree = to_degree;
+
+   pd->abs_pivot.cx = cx;
+   pd->abs_pivot.cy = cy;
+
+   //Update relative pivot based on absolute pivot
+   Evas_Coord x = 0;
+   Evas_Coord y = 0;
+   Evas_Coord w = 0;
+   Evas_Coord h = 0;
+
+   Eo *target = efl_animation_instance_target_get(eo_obj);
+   if (target)
+     evas_object_geometry_get(target, &x, &y, &w, &h);
+
+   pd->rel_pivot.obj = NULL;
+
+   if (w != 0)
+     pd->rel_pivot.cx = (double)(cx - x) / w;
+   else
+     pd->rel_pivot.cx = 0.0;
+
+   if (h != 0)
+     pd->rel_pivot.cy = (double)(cy - y) / h;
+   else
+     pd->rel_pivot.cy = 0.0;
 
    pd->use_rel_pivot = EINA_FALSE;
 }
 
 EOLIAN static void
-_efl_animation_instance_rotate_absolute_pivot_get(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, Evas_Coord *pivot_x, Evas_Coord *pivot_y, Evas_Coord *pivot_z)
+_efl_animation_instance_rotate_rotate_absolute_get(Eo *eo_obj, Evas_Object_Animation_Instance_Rotate_Data *pd, double *from_degree, double *to_degree, Evas_Coord *cx, Evas_Coord *cy)
 {
    EFL_ANIMATION_INSTANCE_ROTATE_CHECK_OR_RETURN(eo_obj);
 
-   if (pivot_x)
-     *pivot_x = pd->abs_pivot.x;
+   //Update absolute pivot based on relative pivot
+   if (pd->use_rel_pivot)
+     {
+        Evas_Coord x = 0;
+        Evas_Coord y = 0;
+        Evas_Coord w = 0;
+        Evas_Coord h = 0;
 
-   if (pivot_y)
-     *pivot_y = pd->abs_pivot.y;
+        if (pd->rel_pivot.obj)
+          evas_object_geometry_get(pd->rel_pivot.obj, &x, &y, &w, &h);
+        else
+          {
+             Eo *target = efl_animation_instance_target_get(eo_obj);
+             if (target)
+               evas_object_geometry_get(target, &x, &y, &w, &h);
+          }
 
-   if (pivot_z)
-     *pivot_z = pd->abs_pivot.z;
+        pd->abs_pivot.cx = x + (w * pd->rel_pivot.cx);
+        pd->abs_pivot.cy = y + (h * pd->rel_pivot.cy);
+     }
+
+   if (from_degree)
+     *from_degree = pd->from.degree;
+
+   if (to_degree)
+     *to_degree = pd->to.degree;
+
+   if (cx)
+     *cx = pd->abs_pivot.cx;
+
+   if (cy)
+     *cy = pd->abs_pivot.cy;
 }
 
 static void
@@ -133,16 +211,15 @@ _efl_animation_instance_rotate_efl_object_constructor(Eo *eo_obj, Evas_Object_An
 {
    eo_obj = efl_constructor(efl_super(eo_obj, MY_CLASS));
 
-   pd->from.angle = 0.0;
-   pd->to.angle = 0.0;
+   pd->from.degree = 0.0;
+   pd->to.degree = 0.0;
 
-   pd->rel_pivot.x = 0.5;
-   pd->rel_pivot.y = 0.5;
-   pd->rel_pivot.z = 0.5;
+   pd->rel_pivot.obj = NULL;
+   pd->rel_pivot.cx = 0.5;
+   pd->rel_pivot.cy = 0.5;
 
-   pd->abs_pivot.x = 0;
-   pd->abs_pivot.y = 0;
-   pd->abs_pivot.z = 0;
+   pd->abs_pivot.cx = 0;
+   pd->abs_pivot.cy = 0;
 
    pd->use_rel_pivot = EINA_TRUE;
 
