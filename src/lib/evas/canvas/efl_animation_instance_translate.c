@@ -32,6 +32,8 @@ struct _Evas_Object_Animation_Instance_Translate_Data
    Evas_Object_Animation_Instance_Translate_Property from;
    Evas_Object_Animation_Instance_Translate_Property to;
 
+   Evas_Coord init_x, init_y;
+
    Eina_Bool use_rel_move;
 };
 
@@ -158,9 +160,53 @@ _efl_animation_instance_translate_translate_absolute_get(Eo *eo_obj, Evas_Object
 }
 
 static void
+_pre_start_cb(void *data, const Efl_Event *event)
+{
+   EFL_ANIMATION_INSTANCE_TRANSLATE_DATA_GET(event->object, pd);
+
+   Eo *target = efl_animation_instance_target_get(event->object);
+   if (!target) return;
+
+   Evas_Coord x, y;
+   evas_object_geometry_get(target, &x, &y, NULL, NULL);
+
+   pd->init_x = x;
+   pd->init_y = y;
+}
+
+static void
 _pre_animate_cb(void *data, const Efl_Event *event)
 {
+   EFL_ANIMATION_INSTANCE_TRANSLATE_DATA_GET(event->object, pd);
    Efl_Animation_Animate_Event_Info *event_info = event->info;
+
+   double progress = event_info->progress;
+
+   Eo *target = efl_animation_instance_target_get(event->object);
+   if (!target) return;
+
+   Evas_Coord new_x = 0;
+   Evas_Coord new_y = 0;
+
+   if (pd->use_rel_move)
+     {
+        Evas_Coord move_x, move_y;
+
+        move_x
+           = (pd->from.move_x * (1.0 - progress)) + (pd->to.move_x * progress);
+        move_y
+           = (pd->from.move_y * (1.0 - progress)) + (pd->to.move_y * progress);
+
+        new_x = pd->init_x + move_x;
+        new_y = pd->init_y + move_y;
+     }
+   else
+     {
+        new_x = (pd->from.x * (1.0 - progress)) + (pd->to.x * progress);
+        new_y = (pd->from.y * (1.0 - progress)) + (pd->to.y * progress);
+     }
+
+   evas_object_move(target, new_x, new_y);
 }
 
 EOLIAN static Efl_Object *
@@ -178,7 +224,14 @@ _efl_animation_instance_translate_efl_object_constructor(Eo *eo_obj, Evas_Object
    pd->to.x = 0;
    pd->to.y = 0;
 
+   pd->init_x = 0;
+   pd->init_y = 0;
+
    pd->use_rel_move = EINA_TRUE;
+
+   //pre start event is supported within class only (protected event)
+   efl_event_callback_add(eo_obj, EFL_ANIMATION_INSTANCE_EVENT_PRE_START,
+                          _pre_start_cb, NULL);
 
    //pre animate event is supported within class only (protected event)
    efl_event_callback_add(eo_obj, EFL_ANIMATION_INSTANCE_EVENT_PRE_ANIMATE,
