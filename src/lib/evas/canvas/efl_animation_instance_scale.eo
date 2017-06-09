@@ -12,38 +12,27 @@ class Efl.Animation.Instance.Scale (Efl.Animation.Instance)
          get {
          }
          values {
-            from_scale: double; [[Scale factor when animation starts]]
-            to_scale: double; [[Scale factor when animation ends]]
+            from_scale_x: double; [[Scale factor along x axis when animation starts]]
+            from_scale_y: double; [[Scale factor along y axis when animation starts]]
+            to_scale_x: double; [[Scale factor along x axis when animation ends]]
+            to_scale_y: double; [[Scale factor along y axis when animation ends]]
+            pivot: Efl.Canvas.Object; [[Pivot object for the center point. If the pivot object is NULL, then the object is scaled on itself.]]
+            cx: double; [[X relative coordinate of the center point. The left end is 0.0 and the right end is 1.0 (the center is 0.5).]]
+            cy: double; [[Y relative coordinate of the center point. The top end is 0.0 and the bottom end is 1.0 (the center is 0.5).]]
          }
       }
-      @property scale_x @protected /* @internal */ {
+      @property scale_absolute @protected /* @internal */ {
          set {
          }
          get {
          }
          values {
-            from_x: double; [[Scale factor along x axis when animation starts]]
-            to_x: double; [[Scale factor along x axis when animation ends]]
-         }
-      }
-      @property scale_y @protected /* @internal */ {
-         set {
-         }
-         get {
-         }
-         values {
-            from_y: double; [[Scale factor along y axis when animation starts]]
-            to_y: double; [[Scale factor along y axis when animation ends]]
-         }
-      }
-      @property scale_z @protected /* @internal */ {
-         set {
-         }
-         get {
-         }
-         values {
-            from_z: double; [[Scale factor along z axis when animation starts]]
-            to_z: double; [[Scale factor along z axis when animation ends]]
+            from_scale_x: double; [[Scale factor along x axis when animation starts]]
+            from_scale_y: double; [[Scale factor along y axis when animation starts]]
+            to_scale_x: double; [[Scale factor along x axis when animation ends]]
+            to_scale_y: double; [[Scale factor along y axis when animation ends]]
+            cx: int; [[X absolute coordinate of the center point.]]
+            cy: int; [[Y absolute coordinate of the center point.]]
          }
       }
    }
