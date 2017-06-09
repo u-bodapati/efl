@@ -14,43 +14,11 @@ class Efl.Animation.Translate (Efl.Animation)
          values {
             from_x: int; [[Distance moved along x axis when animation starts]]
             from_y: int; [[Distance moved along y axis when animation starts]]
-            from_z: int; [[Distance moved along z axis when animation starts]]
             to_x: int; [[Distance moved along x axis when animation ends]]
             to_y: int; [[Distance moved along y axis when animation ends]]
-            to_z: int; [[Distance moved along z axis when animation ends]]
          }
       }
-      @property translate_x {
-         set {
-         }
-         get {
-         }
-         values {
-            from_x: int; [[Distance moved along x axis when animation starts]]
-            to_x: int; [[Distance moved along x axis when animation ends]]
-         }
-      }
-      @property translate_y {
-         set {
-         }
-         get {
-         }
-         values {
-            from_y: int; [[Distance moved along y axis when animation starts]]
-            to_y: int; [[Distance moved along y axis when animation ends]]
-         }
-      }
-      @property translate_z {
-         set {
-         }
-         get {
-         }
-         values {
-            from_z: int; [[Distance moved along z axis when animation starts]]
-            to_z: int; [[Distance moved along z axis when animation ends]]
-         }
-      }
-      @property coordinate {
+      @property translate_absolute {
          set {
          }
          get {
@@ -58,40 +26,8 @@ class Efl.Animation.Translate (Efl.Animation)
          values {
             from_x: int; [[X coordinate when animation starts]]
             from_y: int; [[Y coordinate when animation starts]]
-            from_z: int; [[Z coordinate when animation starts]]
             to_x: int; [[X coordinate when animation ends]]
             to_y: int; [[Y coordinate when animation ends]]
-            to_z: int; [[Z coordinate when animation ends]]
-         }
-      }
-      @property coordinate_x {
-         set {
-         }
-         get {
-         }
-         values {
-            from_x: int; [[X coordinate when animation starts]]
-            to_x: int; [[X coordinate when animation ends]]
-         }
-      }
-      @property coordinate_y {
-         set {
-         }
-         get {
-         }
-         values {
-            from_y: int; [[Y coordinate when animation starts]]
-            to_y: int; [[Y coordinate when animation ends]]
-         }
-      }
-      @property coordinate_z {
-         set {
-         }
-         get {
-         }
-         values {
-            from_z: int; [[Z coordinate when animation starts]]
-            to_z: int; [[Z coordinate when animation ends]]
          }
       }
    }
