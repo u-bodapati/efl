@@ -235,9 +235,6 @@ _pre_animate_cb(void *data EINA_UNUSED, const Efl_Event *event)
    double scale_y =
       (pd->from.scale_y * (1.0 - progress)) + (pd->to.scale_y * progress);
 
-   if (efl_gfx_map_has(target))
-     efl_gfx_map_reset(target);
-
    if (pd->use_rel_pivot)
      {
         efl_gfx_map_zoom(target,

@@ -41,6 +41,10 @@ abstract Efl.Animation.Instance (Efl.Object)
          [[Start animation.]]
          return: bool; [[$true on success, $false otherwise]]
       }
+      composite_start @protected /* @internal */ {
+         [[Start group member instance. Group member instances should be displayed as a composite instance. To display instances as a composite instance, map effect should not be reset per group member instance. Therefore, group instance calls this method not to reset map effect automatically and resets map effect after all group member instances are animated.]]
+         return: bool; [[$true on success, $false otherwise]]
+      }
       cancel {
          [[Cancel animation.]]
          return: bool; [[$true on success, $false otherwise]]
@@ -48,6 +52,9 @@ abstract Efl.Animation.Instance (Efl.Object)
       state_get {
          [[Get the state of animation]]
          return: Efl.Animation.State; [[Animation state]]
+      }
+      map_reset @protected /* @internal */ {
+         [[Reset map effect.]]
       }
    }
    implements {

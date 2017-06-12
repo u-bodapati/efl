@@ -26,5 +26,6 @@ abstract Efl.Animation.Instance.Group (Efl.Animation.Instance)
    implements {
       Efl.Object.constructor;
       Efl.Object.destructor;
+      Efl.Animation.Instance.map_reset;
    }
 }

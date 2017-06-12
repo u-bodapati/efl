@@ -57,6 +57,7 @@ struct _Evas_Object_Animation_Instance_Data
    Eina_Bool cancelled : 1;
    Eina_Bool ended : 1;
    Eina_Bool state_keep : 1;
+   Eina_Bool composite : 1;
 };
 
 static void
@@ -188,6 +189,13 @@ _animator_cb(void *data)
    Efl_Animation_Animate_Event_Info event_info;
    event_info.progress = pd->progress;
 
+   if (!pd->composite)
+     {
+        //Reset previous map effect before apply map effect
+        if (efl_gfx_map_has(pd->target))
+          efl_gfx_map_reset(pd->target);
+     }
+
    //pre animate event is supported within class only (protected event)
    efl_event_callback_call(eo_obj, EFL_ANIMATION_INSTANCE_EVENT_PRE_ANIMATE,
                            &event_info);
@@ -217,11 +225,9 @@ end:
    return ECORE_CALLBACK_CANCEL;
 }
 
-EOLIAN static Eina_Bool
-_efl_animation_instance_start(Eo *eo_obj, Evas_Object_Animation_Instance_Data *pd)
+static Eina_Bool
+_start(Eo *eo_obj, Evas_Object_Animation_Instance_Data *pd)
 {
-   EFL_ANIMATION_INSTANCE_CHECK_OR_RETURN(eo_obj, EINA_FALSE);
-
    if (pd->duration <= 0.0)
      return EINA_FALSE;
 
@@ -247,6 +253,26 @@ _efl_animation_instance_start(Eo *eo_obj, Evas_Object_Animation_Instance_Data *p
    _animator_cb(eo_obj);
 
    return EINA_TRUE;
+}
+
+EOLIAN static Eina_Bool
+_efl_animation_instance_start(Eo *eo_obj, Evas_Object_Animation_Instance_Data *pd)
+{
+   EFL_ANIMATION_INSTANCE_CHECK_OR_RETURN(eo_obj, EINA_FALSE);
+
+   pd->composite = EINA_FALSE;
+
+   return _start(eo_obj, pd);
+}
+
+EOLIAN static Eina_Bool
+_efl_animation_instance_composite_start(Eo *eo_obj, Evas_Object_Animation_Instance_Data *pd)
+{
+   EFL_ANIMATION_INSTANCE_CHECK_OR_RETURN(eo_obj, EINA_FALSE);
+
+   pd->composite = EINA_TRUE;
+
+   return _start(eo_obj, pd);
 }
 
 EOLIAN static Eina_Bool
@@ -286,6 +312,19 @@ _efl_animation_instance_state_get(Eo *eo_obj, Evas_Object_Animation_Instance_Dat
      return EFL_ANIMATION_STATE_RUNNING;
    else
      return EFL_ANIMATION_STATE_STOPPED;
+}
+
+EOLIAN static void
+_efl_animation_instance_map_reset(Eo *eo_obj, Evas_Object_Animation_Instance_Data *pd)
+{
+   EFL_ANIMATION_INSTANCE_CHECK_OR_RETURN(eo_obj);
+
+   Efl_Canvas_Object *target = efl_animation_instance_target_get(eo_obj);
+   if (target)
+     {
+        if (efl_gfx_map_has(target))
+          efl_gfx_map_reset(target);
+     }
 }
 
 EOLIAN static Efl_Object *

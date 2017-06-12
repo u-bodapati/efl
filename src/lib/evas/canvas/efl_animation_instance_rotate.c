@@ -214,9 +214,6 @@ _pre_animate_cb(void *data, const Efl_Event *event)
    double degree =
       (pd->from.degree * (1.0 - progress)) + (pd->to.degree * progress);
 
-   if (efl_gfx_map_has(target))
-     efl_gfx_map_reset(target);
-
    if (pd->use_rel_pivot)
      {
         efl_gfx_map_rotate(target,

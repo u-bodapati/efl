@@ -1,10 +1,10 @@
 import efl_animation_types;
 
-class Efl.Animation.Instance.Group.Sequential (Efl.Animation.Instance.Group)
+class Efl.Animation.Instance.Group.Parallel (Efl.Animation.Instance.Group)
 {
-   [[Efl group sequential animation instance class]]
+   [[Efl group parallel animation instance class]]
    legacy_prefix: evas_object_animation_instance;
-   data: Evas_Object_Animation_Instance_Group_Sequential_Data;
+   data: Evas_Object_Animation_Instance_Group_Parallel_Data;
    methods {
    }
    implements {

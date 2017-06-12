@@ -54,6 +54,20 @@ _efl_animation_instance_group_instances_get(Eo *eo_obj, Evas_Object_Animation_In
    return pd->instances;
 }
 
+EOLIAN static void
+_efl_animation_instance_group_efl_animation_instance_map_reset(Eo *eo_obj, Evas_Object_Animation_Instance_Group_Data *pd)
+{
+   EFL_ANIMATION_INSTANCE_GROUP_CHECK_OR_RETURN(eo_obj);
+
+   Eina_List *l;
+   Efl_Animation_Instance *inst;
+
+   EINA_LIST_FOREACH(pd->instances, l, inst)
+     {
+        efl_animation_instance_map_reset(inst);
+     }
+}
+
 EOLIAN static Efl_Object *
 _efl_animation_instance_group_efl_object_constructor(Eo *eo_obj, Evas_Object_Animation_Instance_Group_Data *pd)
 {
